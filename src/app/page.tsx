@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { Lock, ArrowRight, X, Plus } from "lucide-react";
+import { Lock, ArrowRight, X, Plus, LogOut } from "lucide-react";
 import { DUMMY_PROJECTS, DUMMY_PASSES } from "@/data/dummy";
 
 const CATEGORIES = [
@@ -114,6 +114,13 @@ export default function Home() {
   const handleTicketSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     await validatePass(ticketPass);
+  };
+
+  const handleLockPremiere = () => {
+    localStorage.removeItem('unlocked_tickets');
+    setUnlockedProjects([]);
+    setActiveCategory("Commercials");
+    setShowPremiereModal(false);
   };
 
   const { scrollYProgress } = useScroll({
@@ -284,9 +291,23 @@ export default function Home() {
                   } ${cat === "Premiere" ? "mt-8 border-t border-current/10 pt-8" : ""}`}
                 >
                   {cat === "Premiere" ? (
-                    <span className="flex items-center gap-2">
-                       {cat} <span className={`inline-block w-2 h-2 rounded-full ${showPremiereModal ? 'bg-red-600' : 'bg-red-600/50'} transition-colors animate-pulse`} />
-                    </span>
+                    <div className="flex items-center justify-between w-full group/prem">
+                      <span className="flex items-center gap-2">
+                         {cat} <span className={`inline-block w-2 h-2 rounded-full ${showPremiereModal ? 'bg-red-600' : 'bg-red-600/50'} transition-colors animate-pulse`} />
+                      </span>
+                      {unlockedProjects.length > 0 && activeCategory === "Premiere" && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLockPremiere();
+                          }}
+                          className="opacity-0 group-hover/prem:opacity-100 p-2 hover:bg-white/10 rounded-full transition-all text-red-500"
+                          title="Stop Premiere Session"
+                        >
+                          <LogOut size={16} />
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     cat
                   )}
