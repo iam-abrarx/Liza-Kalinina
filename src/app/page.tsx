@@ -281,37 +281,40 @@ export default function Home() {
           <aside className="md:w-64 shrink-0">
             <div className="sticky top-32 flex flex-col gap-6">
               {CATEGORIES.map((cat) => (
-                <button
+                <div
                   key={cat}
-                  onClick={() => handleCategoryClick(cat)}
-                  className={`text-left text-lg md:text-xl transition-all duration-500 ${
-                    activeCategory === cat && !showPremiereModal
-                      ? (activeCategory === "Premiere" ? "text-red-600 font-normal italic" : "text-[var(--color-brand-ink)] font-normal italic")
-                      : (activeCategory === "Premiere" ? "text-white/30 font-light hover:text-white" : "text-gray-400 font-light hover:text-gray-600")
-                  } ${cat === "Premiere" ? "mt-8 border-t border-current/10 pt-8" : ""}`}
+                  className={`flex items-center justify-between w-full group/prem ${cat === "Premiere" ? "mt-8 border-t border-current/10 pt-8" : ""}`}
                 >
-                  {cat === "Premiere" ? (
-                    <div className="flex items-center justify-between w-full group/prem">
+                  <button
+                    onClick={() => handleCategoryClick(cat)}
+                    className={`text-left text-lg md:text-xl transition-all duration-500 ${
+                      activeCategory === cat && !showPremiereModal
+                        ? (activeCategory === "Premiere" ? "text-red-600 font-normal italic" : "text-[var(--color-brand-ink)] font-normal italic")
+                        : (activeCategory === "Premiere" ? "text-white/30 font-light hover:text-white" : "text-gray-400 font-light hover:text-gray-600")
+                    }`}
+                  >
+                    {cat === "Premiere" ? (
                       <span className="flex items-center gap-2">
                          {cat} <span className={`inline-block w-2 h-2 rounded-full ${showPremiereModal ? 'bg-red-600' : 'bg-red-600/50'} transition-colors animate-pulse`} />
                       </span>
-                      {unlockedProjects.length > 0 && activeCategory === "Premiere" && (
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLockPremiere();
-                          }}
-                          className="opacity-0 group-hover/prem:opacity-100 p-2 hover:bg-white/10 rounded-full transition-all text-red-500"
-                          title="Stop Premiere Session"
-                        >
-                          <LogOut size={16} />
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    cat
+                    ) : (
+                      cat
+                    )}
+                  </button>
+                  
+                  {cat === "Premiere" && unlockedProjects.length > 0 && activeCategory === "Premiere" && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLockPremiere();
+                      }}
+                      className="opacity-0 group-hover/prem:opacity-100 p-2 hover:bg-white/10 rounded-full transition-all text-red-500"
+                      title="Stop Premiere Session"
+                    >
+                      <LogOut size={16} />
+                    </button>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           </aside>
