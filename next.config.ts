@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 
-console.log('Build Mode:', process.env.EXPORT === 'true' ? 'export' : 'default');
+const isExport = process.env.EXPORT === 'true';
+console.log('Build Mode:', isExport ? 'export' : 'default');
 
 const nextConfig: NextConfig = {
-  output: process.env.EXPORT === 'true' ? 'export' : undefined,
+  output: isExport ? 'export' : undefined,
+  basePath: isExport ? '/Liza-Kalinina' : undefined,
+  assetPrefix: isExport ? '/Liza-Kalinina/' : undefined,
   images: {
     unoptimized: true,
   },
