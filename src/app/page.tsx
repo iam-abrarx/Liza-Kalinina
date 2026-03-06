@@ -269,7 +269,7 @@ export default function Home() {
       <section 
         className={`relative z-20 transition-colors duration-1000 ${activeCategory === "Premiere" ? "bg-black text-white" : "bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)]"} pt-24 pb-48 px-6 md:px-12 lg:px-24`}
       >
-        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row gap-12 lg:gap-32">
+        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row gap-12 lg:gap-24 xl:gap-32">
           
           <aside className="md:w-64 shrink-0">
             <div className="sticky top-32 flex flex-col gap-6">
@@ -373,8 +373,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-                  <div className="lg:col-span-7 flex flex-col gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-24 max-w-7xl">
+                  <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
                     <h2 className={`text-4xl md:text-5xl lg:text-7xl ${mode === 'theatrical' ? 'text-white font-display italic tracking-tight' : 'text-[var(--color-brand-ink)]'}`}>
                       {project.title}
                     </h2>
@@ -386,7 +386,7 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <div className={`lg:col-span-5 flex flex-col gap-2 text-sm border-l ${mode === 'theatrical' ? 'border-white/10 text-white/40' : 'border-black/10 text-gray-500'} pl-6 lg:pl-8`}>
+                  <div className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-2 text-sm border-l ${mode === 'theatrical' ? 'border-white/10 text-white/40' : 'border-black/10 text-gray-500'} pl-6 lg:pl-8`}>
                     <div className={`grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b ${mode === 'theatrical' ? 'border-white/5' : 'border-black/5'} pb-4`}>
                       <span className="uppercase tracking-widest text-[9px] opacity-50">Role</span>
                       <strong className={`font-normal ${mode === 'theatrical' ? 'text-white' : 'text-[var(--color-brand-ink)]'}`}>{project.role}</strong>
