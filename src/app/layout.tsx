@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="antialiased font-body bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] selection:bg-[#111] selection:text-[#F4F4F0]">
         {children}
       </body>
