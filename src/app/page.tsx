@@ -214,9 +214,9 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <nav className="fixed top-0 w-full p-6 md:p-12 flex justify-between items-center z-50 text-white mix-blend-difference overflow-hidden">
-        <Link href="/" className="text-sm tracking-[0.3em] uppercase font-bold">Liza Kalinina</Link>
-        <Link href="/contact" className="text-sm uppercase tracking-widest hover:opacity-50 transition-opacity">Contact</Link>
+      <nav className="fixed top-0 w-full p-6 md:px-12 md:py-8 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-[var(--color-brand-bg)]/80 backdrop-blur-xl border-b border-[var(--color-brand-ink)]/5 transition-all duration-500">
+        <Link href="/" className="text-xs md:text-sm tracking-[0.3em] uppercase font-bold">Liza Kalinina</Link>
+        <Link href="/contact" className="text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity">Contact</Link>
       </nav>
 
       {/* Hero Cover Component */}
@@ -225,21 +225,10 @@ export default function Home() {
           style={{ 
             y: heroY, 
             opacity: heroOpacity, 
-            scale: useTransform(scrollYProgress, [0, 1], [1, 1.15]) 
+            scale: useTransform(scrollYProgress, [0, 1], [1, 1.05]) 
           }}
-          className="absolute inset-0 z-0 bg-black"
-        >
-          {/* Hero Image (Clapperboard Mockup) */}
-          <div className="w-full h-full relative">
-            <img 
-              src="/hero.png" 
-              alt="Liza Kalinina - Cinematic Clapperboard" 
-              className="w-full h-full object-cover grayscale brightness-[0.85] contrast-[1.05]"
-            />
-            {/* Elegant Dramatic Vignette */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
-          </div>
-        </motion.div>
+          className="absolute inset-0 z-0 bg-[var(--color-brand-bg)]"
+        />
         
         {/* Massive Editorial Title */}
         <div className="z-10 text-center flex flex-col items-center pointer-events-none px-4">
@@ -249,10 +238,10 @@ export default function Home() {
             transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center"
           >
-            <span className="text-white/40 text-[10px] sm:text-xs tracking-[0.8em] uppercase font-bold mb-4 ml-4">
+            <span className="text-[var(--color-brand-ink)]/40 text-[10px] sm:text-xs tracking-[0.8em] uppercase font-bold mb-4 ml-4">
               The Works of
             </span>
-            <h1 className="text-white text-[12vw] sm:text-[15vw] font-display italic leading-[0.7] tracking-tighter opacity-90 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] select-none">
+            <h1 className="text-[var(--color-brand-ink)] text-[clamp(3.5rem,15vw,15rem)] font-display italic leading-[0.75] tracking-tighter opacity-90 drop-shadow-[0_20px_50px_rgba(0,0,0,0.05)] select-none">
               Liza Kalinina
             </h1>
           </motion.div>
@@ -264,15 +253,15 @@ export default function Home() {
             className="flex flex-col items-center mt-12 gap-8"
           >
             <div className="flex flex-col items-center gap-2">
-              <p className="text-white text-xs tracking-[0.4em] uppercase font-bold">
+              <p className="text-[var(--color-brand-ink)] text-xs tracking-[0.4em] uppercase font-bold">
                 Director of Photography
               </p>
-              <p className="text-white/40 text-[9px] tracking-[0.2em] uppercase">
+              <p className="text-[var(--color-brand-ink)]/40 text-[9px] tracking-[0.2em] uppercase">
                 Based in Moscow · Available Worldwide
               </p>
             </div>
             {/* Minimalist Animated Scroll Line */}
-            <div className="h-24 w-[1px] bg-gradient-to-b from-white/60 to-transparent animate-pulse delay-700" />
+            <div className="h-24 w-[1px] bg-gradient-to-b from-[var(--color-brand-ink)]/60 to-transparent animate-pulse delay-700" />
           </motion.div>
         </div>
       </section>
@@ -306,7 +295,7 @@ export default function Home() {
             </div>
           </aside>
 
-          <div className={`flex-1 flex flex-col gap-32 border-l ${activeCategory === "Premiere" ? "border-white/5" : "border-black/5"} pl-0 md:pl-16 lg:pl-32`}>
+          <div className={`flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l ${activeCategory === "Premiere" ? "border-white/5" : "border-black/5"} pl-0 md:pl-16 lg:pl-32`}>
             {[...projects, ...unlockedProjects].map((project: any) => {
               const dbCategory = CATEGORY_MAP[activeCategory];
               const isMatch = project.category === activeCategory || project.category === dbCategory;
