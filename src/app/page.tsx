@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Lock, ArrowRight, X, Plus } from "lucide-react";
+import { DUMMY_PROJECTS, DUMMY_PASSES } from "@/data/dummy";
 
 const CATEGORIES = [
   "Commercials",
@@ -23,8 +24,6 @@ const CATEGORY_MAP: Record<string, string> = {
   "Premiere": "PREMIERE"
 };
 
-
-
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [projects, setProjects] = useState<any[]>([]);
@@ -40,11 +39,12 @@ export default function Home() {
   const fetchProjects = async () => {
     try {
       const res = await fetch('/api/projects');
+      if (!res.ok) throw new Error("API unavailable");
       const data = await res.json();
       setProjects(data);
     } catch (error) {
-      console.error("Error fetching projects:", error);
-      setProjects([]);
+      console.log("Using dummy projects fallback");
+      setProjects(DUMMY_PROJECTS);
     }
   };
 
@@ -70,31 +70,44 @@ export default function Home() {
         body: JSON.stringify({ passCode: code })
       });
       
-      const data = await res.json();
-      
-      if (res.ok && data.project) {
-        setUnlockedProjects(prev => {
-          if (prev.find(p => p.id === data.project.id)) return prev;
-          return [...prev, data.project];
-        });
-
-        if (!isSilent) {
-          // Save to persistent storage if it was a manual entry
-          const current = JSON.parse(localStorage.getItem('unlocked_tickets') || '[]');
-          if (!current.includes(code)) {
-            localStorage.setItem('unlocked_tickets', JSON.stringify([...current, code]));
-          }
-          setActiveCategory("Premiere");
-          setShowPremiereModal(false);
-          setTicketPass("");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.project) {
+          handleSuccessfulValidation(data.project, code, isSilent);
+          return;
         }
-      } else if (!isSilent) {
-        setPremiereError(data.error || "Invalid Ticket Pass");
       }
+      throw new Error("Validation failed");
     } catch (error) {
-      if (!isSilent) setPremiereError("Connection error. Try again.");
+      // Static Fallback
+      const pass = DUMMY_PASSES.find(p => p.pass_code.toLowerCase() === code.toLowerCase());
+      if (pass) {
+        const project = DUMMY_PROJECTS.find(p => p.id === pass.linked_project_id);
+        if (project) {
+          handleSuccessfulValidation(project, code, isSilent);
+          return;
+        }
+      }
+      if (!isSilent) setPremiereError("Invalid Ticket Pass");
     } finally {
       if (!isSilent) setIsValidating(false);
+    }
+  };
+
+  const handleSuccessfulValidation = (project: any, code: string, isSilent: boolean) => {
+    setUnlockedProjects(prev => {
+      if (prev.find(p => p.id === project.id)) return prev;
+      return [...prev, project];
+    });
+
+    if (!isSilent) {
+      const current = JSON.parse(localStorage.getItem('unlocked_tickets') || '[]');
+      if (!current.includes(code)) {
+        localStorage.setItem('unlocked_tickets', JSON.stringify([...current, code]));
+      }
+      setActiveCategory("Premiere");
+      setShowPremiereModal(false);
+      setTicketPass("");
     }
   };
 

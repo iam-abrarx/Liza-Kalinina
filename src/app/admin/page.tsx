@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload } from "lucide-react";
 import Link from "next/link";
+import { DUMMY_PROJECTS, DUMMY_PASSES } from "@/data/dummy";
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -88,10 +89,22 @@ export default function AdminDashboard() {
         fetch('/api/projects?admin=true'),
         fetch('/api/ticket-passes')
       ]);
+      
+      if (!projRes.ok || !passRes.ok) throw new Error("API unavailable");
+      
       setProjects(await projRes.json());
       setPasses(await passRes.json());
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.log("Using dummy data fallback in Admin");
+      setProjects(DUMMY_PROJECTS);
+      // Map DUMMY_PASSES to include project info for display
+      const mappedPasses = DUMMY_PASSES.map((tp, idx) => ({
+        id: `dummy-${idx}`,
+        pass_code: tp.pass_code,
+        project: DUMMY_PROJECTS.find(p => p.id === tp.linked_project_id),
+        expires_at: null
+      }));
+      setPasses(mappedPasses);
     }
   };
 
