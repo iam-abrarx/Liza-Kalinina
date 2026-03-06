@@ -308,7 +308,7 @@ export default function Home() {
                         e.stopPropagation();
                         handleLockPremiere();
                       }}
-                      className="opacity-0 group-hover/prem:opacity-100 p-2 hover:bg-white/10 rounded-full transition-all text-red-500"
+                      className="p-2 hover:bg-white/10 rounded-full transition-all text-red-500"
                       title="Stop Premiere Session"
                     >
                       <LogOut size={16} />
