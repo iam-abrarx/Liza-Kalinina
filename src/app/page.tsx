@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { Lock, ArrowRight, X, Plus, LogOut } from "lucide-react";
+import { Lock, ArrowRight, X, Plus, LogOut, Settings, Sparkles, Wand2 } from "lucide-react";
 import { DUMMY_PROJECTS, DUMMY_PASSES } from "@/data/dummy";
 
 const CATEGORIES = [
@@ -35,6 +35,54 @@ export default function Home() {
   const [isValidating, setIsValidating] = useState(false);
   const [premiereError, setPremiereError] = useState("");
   const [hasPlayedTadam, setHasPlayedTadam] = useState(false);
+  
+  // Design Lab State
+  const [showDesignLab, setShowDesignLab] = useState(false);
+  const [heroEffect, setHeroEffect] = useState('reveal');
+  const [listEffect, setListEffect] = useState('stagger');
+  const [animConfig, setAnimConfig] = useState({
+    duration: 0.8,
+    delay: 0,
+    ease: "easeOut" as any
+  });
+
+  const HERO_PRESETS = {
+    reveal: {
+      initial: { y: 100, opacity: 0 },
+      animate: { y: 0, opacity: 1 },
+      transition: { duration: animConfig.duration, delay: animConfig.delay, ease: animConfig.ease }
+    },
+    blur: {
+      initial: { filter: "blur(20px)", opacity: 0 },
+      animate: { filter: "blur(0px)", opacity: 1 },
+      transition: { duration: animConfig.duration, delay: animConfig.delay }
+    },
+    typewriter: {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      transition: { duration: 0.1, staggerChildren: 0.05 }
+    },
+    bounce: {
+      initial: { scale: 0.5, opacity: 0 },
+      animate: { scale: 1, opacity: 1 },
+      transition: { type: "spring", stiffness: 100, damping: 10 } as any
+    }
+  };
+
+  const LIST_PRESETS = {
+    stagger: {
+      initial: { x: -20, opacity: 0 },
+      animate: { x: 0, opacity: 1 }
+    },
+    fade: {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 }
+    },
+    slideUp: {
+      initial: { y: 30, opacity: 0 },
+      animate: { y: 0, opacity: 1 }
+    }
+  };
   
   const fetchProjects = async () => {
     try {
@@ -240,9 +288,10 @@ export default function Home() {
         {/* Massive Editorial Title */}
         <div className="z-10 text-center flex flex-col items-center pointer-events-none px-4">
           <motion.div
-            initial={{ scale: 1.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            key={heroEffect}
+            initial={HERO_PRESETS[heroEffect as keyof typeof HERO_PRESETS].initial}
+            animate={HERO_PRESETS[heroEffect as keyof typeof HERO_PRESETS].animate}
+            transition={HERO_PRESETS[heroEffect as keyof typeof HERO_PRESETS].transition}
             className="flex flex-col items-center"
           >
             <span className="text-[var(--color-brand-ink)]/40 text-[10px] sm:text-xs tracking-[0.8em] uppercase font-bold mb-4 ml-4">
@@ -320,7 +369,7 @@ export default function Home() {
           </aside>
 
           <div className={`flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l ${activeCategory === "Premiere" ? "border-white/5" : "border-black/5"} pl-0 md:pl-16 lg:pl-32`}>
-            {[...projects, ...unlockedProjects].map((project: any) => {
+            {[...projects, ...unlockedProjects].map((project: any, index: number) => {
               const dbCategory = CATEGORY_MAP[activeCategory];
               const isMatch = project.category === activeCategory || project.category === dbCategory;
               const isNarrative = activeCategory === "Narrative";
@@ -328,12 +377,18 @@ export default function Home() {
               
               if (!isMatch) return null;
 
+              const variants = {
+                initial: LIST_PRESETS[listEffect as keyof typeof LIST_PRESETS].initial,
+                animate: LIST_PRESETS[listEffect as keyof typeof LIST_PRESETS].animate
+              };
+
               if (isNarrative) {
                 return (
                   <motion.div
                     key={project.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={variants.initial}
+                    whileInView={variants.animate}
+                    transition={{ duration: animConfig.duration, delay: index * 0.1 }}
                     viewport={{ once: true }}
                     className="group border-b border-black/5 py-12 cursor-pointer relative"
                     onClick={() => setSelectedProject(project)}
@@ -364,10 +419,10 @@ export default function Home() {
               return (
                 <motion.article 
                   key={project.id}
-                  initial={{ opacity: 0, y: 50, filter: "blur(10px)" }}
-                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  initial={variants.initial}
+                  whileInView={variants.animate}
+                  transition={{ duration: animConfig.duration, delay: index * 0.1 }}
                   viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-col gap-8 group"
                 >
                 <div 
@@ -597,6 +652,89 @@ export default function Home() {
           </div>
         </motion.div>
        )}
+      </AnimatePresence>
+      {/* Design Lab Toggle */}
+      <button
+        onClick={() => setShowDesignLab(!showDesignLab)}
+        className="fixed bottom-8 left-8 z-[100] p-4 bg-white shadow-2xl rounded-full hover:scale-110 transition-transform text-black border border-black/5"
+      >
+        <Wand2 size={24} className={showDesignLab ? 'text-red-600' : ''} />
+      </button>
+
+      <AnimatePresence>
+        {showDesignLab && (
+          <motion.div
+            initial={{ x: -400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -400, opacity: 0 }}
+            className="fixed bottom-24 left-8 z-[100] w-80 bg-white/90 backdrop-blur-2xl p-6 rounded-3xl shadow-2xl border border-black/5 text-black flex flex-col gap-6"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-display italic">Design Lab</h3>
+              <button onClick={() => setShowDesignLab(false)}><X size={20} /></button>
+            </div>
+
+            <div>
+              <p className="text-[10px] uppercase tracking-widest opacity-50 mb-3">Hero Text Effect</p>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.keys(HERO_PRESETS).map(preset => (
+                  <button
+                    key={preset}
+                    onClick={() => setHeroEffect(preset)}
+                    className={`px-3 py-2 text-xs rounded-lg border transition-all ${
+                      heroEffect === preset ? 'bg-black text-white border-black' : 'border-black/10 hover:border-black/30'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] uppercase tracking-widest opacity-50 mb-3">List Entrance</p>
+              <div className="grid grid-cols-3 gap-2">
+                {Object.keys(LIST_PRESETS).map(preset => (
+                  <button
+                    key={preset}
+                    onClick={() => setListEffect(preset)}
+                    className={`px-2 py-2 text-[10px] rounded-lg border transition-all ${
+                      listEffect === preset ? 'bg-black text-white border-black' : 'border-black/10 hover:border-black/30'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <p className="text-[10px] uppercase tracking-widest opacity-50">Customization</p>
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-[10px]">
+                  <span>Duration</span>
+                  <span>{animConfig.duration}s</span>
+                </div>
+                <input 
+                  type="range" min="0.1" max="2" step="0.1" 
+                  value={animConfig.duration} 
+                  onChange={(e) => setAnimConfig({...animConfig, duration: parseFloat(e.target.value)})}
+                  className="w-full h-1 bg-black/10 rounded-lg appearance-none cursor-pointer accent-black"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={() => {
+                alert("Settings Saved locally! You can lock this design now.");
+                setShowDesignLab(false);
+              }}
+              className="w-full py-3 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors"
+            >
+              Apply to Production
+            </button>
+          </motion.div>
+        )}
       </AnimatePresence>
     </main>
   );
