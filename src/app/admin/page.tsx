@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
   const [isPassFormOpen, setIsPassFormOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isFetchingMeta, setIsFetchingMeta] = useState(false);
   const [newProject, setNewProject] = useState({
     title: "",
     category: "COMMERCIAL",
@@ -67,6 +68,44 @@ export default function AdminDashboard() {
       ...prev,
       gallery: prev.gallery.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleFetchVimeoMeta = async () => {
+    const url = newProject.media_url;
+    if (!url || !url.includes('vimeo.com')) {
+      showMessage("Please enter a valid Vimeo URL first", "error");
+      return;
+    }
+
+    setIsFetchingMeta(true);
+    try {
+      // Use Vimeo oEmbed API
+      const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
+      if (!res.ok) throw new Error("Failed to fetch Vimeo metadata");
+      
+      const data = await res.json();
+      
+      // Extract title and year
+      // The user wants 'name/title' and 'year'
+      // Example title: "Directors showreel Elizabeth Kalinin 2025"
+      let year = newProject.year;
+      if (data.upload_date) {
+        year = data.upload_date.split('-')[0];
+      }
+
+      setNewProject(prev => ({
+        ...prev,
+        title: data.title || prev.title,
+        year: year
+      }));
+      
+      showMessage("Vimeo details fetched successfully");
+    } catch (error) {
+      console.error(error);
+      showMessage("Error fetching Vimeo details", "error");
+    } finally {
+      setIsFetchingMeta(false);
+    }
   };
   const [newPass, setNewPass] = useState({
     pass_code: "",
@@ -397,22 +436,33 @@ export default function AdminDashboard() {
                       className="w-full bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
                       placeholder="https://..."
                     />
-                    <label className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer hover:text-black text-gray-400 transition-colors flex items-center gap-2">
-                       <input 
-                          type="file" 
-                          className="hidden" 
-                          onChange={handleFileUpload}
-                          disabled={isUploading}
-                       />
-                       {isUploading ? (
-                         <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING...</span>
-                       ) : (
-                         <div className="flex items-center gap-1">
-                           <span className="text-[10px] uppercase font-bold">Upload File</span>
-                           <Upload size={14} />
-                         </div>
-                       )}
-                    </label>
+                    <div className="flex flex-col gap-2">
+                       <label className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer hover:text-black text-gray-400 transition-colors flex items-center gap-4">
+                          <input 
+                              type="file" 
+                              className="hidden" 
+                              onChange={handleFileUpload}
+                              disabled={isUploading}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleFetchVimeoMeta}
+                            disabled={isFetchingMeta || !newProject.media_url.includes('vimeo.com')}
+                            className="text-[10px] uppercase font-bold text-black border-r border-black/10 pr-4 disabled:opacity-30 flex items-center gap-1"
+                          >
+                            {isFetchingMeta ? "FETCHING..." : "FETCH DETAILS"}
+                            {!isFetchingMeta && <LinkIcon size={12} />}
+                          </button>
+                          {isUploading ? (
+                            <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING...</span>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] uppercase font-bold">Upload File</span>
+                              <Upload size={14} />
+                            </div>
+                          )}
+                       </label>
+                    </div>
                   </div>
                   <p className="text-[10px] text-gray-400 italic">Accepts direct URLs or local file uploads to the server.</p>
                 </div>
