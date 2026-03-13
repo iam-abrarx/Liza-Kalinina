@@ -10,7 +10,6 @@ const CATEGORIES = [
   "Commercials",
   "Music Videos",
   "Narrative",
-  "Fashion",
   "Stills",
   "Featured",
 ];
@@ -22,6 +21,12 @@ const CATEGORY_MAP: Record<string, string> = {
   "Fashion": "FASHION",
   "Stills": "STILLS",
   "Featured": "PREMIERE"
+};
+
+const getVimeoId = (url: string) => {
+  if (!url) return null;
+  const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  return match ? match[1] : null;
 };
 
 const getMediaUrl = (url: string) => {
@@ -550,7 +555,14 @@ export default function Home() {
                   </div>
                 )}
 
-                {getMediaUrl(selectedProject.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+                {getVimeoId(selectedProject.media_url) ? (
+                  <iframe
+                    src={`https://player.vimeo.com/video/${getVimeoId(selectedProject.media_url)}?autoplay=1&title=0&byline=0&portrait=0`}
+                    className="w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : getMediaUrl(selectedProject.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
                   <video 
                     src={getMediaUrl(selectedProject.media_url)} 
                     autoPlay 

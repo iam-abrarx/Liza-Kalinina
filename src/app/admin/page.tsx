@@ -241,6 +241,12 @@ export default function AdminDashboard() {
     }
   };
 
+  const getVimeoId = (url: string) => {
+    if (!url) return null;
+    const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    return match ? match[1] : null;
+  };
+
   const getMediaUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
@@ -313,8 +319,12 @@ export default function AdminDashboard() {
               projects.map(p => (
                 <div key={p.id} className="p-4 border border-black/10 bg-white flex justify-between items-center group hover:border-black/30 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-20 aspect-video bg-gray-100 overflow-hidden border border-black/5">
-                      {getMediaUrl(p.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+                    <div className="w-20 aspect-video bg-zinc-900 overflow-hidden border border-black/5 flex items-center justify-center">
+                      {getVimeoId(p.media_url) ? (
+                        <div className="flex flex-col items-center">
+                          <span className="text-[8px] font-bold text-white/40">VIMEO</span>
+                        </div>
+                      ) : getMediaUrl(p.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
                         <video src={getMediaUrl(p.media_url)} muted className="w-full h-full object-cover" />
                       ) : (
                         <img src={getMediaUrl(p.media_url)} alt="" className="w-full h-full object-cover" />
@@ -412,7 +422,6 @@ export default function AdminDashboard() {
                     <option value="COMMERCIAL">Commercials</option>
                     <option value="MUSIC_VIDEO">Music Videos</option>
                     <option value="NARRATIVE">Narrative</option>
-                    <option value="FASHION">Fashion</option>
                     <option value="STILLS">Stills</option>
                     <option value="PREMIERE">Featured (Private)</option>
                   </select>
@@ -426,9 +435,44 @@ export default function AdminDashboard() {
                     className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Media URL (HLS/Direct)</label>
-                  <div className="relative group">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400">Media URL (Vimeo link or direct video)</label>
+                    <div className="flex items-center gap-4">
+                      {/* Fetch Button */}
+                      <button
+                        type="button"
+                        onClick={handleFetchVimeoMeta}
+                        disabled={isFetchingMeta || !newProject.media_url.includes('vimeo.com')}
+                        className="text-[10px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-1 transition-colors"
+                        title="Auto-fill title and year from Vimeo"
+                      >
+                        {isFetchingMeta ? "FETCHING..." : "FETCH DETAILS"}
+                        {!isFetchingMeta && <LinkIcon size={12} />}
+                      </button>
+
+                      <div className="h-3 w-[1px] bg-black/10" />
+
+                      {/* Upload Button */}
+                      <label className="cursor-pointer hover:text-black text-gray-400 transition-colors flex items-center gap-2">
+                        <input 
+                            type="file" 
+                            className="hidden" 
+                            onChange={handleFileUpload}
+                            disabled={isUploading}
+                        />
+                        {isUploading ? (
+                          <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING...</span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] uppercase font-bold text-gray-500 hover:text-black">Upload File</span>
+                            <Upload size={14} className="text-gray-400" />
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                  <div className="relative">
                     <input 
                       required
                       value={newProject.media_url}
@@ -436,35 +480,8 @@ export default function AdminDashboard() {
                       className="w-full bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
                       placeholder="https://..."
                     />
-                    <div className="flex flex-col gap-2">
-                       <label className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer hover:text-black text-gray-400 transition-colors flex items-center gap-4">
-                          <input 
-                              type="file" 
-                              className="hidden" 
-                              onChange={handleFileUpload}
-                              disabled={isUploading}
-                          />
-                          <button
-                            type="button"
-                            onClick={handleFetchVimeoMeta}
-                            disabled={isFetchingMeta || !newProject.media_url.includes('vimeo.com')}
-                            className="text-[10px] uppercase font-bold text-black border-r border-black/10 pr-4 disabled:opacity-30 flex items-center gap-1"
-                          >
-                            {isFetchingMeta ? "FETCHING..." : "FETCH DETAILS"}
-                            {!isFetchingMeta && <LinkIcon size={12} />}
-                          </button>
-                          {isUploading ? (
-                            <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING...</span>
-                          ) : (
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] uppercase font-bold">Upload File</span>
-                              <Upload size={14} />
-                            </div>
-                          )}
-                       </label>
-                    </div>
                   </div>
-                  <p className="text-[10px] text-gray-400 italic">Accepts direct URLs or local file uploads to the server.</p>
+                  <p className="text-[10px] text-gray-400 italic">Supports Vimeo links and direct video/HLS URLs.</p>
                 </div>
               </div>
 
