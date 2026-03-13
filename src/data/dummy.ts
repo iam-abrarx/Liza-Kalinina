@@ -5,7 +5,7 @@ export const DUMMY_PROJECTS = [
     "title": "QDQ",
     "category": "PREMIERE",
     "year": "2026",
-    "media_url": "/Liza-Kalinina/uploads/1772746916857-Spec-commercial---SONY.mp4",
+    "media_url": "/uploads/1772746916857-Spec-commercial---SONY.mp4",
     "role": "Director of Photography",
     "director": "WQFQ",
     "client": "WF",
@@ -22,7 +22,7 @@ export const DUMMY_PROJECTS = [
     "title": "asas",
     "category": "PREMIERE",
     "year": "2026",
-    "media_url": "/Liza-Kalinina/uploads/1772747567960-A-rendez-vous.mp4",
+    "media_url": "/uploads/1772747567960-A-rendez-vous.mp4",
     "role": "Director of Photography",
     "director": "asaas",
     "client": "as",
@@ -39,7 +39,7 @@ export const DUMMY_PROJECTS = [
     "title": "miiddd",
     "category": "FASHION",
     "year": "2026",
-    "media_url": "/Liza-Kalinina/uploads/1772748055329-woman-surrounded-by-clothing-pile_23-2150950893.avif",
+    "media_url": "/uploads/1772748055329-woman-surrounded-by-clothing-pile_23-2150950893.avif",
     "role": "Director of Photography",
     "director": "asas",
     "client": "asas",
@@ -56,7 +56,7 @@ export const DUMMY_PROJECTS = [
     "title": "Late motion",
     "category": "FASHION",
     "year": "2026",
-    "media_url": "/Liza-Kalinina/uploads/1772750276132-fashion_blog_styling_blog_two-models-min-1024x683.jpg",
+    "media_url": "/uploads/1772750276132-fashion_blog_styling_blog_two-models-min-1024x683.jpg",
     "role": "Director of Photography",
     "director": "Lizi",
     "client": "DEVA",
@@ -65,9 +65,9 @@ export const DUMMY_PROJECTS = [
     "description": "Late motion Late motion",
     "long_description": "ful story behin Late motion Late motionLate motion",
     "gallery": [
-      "/Liza-Kalinina/uploads/1772750201941-fashion_blog_styling_blog_two-models-min-1024x683.jpg",
-      "/Liza-Kalinina/uploads/1772750205154-360_F_266043654_d8XqhGWOnhhmIfjmUfe0ufB060Wr5vDY.jpg",
-      "/Liza-Kalinina/uploads/1772750213202-360_F_266043643_8DINB2Qqk1QCElisMIRncmfdtVJJYPbX.jpg"
+      "/uploads/1772750201941-fashion_blog_styling_blog_two-models-min-1024x683.jpg",
+      "/uploads/1772750205154-360_F_266043654_d8XqhGWOnhhmIfjmUfe0ufB060Wr5vDY.jpg",
+      "/uploads/1772750213202-360_F_266043643_8DINB2Qqk1QCElisMIRncmfdtVJJYPbX.jpg"
     ],
     "is_public": true,
     "sort_order": 0

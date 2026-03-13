@@ -202,6 +202,13 @@ export default function AdminDashboard() {
     }
   };
 
+  const getMediaUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+    const cleanUrl = url.replace(/^\/Liza-Kalinina/, '');
+    return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
+  };
+
   if (!isAuthenticated) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#111] text-white font-body px-4">
@@ -268,10 +275,10 @@ export default function AdminDashboard() {
                 <div key={p.id} className="p-4 border border-black/10 bg-white flex justify-between items-center group hover:border-black/30 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-20 aspect-video bg-gray-100 overflow-hidden border border-black/5">
-                      {p.media_url.match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
-                        <video src={p.media_url} muted className="w-full h-full object-cover" />
+                      {getMediaUrl(p.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+                        <video src={getMediaUrl(p.media_url)} muted className="w-full h-full object-cover" />
                       ) : (
-                        <img src={p.media_url} alt="" className="w-full h-full object-cover" />
+                        <img src={getMediaUrl(p.media_url)} alt="" className="w-full h-full object-cover" />
                       )}
                     </div>
                     <div>
@@ -299,7 +306,7 @@ export default function AdminDashboard() {
         {/* Ticket Passes Column */}
         <section>
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-display">Premiere Ticket Passes</h2>
+            <h2 className="text-2xl font-display">Featured Access Passes</h2>
             <button 
               onClick={() => setIsPassFormOpen(true)}
               className="flex items-center gap-2 text-sm uppercase tracking-wider border border-black px-4 py-2 hover:bg-black/5 transition-colors"
@@ -368,7 +375,7 @@ export default function AdminDashboard() {
                     <option value="NARRATIVE">Narrative</option>
                     <option value="FASHION">Fashion</option>
                     <option value="STILLS">Stills</option>
-                    <option value="PREMIERE">Premiere (Private)</option>
+                    <option value="PREMIERE">Featured (Private)</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -534,7 +541,7 @@ export default function AdminDashboard() {
               <X size={24} strokeWidth={1} />
             </button>
             
-            <h2 className="text-2xl font-display italic mb-8">Generate Ticket Pass</h2>
+            <h2 className="text-2xl font-display italic mb-8">Generate Access Pass</h2>
 
             <form onSubmit={handleCreatePass} className="flex flex-col gap-6">
               <div className="flex flex-col gap-2">
@@ -556,7 +563,7 @@ export default function AdminDashboard() {
                   onChange={e => setNewPass({...newPass, linked_project_id: e.target.value})}
                   className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium appearance-none"
                 >
-                  <option value="">Select a Premiere project...</option>
+                  <option value="">Select a Featured project...</option>
                   {projects.filter(p => p.category === 'PREMIERE').map(p => (
                     <option key={p.id} value={p.id}>{p.title}</option>
                   ))}

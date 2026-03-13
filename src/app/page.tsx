@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { Lock, ArrowRight, X, Plus, LogOut, Settings, Sparkles, Wand2 } from "lucide-react";
+import { Lock, ArrowRight, X, Plus, LogOut } from "lucide-react";
 import { DUMMY_PROJECTS, DUMMY_PASSES } from "@/data/dummy";
 
 const CATEGORIES = [
@@ -12,7 +12,7 @@ const CATEGORIES = [
   "Narrative",
   "Fashion",
   "Stills",
-  "Premiere",
+  "Featured",
 ];
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -21,68 +21,93 @@ const CATEGORY_MAP: Record<string, string> = {
   "Narrative": "NARRATIVE",
   "Fashion": "FASHION",
   "Stills": "STILLS",
-  "Premiere": "PREMIERE"
+  "Featured": "PREMIERE"
 };
+
+const getMediaUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+  // Remove legacy prefix if it exists
+  const cleanUrl = url.replace(/^\/Liza-Kalinina/, '');
+  // Ensure it starts with /
+  return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
+};
+
+function LoadingScreen({ onComplete }: { onComplete: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 2500);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }}
+      className="fixed inset-0 z-[500] bg-[var(--color-brand-bg)] flex flex-col items-center justify-center pointer-events-none"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <div className="overflow-hidden">
+          <motion.h1 
+            initial={{ y: 60 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="text-4xl md:text-6xl font-display italic tracking-tighter"
+          >
+            Liza Kalinina
+          </motion.h1>
+        </div>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.4 }}
+          transition={{ delay: 0.8, duration: 1 }}
+          className="flex flex-col items-center gap-8"
+        >
+          <p className="text-[10px] uppercase tracking-[0.5em] font-medium">Director of Photography</p>
+          
+          {/* Minimalist Shutter Loader */}
+          <div className="relative w-12 h-12 flex items-center justify-center">
+            <motion.div 
+              animate={{ rotate: 180 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 rounded-full border border-black/5"
+            >
+              {[0, 60, 120, 180, 240, 300].map((deg) => (
+                <div 
+                  key={deg}
+                  style={{ transform: `rotate(${deg}deg) translateY(-50%)` }}
+                  className="absolute top-1/2 left-1/2 w-6 h-[1px] bg-black/10 origin-left"
+                />
+              ))}
+            </motion.div>
+            <div className="w-4 h-4 rounded-full border border-black/20" />
+          </div>
+        </motion.div>
+      </div>
+      
+      {/* Cinematic Reveal Bars */}
+      <motion.div 
+        initial={{ scaleY: 1 }}
+        animate={{ scaleY: 0 }}
+        transition={{ delay: 2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute inset-0 bg-black/5 origin-top pointer-events-none"
+      />
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [projects, setProjects] = useState<any[]>([]);
   const [unlockedProjects, setUnlockedProjects] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState("Commercials");
-  const [showPremiereModal, setShowPremiereModal] = useState(false);
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
   const [ticketPass, setTicketPass] = useState("");
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [premiereError, setPremiereError] = useState("");
   const [hasPlayedTadam, setHasPlayedTadam] = useState(false);
-  
-  // Design Lab State
-  const [showDesignLab, setShowDesignLab] = useState(false);
-  const [heroEffect, setHeroEffect] = useState('reveal');
-  const [listEffect, setListEffect] = useState('stagger');
-  const [animConfig, setAnimConfig] = useState({
-    duration: 0.8,
-    delay: 0,
-    ease: "easeOut" as any
-  });
-
-  const HERO_PRESETS = {
-    reveal: {
-      initial: { y: 100, opacity: 0 },
-      animate: { y: 0, opacity: 1 },
-      transition: { duration: animConfig.duration, delay: animConfig.delay, ease: animConfig.ease }
-    },
-    blur: {
-      initial: { filter: "blur(20px)", opacity: 0 },
-      animate: { filter: "blur(0px)", opacity: 1 },
-      transition: { duration: animConfig.duration, delay: animConfig.delay }
-    },
-    typewriter: {
-      initial: { opacity: 0 },
-      animate: { opacity: 1 },
-      transition: { duration: 0.1, staggerChildren: 0.05 }
-    },
-    bounce: {
-      initial: { scale: 0.5, opacity: 0 },
-      animate: { scale: 1, opacity: 1 },
-      transition: { type: "spring", stiffness: 100, damping: 10 } as any
-    }
-  };
-
-  const LIST_PRESETS = {
-    stagger: {
-      initial: { x: -20, opacity: 0 },
-      animate: { x: 0, opacity: 1 }
-    },
-    fade: {
-      initial: { opacity: 0 },
-      animate: { opacity: 1 }
-    },
-    slideUp: {
-      initial: { y: 30, opacity: 0 },
-      animate: { y: 0, opacity: 1 }
-    }
-  };
   
   const fetchProjects = async () => {
     try {
@@ -136,7 +161,7 @@ export default function Home() {
           return;
         }
       }
-      if (!isSilent) setPremiereError("Invalid Ticket Pass");
+      if (!isSilent) setPremiereError("Invalid Access Code");
     } finally {
       if (!isSilent) setIsValidating(false);
     }
@@ -153,8 +178,8 @@ export default function Home() {
       if (!current.includes(code)) {
         localStorage.setItem('unlocked_tickets', JSON.stringify([...current, code]));
       }
-      setActiveCategory("Premiere");
-      setShowPremiereModal(false);
+      setActiveCategory("Featured");
+      setShowFeaturedModal(false);
       setTicketPass("");
     }
   };
@@ -164,11 +189,11 @@ export default function Home() {
     await validatePass(ticketPass);
   };
 
-  const handleLockPremiere = () => {
+  const handleLockFeatured = () => {
     localStorage.removeItem('unlocked_tickets');
     setUnlockedProjects([]);
     setActiveCategory("Commercials");
-    setShowPremiereModal(false);
+    setShowFeaturedModal(false);
   };
 
   const { scrollYProgress } = useScroll({
@@ -178,6 +203,7 @@ export default function Home() {
 
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
 
   const playTadam = () => {
     if (hasPlayedTadam) return;
@@ -188,26 +214,34 @@ export default function Home() {
   };
 
   const handleCategoryClick = (cat: string) => {
-    if (cat === "Premiere") {
+    if (cat === "Featured") {
       playTadam();
       // If we already have unlocked content, just show the tab.
       if (unlockedProjects.length > 0) {
-        setActiveCategory("Premiere");
+        setActiveCategory("Featured");
       } else {
-        setShowPremiereModal(true);
+        setShowFeaturedModal(true);
       }
     } else {
       setActiveCategory(cat);
-      setShowPremiereModal(false);
+      setShowFeaturedModal(false);
     }
   };
 
   return (
     <main className="min-h-screen bg-[var(--color-brand-bg)]" ref={containerRef}>
-      
-      {/* Dynamic Premiere Gate Modal */}
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <LoadingScreen key="loader" onComplete={() => setIsLoading(false)} />
+        ) : (
+          <motion.div 
+            key="main-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+          >
       <AnimatePresence>
-        {showPremiereModal && (
+        {showFeaturedModal && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -215,7 +249,7 @@ export default function Home() {
             className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-6 text-white"
           >
             <button 
-              onClick={() => setShowPremiereModal(false)}
+              onClick={() => setShowFeaturedModal(false)}
               className="absolute top-8 right-8 md:top-12 md:right-12 text-white/50 hover:text-white transition-colors"
             >
               <X size={32} strokeWidth={1} />
@@ -230,9 +264,9 @@ export default function Home() {
             >
               <div className="flex flex-col gap-6">
                 <Lock size={48} strokeWidth={1} className="mx-auto text-red-600 animate-pulse" />
-                <h2 className="text-4xl md:text-5xl font-display italic">Premiere Access</h2>
+                <h2 className="text-4xl md:text-5xl font-display italic">Featured Access</h2>
                 <p className="text-sm text-white/40 leading-relaxed max-w-xs mx-auto">
-                  Enter your unique ticket pass to unlock private screenings and confidential project treatments.
+                  Enter your unique access code to unlock featured screenings and confidential project treatments.
                 </p>
               </div>
 
@@ -240,7 +274,7 @@ export default function Home() {
                 <div className="relative w-full">
                   <input 
                     type="text"
-                    placeholder="Enter Secret Pass Code"
+                    placeholder="Enter Access Code"
                     value={ticketPass}
                     onChange={(e) => setTicketPass(e.target.value)}
                     className="w-full bg-transparent border-b border-white/20 focus:border-white py-6 text-center text-2xl tracking-[0.3em] font-mono outline-none transition-colors uppercase placeholder:text-white/10"
@@ -259,7 +293,7 @@ export default function Home() {
                   className="mt-8 flex items-center justify-between w-full border border-white/20 hover:bg-white hover:text-black px-8 py-4 rounded-full transition-all group disabled:opacity-50"
                 >
                   <span className="text-sm uppercase tracking-widest font-medium">
-                    {isValidating ? "Validating Pass..." : "Validate Ticket"}
+                    {isValidating ? "Validating..." : "Unlock Access"}
                   </span>
                   <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
                 </button>
@@ -280,7 +314,7 @@ export default function Home() {
           style={{ 
             y: heroY, 
             opacity: heroOpacity, 
-            scale: useTransform(scrollYProgress, [0, 1], [1, 1.05]) 
+            scale: heroScale
           }}
           className="absolute inset-0 z-0 bg-[var(--color-brand-bg)]"
         />
@@ -288,18 +322,19 @@ export default function Home() {
         {/* Massive Editorial Title */}
         <div className="z-10 text-center flex flex-col items-center pointer-events-none px-4">
           <motion.div
-            key={heroEffect}
-            initial={HERO_PRESETS[heroEffect as keyof typeof HERO_PRESETS].initial}
-            animate={HERO_PRESETS[heroEffect as keyof typeof HERO_PRESETS].animate}
-            transition={HERO_PRESETS[heroEffect as keyof typeof HERO_PRESETS].transition}
+            initial={{ y: 150, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center"
           >
             <span className="text-[var(--color-brand-ink)]/40 text-[10px] sm:text-xs tracking-[0.8em] uppercase font-bold mb-4 ml-4">
               The Works of
             </span>
-            <h1 className="text-[var(--color-brand-ink)] text-[clamp(3.5rem,15vw,15rem)] font-display italic leading-[0.75] tracking-tighter opacity-90 drop-shadow-[0_20px_50px_rgba(0,0,0,0.05)] select-none">
+            <motion.h1 
+              className="text-[var(--color-brand-ink)] text-[clamp(3.5rem,15vw,15rem)] font-display italic leading-[0.75] tracking-tighter opacity-90 drop-shadow-[0_20px_50px_rgba(0,0,0,0.05)] select-none cursor-default"
+            >
               Liza Kalinina
-            </h1>
+            </motion.h1>
           </motion.div>
           
           <motion.div 
@@ -323,7 +358,7 @@ export default function Home() {
       </section>
 
       <section 
-        className={`relative z-20 transition-colors duration-1000 ${activeCategory === "Premiere" ? "bg-black text-white" : "bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)]"} pt-24 pb-48 px-6 md:px-12 lg:px-24`}
+        className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-24 pb-48 px-6 md:px-12 lg:px-24"
       >
         <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row gap-12 lg:gap-24 xl:gap-32">
           
@@ -332,33 +367,33 @@ export default function Home() {
               {CATEGORIES.map((cat) => (
                 <div
                   key={cat}
-                  className={`flex items-center justify-between w-full group/prem ${cat === "Premiere" ? "mt-8 border-t border-current/10 pt-8" : ""}`}
+                  className={`flex items-center justify-between w-full group/prem ${cat === "Featured" ? "mt-2 border-t border-current/10 pt-4" : ""}`}
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
                     className={`text-left text-lg md:text-xl transition-all duration-500 ${
-                      activeCategory === cat && !showPremiereModal
-                        ? (activeCategory === "Premiere" ? "text-red-600 font-normal italic" : "text-[var(--color-brand-ink)] font-normal italic")
-                        : (activeCategory === "Premiere" ? "text-white/30 font-light hover:text-white" : "text-gray-400 font-light hover:text-gray-600")
+                      activeCategory === cat && !showFeaturedModal
+                        ? (activeCategory === "Featured" ? "text-red-600 font-normal italic" : "text-[var(--color-brand-ink)] font-normal italic")
+                        : "text-gray-400 font-light hover:text-gray-600"
                     }`}
                   >
-                    {cat === "Premiere" ? (
+                    {cat === "Featured" ? (
                       <span className="flex items-center gap-2">
-                         {cat} <span className={`inline-block w-2 h-2 rounded-full ${showPremiereModal ? 'bg-red-600' : 'bg-red-600/50'} transition-colors animate-pulse`} />
+                         {cat} <span className={`inline-block w-2 h-2 rounded-full ${showFeaturedModal ? 'bg-red-600' : 'bg-red-600/50'} transition-colors animate-pulse`} />
                       </span>
                     ) : (
                       cat
                     )}
                   </button>
                   
-                  {cat === "Premiere" && unlockedProjects.length > 0 && activeCategory === "Premiere" && (
+                  {cat === "Featured" && unlockedProjects.length > 0 && activeCategory === "Featured" && (
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleLockPremiere();
+                        handleLockFeatured();
                       }}
-                      className="p-2 hover:bg-white/10 rounded-full transition-all text-red-500"
-                      title="Stop Premiere Session"
+                      className="p-2 hover:bg-black/5 rounded-full transition-all text-red-500"
+                      title="End Featured Session"
                     >
                       <LogOut size={16} />
                     </button>
@@ -368,27 +403,21 @@ export default function Home() {
             </div>
           </aside>
 
-          <div className={`flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l ${activeCategory === "Premiere" ? "border-white/5" : "border-black/5"} pl-0 md:pl-16 lg:pl-32`}>
-            {[...projects, ...unlockedProjects].map((project: any, index: number) => {
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l border-black/5 pl-0 md:pl-16 lg:pl-32">
+            {[...projects, ...unlockedProjects].map((project: any) => {
               const dbCategory = CATEGORY_MAP[activeCategory];
               const isMatch = project.category === activeCategory || project.category === dbCategory;
               const isNarrative = activeCategory === "Narrative";
-              const mode = activeCategory === "Premiere" ? "theatrical" : "editorial";
+              const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
               
               if (!isMatch) return null;
-
-              const variants = {
-                initial: LIST_PRESETS[listEffect as keyof typeof LIST_PRESETS].initial,
-                animate: LIST_PRESETS[listEffect as keyof typeof LIST_PRESETS].animate
-              };
 
               if (isNarrative) {
                 return (
                   <motion.div
                     key={project.id}
-                    initial={variants.initial}
-                    whileInView={variants.animate}
-                    transition={{ duration: animConfig.duration, delay: index * 0.1 }}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     className="group border-b border-black/5 py-12 cursor-pointer relative"
                     onClick={() => setSelectedProject(project)}
@@ -416,98 +445,31 @@ export default function Home() {
                 );
               }
 
-              return (
-                <motion.article 
-                  key={project.id}
-                  initial={variants.initial}
-                  whileInView={variants.animate}
-                  transition={{ duration: animConfig.duration, delay: index * 0.1 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  className="flex flex-col gap-8 group"
-                >
-                <div 
-                  className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-white/5 shadow-2xl' : 'bg-gray-200'} overflow-hidden cursor-pointer`}
-                  onClick={() => setSelectedProject(project)}
-                >
-                  {project.media_url.match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
-                    <video 
-                      src={project.media_url} 
-                      muted 
-                      autoPlay 
-                      loop 
-                      playsInline
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    />
-                  ) : (
-                    <img 
-                      src={project.media_url} 
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    />
-                  )}
-                  <div className={`absolute inset-0 ${mode === 'theatrical' ? 'bg-gradient-to-t from-black/80 via-transparent to-transparent' : 'bg-black/0 group-hover:bg-black/10'} transition-all duration-500 flex flex-col items-center justify-center p-8`}>
-                     <span className={`opacity-0 group-hover:opacity-100 text-white border ${mode === 'theatrical' ? 'border-red-600' : 'border-white/50'} rounded-full px-12 py-4 uppercase tracking-[0.4em] text-[10px] transition-all duration-500 transform group-hover:translate-y-0 translate-y-8 backdrop-blur-sm`}>
-                       Screening
-                     </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-24 max-w-7xl">
-                  <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
-                    <h2 className={`text-4xl md:text-5xl lg:text-7xl ${mode === 'theatrical' ? 'text-white font-display italic tracking-tight' : 'text-[var(--color-brand-ink)]'}`}>
-                      {project.title}
-                    </h2>
-                    <p className={`text-xl italic font-display ${mode === 'theatrical' ? 'text-red-600' : 'text-gray-500'}`}>
-                      {project.category} · {project.year}
-                    </p>
-                    <p className={`text-base leading-relaxed max-w-xl mt-4 ${mode === 'theatrical' ? 'text-white/60' : 'text-gray-700'}`}>
-                      {project.description}
-                    </p>
-                  </div>
-
-                  <div className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-2 text-sm border-l ${mode === 'theatrical' ? 'border-white/10 text-white/40' : 'border-black/10 text-gray-500'} pl-6 lg:pl-8`}>
-                    <div className={`grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b ${mode === 'theatrical' ? 'border-white/5' : 'border-black/5'} pb-4`}>
-                      <span className="uppercase tracking-widest text-[9px] opacity-50">Role</span>
-                      <strong className={`font-normal ${mode === 'theatrical' ? 'text-white' : 'text-[var(--color-brand-ink)]'}`}>{project.role}</strong>
-                    </div>
-                    <div className={`grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b ${mode === 'theatrical' ? 'border-white/5' : 'border-black/5'} py-4`}>
-                      <span className="uppercase tracking-widest text-[9px] opacity-50">Director</span>
-                      <strong className={`font-normal ${mode === 'theatrical' ? 'text-white' : 'text-[var(--color-brand-ink)]'}`}>{project.director}</strong>
-                    </div>
-                    <div className={`grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b ${mode === 'theatrical' ? 'border-white/5' : 'border-black/5'} py-4`}>
-                      <span className="uppercase tracking-widest text-[9px] opacity-50">Client</span>
-                      <strong className={`font-normal ${mode === 'theatrical' ? 'text-white' : 'text-[var(--color-brand-ink)]'}`}>{project.client}</strong>
-                    </div>
-                    <div className={`grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b ${mode === 'theatrical' ? 'border-white/5' : 'border-black/5'} py-4`}>
-                      <span className="uppercase tracking-widest text-[9px] opacity-50">Studio</span>
-                      <strong className={`font-normal ${mode === 'theatrical' ? 'text-white' : 'text-[var(--color-brand-ink)]'}`}>{project.production_company}</strong>
-                    </div>
-                    {project.awards && (
-                      <div className={`mt-6 pt-2 font-normal italic font-display ${mode === 'theatrical' ? 'text-red-600/80' : 'text-[#b09e8d]'}`}>
-                        {project.awards}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.article>
-              );
-            })}
+                return (
+                  <ProjectCard 
+                    key={project.id} 
+                    project={project} 
+                    mode={mode} 
+                    onSelect={setSelectedProject} 
+                  />
+                );
+              })}
             
-            {activeCategory === "Premiere" && (
+            {activeCategory === "Featured" && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="pt-16 pb-32 border-t border-white/5 flex flex-col items-center gap-8"
+                className="pt-16 pb-32 border-t border-black/5 flex flex-col items-center gap-8"
               >
                 <div className="text-center space-y-2">
-                  <p className="text-sm uppercase tracking-[0.2em] text-white/40">Have another ticket?</p>
-                  <h3 className="text-3xl font-display italic text-white/90">Unlock Exclusive Content</h3>
+                  <p className="text-sm uppercase tracking-[0.2em] text-black/40">Have another access code?</p>
+                  <h3 className="text-3xl font-display italic text-[var(--color-brand-ink)]/90">Unlock More Featured Content</h3>
                 </div>
                 <button 
-                  onClick={() => setShowPremiereModal(true)}
-                  className="flex items-center gap-4 border border-white/20 hover:border-red-600 hover:bg-red-600 px-12 py-5 rounded-full text-white transition-all group"
+                  onClick={() => setShowFeaturedModal(true)}
+                  className="flex items-center gap-4 border border-black/10 hover:border-red-600 hover:bg-red-600 px-12 py-5 rounded-full text-[var(--color-brand-ink)] hover:text-white transition-all group"
                 >
-                  <span className="text-sm uppercase tracking-widest font-medium">Enter New Pass</span>
+                  <span className="text-sm uppercase tracking-widest font-medium">Enter New Code</span>
                   <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                 </button>
               </motion.div>
@@ -515,22 +477,37 @@ export default function Home() {
 
             {/* Filter fallback state */}
             {([...projects, ...unlockedProjects]).filter((p: any) => p.category === activeCategory || p.category === CATEGORY_MAP[activeCategory]).length === 0 && (
-               <div className={`py-32 text-center italic font-display text-xl ${activeCategory === "Premiere" ? "text-white/40" : "text-gray-400"}`}>
+               <div className="py-32 text-center italic font-display text-xl text-gray-400">
                  No projects loaded for {activeCategory} yet.
-                 {activeCategory === "Premiere" && (
+                 {activeCategory === "Featured" && (
                    <button 
-                     onClick={() => setShowPremiereModal(true)}
+                     onClick={() => setShowFeaturedModal(true)}
                      className="block mx-auto mt-8 text-red-600 border-b border-red-600/30 text-sm uppercase tracking-widest pb-1 hover:border-red-600 transition-colors"
                    >
-                     Enter your pass to unlock works
+                     Enter your code to unlock featured works
                    </button>
                  )}
                </div>
             )}
           </div>
-          
         </div>
       </section>
+
+      {/* Cinematic Footer Section */}
+      <footer className="py-8 px-6 md:px-12 lg:px-24 border-t border-black/5">
+        <div className="max-w-screen-2xl mx-auto flex flex-col items-center">
+
+          <div className="w-full flex flex-col md:flex-row justify-between items-center gap-8 mt-8 opacity-30 text-[9px] uppercase tracking-[0.5em] font-medium border-t border-black/5 pt-12">
+            <div className="flex gap-12">
+              <Link href="#" className="hover:opacity-100 transition-opacity">Instagram</Link>
+              <Link href="#" className="hover:opacity-100 transition-opacity">Vimeo</Link>
+              <Link href="#" className="hover:opacity-100 transition-opacity">IMDb</Link>
+            </div>
+            <span>© 2026 Liza Kalinina · All Rights Reserved</span>
+            <span className="hidden md:block">Based in Moscow / Worldwide</span>
+          </div>
+        </div>
+      </footer>
 
       {/* Theater Mode Overlay */}
       <AnimatePresence>
@@ -569,13 +546,13 @@ export default function Home() {
                 {selectedProject.category === 'PREMIERE' && (
                   <div className="absolute top-8 left-8 z-[210] flex items-center gap-3">
                     <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
-                    <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-white drop-shadow-md">Premiering Now</span>
+                    <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-white drop-shadow-md">Featured Now</span>
                   </div>
                 )}
 
-                {selectedProject.media_url.match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+                {getMediaUrl(selectedProject.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
                   <video 
-                    src={selectedProject.media_url} 
+                    src={getMediaUrl(selectedProject.media_url)} 
                     autoPlay 
                     loop 
                     controls
@@ -584,7 +561,7 @@ export default function Home() {
                   />
                 ) : (
                   <img 
-                    src={selectedProject.media_url} 
+                    src={getMediaUrl(selectedProject.media_url)} 
                     alt={selectedProject.title}
                      className="w-full h-full object-contain"
                   />
@@ -612,7 +589,7 @@ export default function Home() {
                       viewport={{ once: true }}
                       className="aspect-video bg-zinc-900 overflow-hidden"
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" />
+                      <img src={getMediaUrl(img)} alt="" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" />
                     </motion.div>
                   ))}
                 </div>
@@ -653,89 +630,144 @@ export default function Home() {
         </motion.div>
        )}
       </AnimatePresence>
-      {/* Design Lab Toggle */}
-      <button
-        onClick={() => setShowDesignLab(!showDesignLab)}
-        className="fixed bottom-8 left-8 z-[100] p-4 bg-white shadow-2xl rounded-full hover:scale-110 transition-transform text-black border border-black/5"
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </main>
+  );
+}
+
+function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, onSelect: (p: any) => void }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+
+  const scale = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0.8, 1, 1, 0.8]);
+  const opacity = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0, 1, 1, 0]);
+
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  const handleProjectClick = async () => {
+    if (mode === 'theatrical') {
+      onSelect(project);
+      return;
+    }
+
+    setIsCapturing(true);
+    // Simulate shutter speed
+    await new Promise(resolve => setTimeout(resolve, 400));
+    onSelect(project);
+    setIsCapturing(false);
+  };
+
+  return (
+    <motion.article 
+      ref={ref}
+      style={{ scale, opacity }}
+      className="flex flex-col gap-8 group"
+    >
+      <div 
+        className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-gray-200'} overflow-hidden cursor-pointer`}
+        onClick={handleProjectClick}
       >
-        <Wand2 size={24} className={showDesignLab ? 'text-red-600' : ''} />
-      </button>
-
-      <AnimatePresence>
-        {showDesignLab && (
-          <motion.div
-            initial={{ x: -400, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -400, opacity: 0 }}
-            className="fixed bottom-24 left-8 z-[100] w-80 bg-white/90 backdrop-blur-2xl p-6 rounded-3xl shadow-2xl border border-black/5 text-black flex flex-col gap-6"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-display italic">Design Lab</h3>
-              <button onClick={() => setShowDesignLab(false)}><X size={20} /></button>
-            </div>
-
-            <div>
-              <p className="text-[10px] uppercase tracking-widest opacity-50 mb-3">Hero Text Effect</p>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.keys(HERO_PRESETS).map(preset => (
-                  <button
-                    key={preset}
-                    onClick={() => setHeroEffect(preset)}
-                    className={`px-3 py-2 text-xs rounded-lg border transition-all ${
-                      heroEffect === preset ? 'bg-black text-white border-black' : 'border-black/10 hover:border-black/30'
-                    }`}
-                  >
-                    {preset}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-[10px] uppercase tracking-widest opacity-50 mb-3">List Entrance</p>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.keys(LIST_PRESETS).map(preset => (
-                  <button
-                    key={preset}
-                    onClick={() => setListEffect(preset)}
-                    className={`px-2 py-2 text-[10px] rounded-lg border transition-all ${
-                      listEffect === preset ? 'bg-black text-white border-black' : 'border-black/10 hover:border-black/30'
-                    }`}
-                  >
-                    {preset}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <p className="text-[10px] uppercase tracking-widest opacity-50">Customization</p>
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between text-[10px]">
-                  <span>Duration</span>
-                  <span>{animConfig.duration}s</span>
-                </div>
-                <input 
-                  type="range" min="0.1" max="2" step="0.1" 
-                  value={animConfig.duration} 
-                  onChange={(e) => setAnimConfig({...animConfig, duration: parseFloat(e.target.value)})}
-                  className="w-full h-1 bg-black/10 rounded-lg appearance-none cursor-pointer accent-black"
-                />
-              </div>
-            </div>
-
-            <button 
-              onClick={() => {
-                alert("Settings Saved locally! You can lock this design now.");
-                setShowDesignLab(false);
-              }}
-              className="w-full py-3 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors"
-            >
-              Apply to Production
-            </button>
-          </motion.div>
+        {getMediaUrl(project.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+          <video 
+            src={getMediaUrl(project.media_url)} 
+            muted 
+            autoPlay 
+            loop 
+            playsInline
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          />
+        ) : (
+          <img 
+            src={getMediaUrl(project.media_url)} 
+            alt={project.title}
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          />
         )}
-      </AnimatePresence>
-    </main>
+        <div className={`absolute inset-0 ${mode === 'theatrical' ? 'bg-gradient-to-t from-black/60 via-transparent to-transparent' : 'bg-black/0 group-hover:bg-black/20'} transition-all duration-500 flex flex-col items-center justify-center p-8`}>
+           {mode === 'theatrical' ? (
+             <span className="opacity-0 group-hover:opacity-100 text-white border border-red-600 rounded-full px-12 py-4 uppercase tracking-[0.4em] text-[10px] transition-all duration-500 transform group-hover:translate-y-0 translate-y-8 backdrop-blur-sm">
+               Screening
+             </span>
+           ) : (
+             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none p-6 flex flex-col justify-between">
+               {/* Viewfinder Corners */}
+               <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-white/80" />
+               <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-white/80" />
+               <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-white/80" />
+               <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-white/80" />
+               
+               {/* Center Shutter/Aperture - Minimalist */}
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                 <motion.div 
+                   animate={{ 
+                     rotate: isCapturing ? 90 : 0,
+                     scale: isCapturing ? 0.8 : 1
+                   }}
+                   transition={{ duration: 0.3, ease: "circOut" }}
+                   className="relative w-14 h-14 rounded-full border border-white/20 flex items-center justify-center overflow-hidden"
+                 >
+                   {/* Shutter Blades - Thinner */}
+                   {[0, 60, 120, 180, 240, 300].map((deg) => (
+                     <div 
+                       key={deg}
+                       style={{ transform: `rotate(${deg}deg) translateY(-50%)` }}
+                       className="absolute top-1/2 left-1/2 w-7 h-[1px] bg-white/30 origin-left"
+                     />
+                   ))}
+                   <div className="w-5 h-5 rounded-full border border-white/30" />
+                   <motion.div 
+                     animate={{ opacity: isCapturing ? 1 : 0 }}
+                     className="absolute inset-0 bg-white/20"
+                   />
+                 </motion.div>
+               </div>
+             </div>
+           )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-24 max-w-7xl">
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+          <h2 className={`text-4xl md:text-5xl lg:text-7xl ${mode === 'theatrical' ? 'text-[var(--color-brand-ink)] font-display italic tracking-tight' : 'text-[var(--color-brand-ink)]'}`}>
+            {project.title}
+          </h2>
+          <p className={`text-xl italic font-display ${mode === 'theatrical' ? 'text-red-600' : 'text-gray-500'}`}>
+            {project.category} · {project.year}
+          </p>
+          <p className={`text-base leading-relaxed max-w-xl mt-4 ${mode === 'theatrical' ? 'text-[var(--color-brand-ink)]/70' : 'text-gray-700'}`}>
+            {project.description}
+          </p>
+        </div>
+
+        <div className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-2 text-sm border-l border-black/10 text-gray-500 pl-6 lg:pl-8`}>
+          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 pb-4">
+            <span className="uppercase tracking-widest text-[9px] opacity-50">Role</span>
+            <strong className="font-normal text-[var(--color-brand-ink)]">{project.role}</strong>
+          </div>
+          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 py-4">
+            <span className="uppercase tracking-widest text-[9px] opacity-50">Director</span>
+            <strong className="font-normal text-[var(--color-brand-ink)]">{project.director}</strong>
+          </div>
+          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 py-4">
+            <span className="uppercase tracking-widest text-[9px] opacity-50">Client</span>
+            <strong className="font-normal text-[var(--color-brand-ink)]">{project.client}</strong>
+          </div>
+          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 py-4">
+            <span className="uppercase tracking-widest text-[9px] opacity-50">Studio</span>
+            <strong className="font-normal text-[var(--color-brand-ink)]">{project.production_company}</strong>
+          </div>
+          {project.awards && (
+            <div className={`mt-6 pt-2 font-normal italic font-display ${mode === 'theatrical' ? 'text-red-600/80' : 'text-[#b09e8d]'}`}>
+              {project.awards}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.article>
   );
 }
