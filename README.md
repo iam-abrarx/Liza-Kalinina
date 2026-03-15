@@ -42,6 +42,7 @@ Create a `.env` file in the root directory:
 
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/liza_dop"
+BLOB_READ_WRITE_TOKEN="your_vercel_blob_token_here"
 ```
 
 ### 4. Database Initialization
