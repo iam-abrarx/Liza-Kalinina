@@ -21,6 +21,7 @@ export default function AdminDashboard() {
     category: "COMMERCIAL",
     year: new Date().getFullYear().toString(),
     media_url: "",
+    thumbnail_url: "",
     role: "Director of Photography",
     director: "",
     client: "",
@@ -96,7 +97,8 @@ export default function AdminDashboard() {
       setNewProject(prev => ({
         ...prev,
         title: data.title || prev.title,
-        year: year
+        year: year,
+        thumbnail_url: data.thumbnail_url || prev.thumbnail_url
       }));
       
       showMessage("Vimeo details fetched successfully");
@@ -169,6 +171,7 @@ export default function AdminDashboard() {
             category: "COMMERCIAL",
             year: new Date().getFullYear().toString(),
             media_url: "",
+            thumbnail_url: "",
             role: "Director of Photography",
             director: "",
             client: "",
@@ -550,6 +553,42 @@ export default function AdminDashboard() {
                   className="bg-transparent border border-black/10 focus:border-black outline-none p-3 font-light text-sm"
                   placeholder="The full story behind the project. Exclusive details for Narrative mode..."
                 />
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Thumbnail / Cover Selection</label>
+                </div>
+                
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide py-2">
+                  {/* Candidates for Thumbnail */}
+                  {[
+                    newProject.media_url && !newProject.media_url.includes('vimeo.com') ? newProject.media_url : null,
+                    newProject.thumbnail_url && newProject.thumbnail_url.includes('vimeocdn.com') ? newProject.thumbnail_url : null,
+                    ...newProject.gallery
+                  ].filter(Boolean).map((url, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={() => setNewProject(prev => ({ ...prev, thumbnail_url: url as string }))}
+                      className={`min-w-[150px] aspect-video relative cursor-pointer border-2 transition-all ${
+                        newProject.thumbnail_url === url 
+                          ? 'border-black scale-[1.02]' 
+                          : 'border-transparent opacity-50 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={url as string} alt="" className="w-full h-full object-cover" />
+                      {newProject.thumbnail_url === url && (
+                        <div className="absolute top-2 right-2 bg-black text-white px-2 py-0.5 text-[8px] uppercase tracking-widest font-bold">COVER</div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {(!newProject.media_url || newProject.media_url.includes('vimeo.com')) && !newProject.thumbnail_url && newProject.gallery.length === 0 && (
+                     <div className="w-full py-6 border border-dashed border-black/5 flex items-center justify-center text-gray-400 italic text-[10px]">
+                        Add gallery photos or enter Media URL to pick a cover
+                     </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-col gap-4">

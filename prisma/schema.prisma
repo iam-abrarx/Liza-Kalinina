@@ -13,6 +13,7 @@ model Project {
   category           Category
   year               String
   media_url          String
+  thumbnail_url      String?
   role               String
   director           String
   client             String

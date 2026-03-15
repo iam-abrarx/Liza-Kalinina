@@ -684,9 +684,15 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
         className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-gray-200'} overflow-hidden cursor-pointer`}
         onClick={handleProjectClick}
       >
-        {getMediaUrl(project.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+        {getVimeoId(project.media_url) ? (
+          <img 
+            src={project.thumbnail_url || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
+            alt={project.title}
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          />
+        ) : getMediaUrl(project.thumbnail_url || project.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
           <video 
-            src={getMediaUrl(project.media_url)} 
+            src={getMediaUrl(project.thumbnail_url || project.media_url)} 
             muted 
             autoPlay 
             loop 
@@ -695,7 +701,7 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
           />
         ) : (
           <img 
-            src={getMediaUrl(project.media_url)} 
+            src={getMediaUrl(project.thumbnail_url || project.media_url)} 
             alt={project.title}
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
           />
