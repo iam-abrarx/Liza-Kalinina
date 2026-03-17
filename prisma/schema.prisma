@@ -13,19 +13,19 @@ model Project {
   category           Category
   year               String
   media_url          String
-  thumbnail_url      String?
   role               String
   director           String
   client             String
   production_company String
   awards             String?
   description        String
-  long_description   String?
-  gallery            String[]     @default([])
   is_public          Boolean      @default(true)
   sort_order         Int          @default(0)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
+  gallery            String[]     @default([])
+  long_description   String?
+  thumbnail_url      String?
   ticketPasses       TicketPass[]
 }
 
@@ -33,9 +33,9 @@ model TicketPass {
   id                String    @id @default(uuid())
   pass_code         String    @unique
   linked_project_id String
-  project           Project   @relation(fields: [linked_project_id], references: [id], onDelete: Cascade)
   expires_at        DateTime?
   createdAt         DateTime  @default(now())
+  project           Project   @relation(fields: [linked_project_id], references: [id], onDelete: Cascade)
 }
 
 enum Category {
