@@ -533,6 +533,9 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
             localStorage.setItem('unlocked_tickets', JSON.stringify([...current, unlockCode]));
           }
           
+          // Immediately open the unlocked project in theater mode
+          onSelect(data.project);
+          
           setUnlockCode("");
           return;
         }
