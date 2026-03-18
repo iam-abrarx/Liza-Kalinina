@@ -59,7 +59,8 @@ export default function AdminDashboard() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const newBlob = await upload(file.name, file, {
+        const uniqueName = `${Date.now()}-${file.name}`;
+        const newBlob = await upload(uniqueName, file, {
           access: 'public',
           handleUploadUrl: '/api/upload',
           onUploadProgress: (progress) => {
@@ -190,7 +191,8 @@ export default function AdminDashboard() {
 
     setIsUploading(true);
     try {
-      const newBlob = await upload(file.name, file, {
+      const uniqueName = `${Date.now()}-${file.name}`;
+      const newBlob = await upload(uniqueName, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
       });
