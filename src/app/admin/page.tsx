@@ -146,39 +146,84 @@ export default function AdminDashboard() {
     setIsGeneratingThumbs(true);
     setThumbnailSuggestions([]);
     try {
-      const video = document.createElement("video");
-      video.src = videoUrl;
-      video.crossOrigin = "anonymous";
-      video.muted = true;
-      video.playsInline = true;
+      const vimeoMatch = videoUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/);
       
-      await new Promise<void>((resolve, reject) => {
-        video.onloadeddata = () => resolve();
-        video.onerror = () => reject("Failed to load video");
-      });
+      if (vimeoMatch) {
+        // === Vimeo: fetch high-res covers from vumbnail API ===
+        const vimeoId = vimeoMatch[1];
+        const thumbs: string[] = [];
+        
+        // Vumbnail supports different sizes: _large, _medium, default
+        const sizes = ['', '_large'];
+        for (const size of sizes) {
+          thumbs.push(`https://vumbnail.com/${vimeoId}${size}.jpg`);
+        }
 
-      const duration = video.duration;
-      // Extract 5 frames across the video
-      const fractions = [0.1, 0.3, 0.5, 0.7, 0.9];
-      const thumbs: string[] = [];
+        // Also try Vimeo oEmbed for the official thumbnail
+        try {
+          const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.thumbnail_url) {
+              // Get max resolution by removing size suffix
+              const hiRes = data.thumbnail_url.replace(/_\d+x\d+/, '');
+              const midRes = data.thumbnail_url.replace(/_\d+x\d+/, '_1280x720');
+              thumbs.unshift(hiRes, midRes);
+            }
+          }
+        } catch { /* ignore fetch errors */ }
 
-      for (const frac of fractions) {
-        video.currentTime = duration * frac;
-        await new Promise<void>((resolve) => {
-          video.onseeked = () => resolve();
+        // Deduplicate
+        const unique = [...new Set(thumbs)];
+        setThumbnailSuggestions(unique);
+        showMessage(`${unique.length} Vimeo thumbnails found`);
+      } else {
+        // === Direct video: extract frames via canvas ===
+        const video = document.createElement("video");
+        video.src = videoUrl;
+        video.muted = true;
+        video.playsInline = true;
+        // Do NOT set crossOrigin for blob storage URLs — it causes canvas tainting
+
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => reject("Video load timed out after 15s"), 15000);
+          video.onloadeddata = () => { clearTimeout(timeout); resolve(); };
+          video.onerror = () => { clearTimeout(timeout); reject("Failed to load video"); };
         });
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-        thumbs.push(canvas.toDataURL("image/jpeg", 0.95));
+
+        const duration = video.duration;
+        const fractions = [0.1, 0.25, 0.5, 0.7, 0.9];
+        const thumbs: string[] = [];
+
+        for (const frac of fractions) {
+          video.currentTime = duration * frac;
+          await new Promise<void>((resolve) => {
+            const seekTimeout = setTimeout(resolve, 5000); // don't hang forever
+            video.onseeked = () => { clearTimeout(seekTimeout); resolve(); };
+          });
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+          try {
+            thumbs.push(canvas.toDataURL("image/jpeg", 0.95));
+          } catch {
+            // Canvas tainted — skip this frame
+            console.warn("Canvas tainted, skipping frame at", frac);
+          }
+        }
+        
+        if (thumbs.length > 0) {
+          setThumbnailSuggestions(thumbs);
+          showMessage(`${thumbs.length} thumbnails generated`);
+        } else {
+          showMessage("Could not extract frames — try uploading a custom cover instead", "error");
+        }
       }
-      setThumbnailSuggestions(thumbs);
-      showMessage("Thumbnails generated successfully");
     } catch (e) {
       console.error(e);
-      showMessage("Error generating thumbnails", "error");
+      showMessage(typeof e === 'string' ? e : "Error generating thumbnails", "error");
     } finally {
       setIsGeneratingThumbs(false);
     }
@@ -634,7 +679,7 @@ export default function AdminDashboard() {
                       </button>
 
                       {/* Generate Thumbnails Button */}
-                      {!newProject.media_url.includes('vimeo.com') && newProject.media_url && (
+                      {newProject.media_url && (
                         <>
                           <div className="h-3 w-[1px] bg-black/10" />
                           <button
