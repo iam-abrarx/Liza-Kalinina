@@ -194,6 +194,13 @@ export default function AdminDashboard() {
       setIsUploading(false);
     }
   };
+
+  const removeThumbnailCandidate = (url: string) => {
+    setThumbnailSuggestions(prev => prev.filter(t => t !== url));
+    if (newProject.thumbnail_url === url) {
+      setNewProject(prev => ({ ...prev, thumbnail_url: "" }));
+    }
+  };
   const [newPass, setNewPass] = useState({
     pass_code: "",
     linked_project_id: "",
@@ -736,7 +743,7 @@ export default function AdminDashboard() {
                   <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Thumbnail / Cover Selection</label>
                 </div>
                 
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide py-2">
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-black/10 scrollbar-track-transparent py-2 px-1">
                   {/* Candidates for Thumbnail */}
                   {[
                     newProject.media_url && !newProject.media_url.includes('vimeo.com') ? newProject.media_url : null,
@@ -754,8 +761,23 @@ export default function AdminDashboard() {
                       }`}
                     >
                       <img src={url as string} alt="" className="w-full h-full object-cover" />
+                      
+                      {/* Remove Button for Suggestions */}
+                      {thumbnailSuggestions.includes(url as string) && (
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeThumbnailCandidate(url as string);
+                          }}
+                          className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black"
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+
                       {newProject.thumbnail_url === url && (
-                        <div className="absolute top-2 right-2 bg-black text-white px-2 py-0.5 text-[8px] uppercase tracking-widest font-bold">COVER</div>
+                        <div className="absolute bottom-2 left-2 bg-black text-white px-2 py-0.5 text-[8px] uppercase tracking-widest font-bold">COVER</div>
                       )}
                     </div>
                   ))}
