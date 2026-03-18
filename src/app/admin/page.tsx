@@ -118,13 +118,16 @@ export default function AdminDashboard() {
     try {
       // Use Vimeo oEmbed API
       const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
-      if (!res.ok) throw new Error("Failed to fetch Vimeo metadata");
+      
+      if (res.status === 403 || res.status === 404) {
+        throw new Error("Private video detected. Vimeo blocks auto-fetch for password-protected links. Please enter details manually.");
+      }
+      
+      if (!res.ok) throw new Error("Failed to fetch metadata. Check if the link is correct.");
       
       const data = await res.json();
       
       // Extract title and year
-      // The user wants 'name/title' and 'year'
-      // Example title: "Directors showreel Elizabeth Kalinin 2025"
       let year = newProject.year;
       if (data.upload_date) {
         year = data.upload_date.split('-')[0];
@@ -138,9 +141,9 @@ export default function AdminDashboard() {
       }));
       
       showMessage("Vimeo details fetched successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showMessage("Error fetching Vimeo details", "error");
+      showMessage(error.message || "Error fetching Vimeo details", "error");
     } finally {
       setIsFetchingMeta(false);
     }
