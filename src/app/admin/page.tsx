@@ -71,8 +71,9 @@ export default function AdminDashboard() {
       } else {
         showMessage("Upload failed", "error");
       }
-    } catch (error) {
-      showMessage("Error uploading file", "error");
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      showMessage(error.message || "Error uploading file", "error");
     } finally {
       setIsUploading(false);
     }
