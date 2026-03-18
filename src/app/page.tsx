@@ -305,17 +305,24 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="absolute top-1/2 right-32 -translate-y-1/2 w-64 aspect-2-1 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none overflow-hidden rotate-3 group-hover:rotate-0 scale-90 group-hover:scale-100 z-10 shadow-2xl translate-x-12 group-hover:translate-x-0 hidden lg:block bg-zinc-900">
-                      {project.thumbnail_url ? (
-                        <img src={getMediaUrl(project.thumbnail_url)} alt="" className="w-full h-full object-cover" />
-                      ) : getMediaUrl(project.media_url).match(/\.(mp4|webm|ogg|mov)$/i) || getMediaUrl(project.media_url).includes('blob') ? (
-                        <video src={getMediaUrl(project.media_url)} muted autoPlay loop playsInline className="w-full h-full object-cover" />
-                      ) : getVimeoId(project.media_url) ? (
-                        <img src={`https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={getMediaUrl(project.media_url)} alt="" className="w-full h-full object-cover" />
-                      )}
-                    </div>
+                    {(() => {
+                      const mediaUrl = getMediaUrl(project.media_url || '');
+                      const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov)/i) || mediaUrl.includes('blob.vercel');
+                      const vimeoId = getVimeoId(project.media_url);
+                      return (
+                        <div className="absolute top-1/2 right-32 -translate-y-1/2 w-64 aspect-2-1 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none overflow-hidden rotate-3 group-hover:rotate-0 scale-90 group-hover:scale-100 z-10 shadow-2xl translate-x-12 group-hover:translate-x-0 hidden lg:block bg-zinc-900">
+                          {project.thumbnail_url ? (
+                            <img src={getMediaUrl(project.thumbnail_url)} alt="" className="w-full h-full object-cover" />
+                          ) : isVideo ? (
+                            <video src={mediaUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
+                          ) : vimeoId ? (
+                            <img src={`https://vumbnail.com/${vimeoId}.jpg`} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <img src={mediaUrl} alt="" className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                      );
+                    })()}
                   </motion.div>
                 );
               }
