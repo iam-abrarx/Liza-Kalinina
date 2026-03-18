@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
 
@@ -19,6 +19,17 @@ export default function AdminDashboard() {
   const [isFetchingMeta, setIsFetchingMeta] = useState(false);
   const [isGeneratingThumbs, setIsGeneratingThumbs] = useState(false);
   const [thumbnailSuggestions, setThumbnailSuggestions] = useState<string[]>([]);
+  const thumbnailScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollThumbnails = (direction: 'left' | 'right') => {
+    if (thumbnailScrollRef.current) {
+      const scrollAmount = 300;
+      thumbnailScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [newProject, setNewProject] = useState({
     title: "",
@@ -743,7 +754,27 @@ export default function AdminDashboard() {
                   <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Thumbnail / Cover Selection</label>
                 </div>
                 
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-black/10 scrollbar-track-transparent py-2 px-1">
+                <div className="relative group/scroll">
+                   {/* Scroll Arrows */}
+                   <button 
+                     type="button"
+                     onClick={() => scrollThumbnails('left')}
+                     className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover/scroll:opacity-100 transition-opacity hover:bg-black -left-2"
+                   >
+                     <ChevronLeft size={20} />
+                   </button>
+                   <button 
+                     type="button"
+                     onClick={() => scrollThumbnails('right')}
+                     className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover/scroll:opacity-100 transition-opacity hover:bg-black -right-2"
+                   >
+                     <ChevronRight size={20} />
+                   </button>
+
+                  <div 
+                    ref={thumbnailScrollRef}
+                    className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-black/10 scrollbar-track-transparent py-2 px-1 scroll-smooth"
+                  >
                   {/* Candidates for Thumbnail */}
                   {[
                     newProject.media_url && !newProject.media_url.includes('vimeo.com') ? newProject.media_url : null,
@@ -802,6 +833,7 @@ export default function AdminDashboard() {
                   </label>
                 </div>
               </div>
+            </div>
 
               <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-center">
