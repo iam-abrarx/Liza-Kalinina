@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
   const [isPassFormOpen, setIsPassFormOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isFetchingMeta, setIsFetchingMeta] = useState(false);
   const [isGeneratingThumbs, setIsGeneratingThumbs] = useState(false);
   const [thumbnailSuggestions, setThumbnailSuggestions] = useState<string[]>([]);
@@ -41,13 +42,18 @@ export default function AdminDashboard() {
     if (files.length === 0) return;
 
     setIsUploading(true);
+    setUploadProgress(0);
     const uploadedUrls: string[] = [];
 
     try {
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         const newBlob = await upload(file.name, file, {
           access: 'public',
           handleUploadUrl: '/api/upload',
+          onUploadProgress: (progress) => {
+            setUploadProgress(Math.round(((i * 100) + progress.percentage) / files.length));
+          }
         });
         if (newBlob.url) uploadedUrls.push(newBlob.url);
       }
@@ -607,7 +613,7 @@ export default function AdminDashboard() {
                             disabled={isUploading}
                         />
                         {isUploading ? (
-                          <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING...</span>
+                          <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING... {uploadProgress}%</span>
                         ) : (
                           <div className="flex items-center gap-1">
                             <span className="text-[10px] uppercase font-bold text-gray-500 hover:text-black">Upload File</span>
@@ -745,8 +751,14 @@ export default function AdminDashboard() {
                       onChange={(e) => handleFileUpload(e, true)}
                       disabled={isUploading}
                     />
-                    <Plus size={14} />
-                    <span className="text-[10px] uppercase font-bold tracking-widest">Add Picture</span>
+                    {isUploading ? (
+                      <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING... {uploadProgress}%</span>
+                    ) : (
+                      <>
+                        <Plus size={14} />
+                        <span className="text-[10px] uppercase font-bold tracking-widest">Add Picture</span>
+                      </>
+                    )}
                   </label>
                 </div>
                 
