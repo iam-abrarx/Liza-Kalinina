@@ -18,6 +18,7 @@ export default function AdminDashboard() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isFetchingMeta, setIsFetchingMeta] = useState(false);
   const [isGeneratingThumbs, setIsGeneratingThumbs] = useState(false);
+  const [thumbnailProgress, setThumbnailProgress] = useState(0);
   const [thumbnailSuggestions, setThumbnailSuggestions] = useState<string[]>([]);
   const thumbnailScrollRef = useRef<HTMLDivElement>(null);
 
@@ -116,31 +117,51 @@ export default function AdminDashboard() {
 
     setIsFetchingMeta(true);
     try {
-      // Use Vimeo oEmbed API
-      const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
-      
-      if (res.status === 403 || res.status === 404) {
-        throw new Error("Private video detected. Vimeo blocks auto-fetch for password-protected links. Please enter details manually.");
+      // Try multiple URL formats to maximize success rate
+      const urlsToTry: string[] = [url];
+
+      // For unlisted videos like vimeo.com/12345/abcdef, also try the clean ID-only URL
+      const unlistedMatch = url.match(/vimeo\.com\/(\d+)\/([a-zA-Z0-9]+)/);
+      if (unlistedMatch) {
+        // The full URL with hash should work for unlisted videos
+        urlsToTry.push(`https://vimeo.com/${unlistedMatch[1]}/${unlistedMatch[2]}`);
+        urlsToTry.push(`https://vimeo.com/${unlistedMatch[1]}`);
       }
-      
-      if (!res.ok) throw new Error("Failed to fetch metadata. Check if the link is correct.");
-      
-      const data = await res.json();
-      
+
+      // Deduplicate
+      const uniqueUrls = [...new Set(urlsToTry)];
+      let data: any = null;
+
+      for (const tryUrl of uniqueUrls) {
+        try {
+          const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(tryUrl)}`);
+          if (res.ok) {
+            data = await res.json();
+            break; // Success!
+          }
+        } catch { /* try next URL */ }
+      }
+
+      if (!data) {
+        throw new Error("Could not fetch details. This video may be password-protected or private. Please enter details manually.");
+      }
+
       // Extract title and year
       let year = newProject.year;
       if (data.upload_date) {
         year = data.upload_date.split('-')[0];
       }
 
+      // Also try to extract author/director info
       setNewProject(prev => ({
         ...prev,
         title: data.title || prev.title,
         year: year,
-        thumbnail_url: data.thumbnail_url || prev.thumbnail_url
+        thumbnail_url: data.thumbnail_url || prev.thumbnail_url,
+        director: data.author_name || prev.director
       }));
       
-      showMessage("Vimeo details fetched successfully");
+      showMessage(`Fetched: "${data.title}" (${year})`);
     } catch (error: any) {
       console.error(error);
       showMessage(error.message || "Error fetching Vimeo details", "error");
@@ -151,6 +172,7 @@ export default function AdminDashboard() {
 
   const generateThumbnails = async (videoUrl: string) => {
     setIsGeneratingThumbs(true);
+    setThumbnailProgress(0);
     setThumbnailSuggestions([]);
     try {
       const vimeoMatch = videoUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/);
@@ -160,11 +182,13 @@ export default function AdminDashboard() {
         const vimeoId = vimeoMatch[1];
         const thumbs: string[] = [];
         
+        setThumbnailProgress(20);
         // Vumbnail supports different sizes: _large, _medium, default
         const sizes = ['', '_large'];
         for (const size of sizes) {
           thumbs.push(`https://vumbnail.com/${vimeoId}${size}.jpg`);
         }
+        setThumbnailProgress(50);
 
         // Also try Vimeo oEmbed for the official thumbnail
         try {
@@ -180,9 +204,11 @@ export default function AdminDashboard() {
           }
         } catch { /* ignore fetch errors */ }
 
+        setThumbnailProgress(90);
         // Deduplicate
         const unique = [...new Set(thumbs)];
         setThumbnailSuggestions(unique);
+        setThumbnailProgress(100);
         showMessage(`${unique.length} Vimeo thumbnails found`);
       } else {
         // === Direct video: extract frames via canvas ===
@@ -192,17 +218,20 @@ export default function AdminDashboard() {
         video.playsInline = true;
         // Do NOT set crossOrigin for blob storage URLs — it causes canvas tainting
 
+        setThumbnailProgress(5);
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => reject("Video load timed out after 15s"), 15000);
           video.onloadeddata = () => { clearTimeout(timeout); resolve(); };
           video.onerror = () => { clearTimeout(timeout); reject("Failed to load video"); };
         });
+        setThumbnailProgress(15);
 
         const duration = video.duration;
         const fractions = [0.1, 0.25, 0.5, 0.7, 0.9];
         const thumbs: string[] = [];
 
-        for (const frac of fractions) {
+        for (let i = 0; i < fractions.length; i++) {
+          const frac = fractions[i];
           video.currentTime = duration * frac;
           await new Promise<void>((resolve) => {
             const seekTimeout = setTimeout(resolve, 5000); // don't hang forever
@@ -219,6 +248,8 @@ export default function AdminDashboard() {
             // Canvas tainted — skip this frame
             console.warn("Canvas tainted, skipping frame at", frac);
           }
+          // Update progress: 15% for loading + 85% spread across frames
+          setThumbnailProgress(Math.round(15 + ((i + 1) / fractions.length) * 85));
         }
         
         if (thumbs.length > 0) {
@@ -233,6 +264,7 @@ export default function AdminDashboard() {
       showMessage(typeof e === 'string' ? e : "Error generating thumbnails", "error");
     } finally {
       setIsGeneratingThumbs(false);
+      setThumbnailProgress(0);
     }
   };
 
@@ -715,7 +747,7 @@ export default function AdminDashboard() {
                             className="text-[10px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-1 transition-colors"
                             title="Generate high-quality thumbnails from this local video"
                           >
-                            {isGeneratingThumbs ? "GENERATING..." : "GENERATE THUMBNAILS"}
+                            {isGeneratingThumbs ? `GENERATING... ${thumbnailProgress}%` : "GENERATE THUMBNAILS"}
                           </button>
                         </>
                       )}
