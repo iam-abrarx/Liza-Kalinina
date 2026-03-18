@@ -11,10 +11,26 @@ export async function GET(request: Request) {
     const isAdmin = adminPassword === (process.env.ADMIN_PASSWORD || 'admin');
     
     const projects = await prisma.project.findMany({
-      where: isAdmin ? {} : { is_public: true },
       orderBy: { sort_order: 'asc' }
     });
-    return NextResponse.json(projects);
+    
+    if (isAdmin) {
+      return NextResponse.json(projects);
+    }
+
+    const sanitizedProjects = projects.map(p => {
+      if (!p.is_public && p.media_url && !p.media_url.includes('vimeo.com')) {
+        return {
+          ...p,
+          media_url: '',
+          long_description: '',
+          is_locked: true,
+        };
+      }
+      return p;
+    });
+
+    return NextResponse.json(sanitizedProjects);
   } catch (error) {
     console.error("Fetch Projects Error:", error);
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });

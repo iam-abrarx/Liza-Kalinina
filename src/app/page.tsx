@@ -108,11 +108,7 @@ export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
   const [unlockedProjects, setUnlockedProjects] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState("Commercials");
-  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
-  const [ticketPass, setTicketPass] = useState("");
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [isValidating, setIsValidating] = useState(false);
-  const [featuredError, setFeaturedError] = useState("");
   const [hasPlayedTadam, setHasPlayedTadam] = useState(false);
 
   const getMatchedProjects = () => {
@@ -143,68 +139,15 @@ export default function Home() {
 
   useEffect(() => {
     fetchProjects();
-    
-    // Recovery logic for persistent session
-    const savedTickets = JSON.parse(localStorage.getItem('unlocked_tickets') || '[]');
-    if (savedTickets.length > 0) {
-      savedTickets.forEach((code: string) => validatePass(code, true));
-    }
   }, []);
 
-  const validatePass = async (code: string, isSilent: boolean = false) => {
-    if (!code) return;
-    if (!isSilent) setIsValidating(true);
-    setFeaturedError("");
-
-    try {
-      const res = await fetch('/api/featured', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passCode: code })
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        if (data.project) {
-          handleSuccessfulValidation(data.project, code, isSilent);
-          return;
-        }
-      }
-      throw new Error("Validation failed");
-    } catch (error) {
-      if (!isSilent) setFeaturedError("Invalid Access Code");
-    } finally {
-      if (!isSilent) setIsValidating(false);
-    }
-  };
-
-  const handleSuccessfulValidation = (project: any, code: string, isSilent: boolean) => {
-    setUnlockedProjects(prev => {
-      if (prev.find(p => p.id === project.id)) return prev;
-      return [...prev, project];
-    });
-
-    if (!isSilent) {
-      const current = JSON.parse(localStorage.getItem('unlocked_tickets') || '[]');
-      if (!current.includes(code)) {
-        localStorage.setItem('unlocked_tickets', JSON.stringify([...current, code]));
-      }
+  const handleCategoryClick = (cat: string) => {
+    if (cat === "Featured") {
+      playTadam();
       setActiveCategory("Featured");
-      setShowFeaturedModal(false);
-      setTicketPass("");
+    } else {
+      setActiveCategory(cat);
     }
-  };
-
-  const handleTicketSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    await validatePass(ticketPass);
-  };
-
-  const handleLockFeatured = () => {
-    localStorage.removeItem('unlocked_tickets');
-    setUnlockedProjects([]);
-    setActiveCategory("Commercials");
-    setShowFeaturedModal(false);
   };
 
   const { scrollYProgress } = useScroll({
@@ -221,20 +164,6 @@ export default function Home() {
     return;
   };
 
-  const handleCategoryClick = (cat: string) => {
-    if (cat === "Featured") {
-      playTadam();
-      // If we already have unlocked content, just show the tab.
-      if (unlockedProjects.length > 0) {
-        setActiveCategory("Featured");
-      } else {
-        setShowFeaturedModal(true);
-      }
-    } else {
-      setActiveCategory(cat);
-      setShowFeaturedModal(false);
-    }
-  };
 
   return (
     <main className="min-h-screen bg-[var(--color-brand-bg)]" ref={containerRef}>
@@ -248,68 +177,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
           >
-      <AnimatePresence>
-        {showFeaturedModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-6 text-white"
-          >
-            <button 
-              onClick={() => setShowFeaturedModal(false)}
-              className="absolute top-8 right-8 md:top-12 md:right-12 text-white/50 hover:text-white transition-colors"
-            >
-              <X size={32} strokeWidth={1} />
-            </button>
-
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-              className="max-w-md w-full text-center flex flex-col items-center gap-12"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex flex-col gap-6">
-                <Lock size={48} strokeWidth={1} className="mx-auto text-white animate-pulse" />
-                <h2 className="text-4xl md:text-5xl font-display italic">Featured Access</h2>
-                <p className="text-sm text-white/40 leading-relaxed max-w-xs mx-auto">
-                  Enter your unique access code to unlock featured screenings and confidential project treatments.
-                </p>
-              </div>
-
-              <form onSubmit={handleTicketSubmit} className="w-full flex flex-col gap-4">
-                <div className="relative w-full">
-                  <input 
-                    type="text"
-                    placeholder="Enter Access Code"
-                    value={ticketPass}
-                    onChange={(e) => setTicketPass(e.target.value)}
-                    className="w-full bg-transparent border-b border-white/20 focus:border-white py-6 text-center text-2xl tracking-[0.3em] font-mono outline-none transition-colors uppercase placeholder:text-white/10"
-                    autoFocus
-                  />
-                  {featuredError && (
-                    <p className="absolute -bottom-8 inset-x-0 text-white/60 text-[10px] uppercase tracking-widest font-bold">
-                      {featuredError}
-                    </p>
-                  )}
-                </div>
-                
-                <button 
-                  type="submit"
-                  disabled={isValidating}
-                  className="mt-8 flex items-center justify-between w-full border border-white/20 hover:bg-white hover:text-black px-8 py-4 rounded-full transition-all group disabled:opacity-50"
-                >
-                  <span className="text-sm uppercase tracking-widest font-medium">
-                    {isValidating ? "Validating..." : "Unlock Access"}
-                  </span>
-                  <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
-                </button>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Global modal removed, replaced by inline ProjectCard unlocking */}
 
       <nav className="fixed top-0 w-full p-6 md:px-12 md:py-8 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-[var(--color-brand-bg)]/80 backdrop-blur-xl border-b border-[var(--color-brand-ink)]/5 transition-all duration-500">
         <Link href="/" className="text-xs md:text-sm tracking-[0.3em] uppercase font-bold">Liza Kalinina</Link>
@@ -380,14 +248,14 @@ export default function Home() {
                   <button
                     onClick={() => handleCategoryClick(cat)}
                     className={`text-left text-lg md:text-xl transition-all duration-500 ${
-                      activeCategory === cat && !showFeaturedModal
-                        ? (activeCategory === "Featured" ? "text-[var(--color-brand-ink)] font-normal italic" : "text-[var(--color-brand-ink)] font-normal italic")
+                      activeCategory === cat
+                        ? "text-[var(--color-brand-ink)] font-normal italic"
                         : "text-gray-400 font-light hover:text-gray-600"
                     }`}
                   >
                     {cat === "Featured" ? (
                       <span className="flex items-center gap-2">
-                         {cat} <span className={`inline-block w-2 h-2 rounded-full ${showFeaturedModal ? 'bg-black' : 'bg-black/20'} transition-colors animate-pulse`} />
+                         {cat} <span className="inline-block w-2 h-2 rounded-full bg-black/20 transition-colors animate-pulse" />
                       </span>
                     ) : (
                       cat
@@ -398,7 +266,8 @@ export default function Home() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleLockFeatured();
+                        localStorage.removeItem('unlocked_tickets');
+                        setUnlockedProjects([]);
                       }}
                       className="p-2 hover:bg-black/5 rounded-full transition-all text-black/40"
                       title="End Featured Session"
@@ -453,42 +322,21 @@ export default function Home() {
                   key={project.id} 
                   project={project} 
                   mode={mode} 
-                  onSelect={setSelectedProject} 
+                  onSelect={setSelectedProject}
+                  onUnlock={(unlockedProject) => {
+                    setUnlockedProjects(prev => {
+                      if (prev.find(p => p.id === unlockedProject.id)) return prev;
+                      return [...prev, unlockedProject];
+                    });
+                  }} 
                 />
               );
             })}
             
-            {activeCategory === "Featured" && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="pt-16 pb-32 border-t border-black/5 flex flex-col items-center gap-8"
-              >
-                <div className="text-center space-y-2">
-                  <p className="text-sm uppercase tracking-[0.2em] text-black/40">Have another access code?</p>
-                  <h3 className="text-3xl font-display italic text-[var(--color-brand-ink)]/90">Unlock More Featured Content</h3>
-                </div>
-                <button 
-                  onClick={() => setShowFeaturedModal(true)}
-                  className="flex items-center gap-4 border border-black/10 hover:border-black hover:bg-black px-12 py-5 rounded-full text-[var(--color-brand-ink)] hover:text-white transition-all group"
-                >
-                  <span className="text-sm uppercase tracking-widest font-medium">Enter New Code</span>
-                  <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                </button>
-              </motion.div>
-            )}
 
             {getMatchedProjects().length === 0 && (
               <div className="py-32 text-center italic font-display text-xl text-gray-400">
                 No projects loaded for {activeCategory} yet.
-                {activeCategory === "Featured" && (
-                  <button 
-                    onClick={() => setShowFeaturedModal(true)}
-                    className="block mx-auto mt-8 text-black border-b border-black/30 text-sm uppercase tracking-widest pb-1 hover:border-black transition-colors"
-                  >
-                    Enter your code to unlock featured works
-                  </button>
-                )}
               </div>
             )}
           </div>
@@ -646,7 +494,7 @@ export default function Home() {
   );
 }
 
-function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, onSelect: (p: any) => void }) {
+function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode: string, onSelect: (p: any) => void, onUnlock?: (p: any) => void }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -657,6 +505,45 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
   const opacity = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0, 1, 1, 0]);
 
   const [isCapturing, setIsCapturing] = useState(false);
+  const [unlockCode, setUnlockCode] = useState("");
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [unlockError, setUnlockError] = useState("");
+
+  const handleUnlockSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!unlockCode) return;
+    setIsUnlocking(true);
+    setUnlockError("");
+
+    try {
+      const res = await fetch('/api/featured', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passCode: unlockCode })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.project && onUnlock) {
+          onUnlock(data.project);
+          
+          // Save to local storage
+          const current = JSON.parse(localStorage.getItem('unlocked_tickets') || '[]');
+          if (!current.includes(unlockCode)) {
+            localStorage.setItem('unlocked_tickets', JSON.stringify([...current, unlockCode]));
+          }
+          
+          setUnlockCode("");
+          return;
+        }
+      }
+      throw new Error("Validation failed");
+    } catch (error) {
+      setUnlockError("Invalid Code");
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
 
   const handleProjectClick = async () => {
     if (mode === 'theatrical') {
@@ -679,13 +566,15 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
     >
       {(project.media_url || project.thumbnail_url) && (
         <div 
-          className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-gray-200'} overflow-hidden cursor-pointer group`}
-          onClick={handleProjectClick}
+          className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-gray-200'} overflow-hidden ${project.is_locked ? '' : 'cursor-pointer group'}`}
+          onClick={project.is_locked ? undefined : handleProjectClick}
           onMouseEnter={(e) => {
+            if (project.is_locked) return;
             const video = e.currentTarget.querySelector('video');
             if (video) video.play().catch(() => {});
           }}
           onMouseLeave={(e) => {
+            if (project.is_locked) return;
             const video = e.currentTarget.querySelector('video');
             if (video) {
               video.pause();
@@ -693,7 +582,45 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
             }
           }}
         >
-          {getVimeoId(project.media_url) ? (
+          {project.is_locked ? (
+            <>
+              <img 
+                src={project.thumbnail_url} 
+                alt={project.title}
+                className="w-full h-full object-cover blur-2xl scale-110 opacity-50"
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
+                <form 
+                  onSubmit={handleUnlockSubmit}
+                  className="w-full max-w-sm flex flex-col items-center gap-6"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Lock size={32} className="text-white/80 animate-pulse" />
+                  <div className="relative w-full">
+                    <input 
+                      type="password"
+                      placeholder="Enter Access Code"
+                      value={unlockCode}
+                      onChange={(e) => setUnlockCode(e.target.value)}
+                      className="w-full bg-white/5 border border-white/20 focus:border-white focus:bg-white/10 rounded-full py-4 text-center text-lg tracking-[0.2em] font-mono outline-none transition-all uppercase placeholder:text-white/30 text-white"
+                    />
+                    {unlockError && (
+                      <p className="absolute -bottom-6 inset-x-0 text-red-300 text-[10px] text-center uppercase tracking-widest font-bold">
+                        {unlockError}
+                      </p>
+                    )}
+                  </div>
+                  <button 
+                    type="submit"
+                    disabled={isUnlocking}
+                    className="flex items-center gap-2 border border-white/20 hover:bg-white hover:text-black text-white px-8 py-3 rounded-full transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+                  >
+                    {isUnlocking ? "Unlocking..." : "Unlock"}
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : getVimeoId(project.media_url) ? (
             <img 
               src={project.thumbnail_url || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
               alt={project.title}
@@ -716,7 +643,9 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
               className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             />
           )}
-          <div className={`absolute inset-0 ${mode === 'theatrical' ? 'bg-gradient-to-t from-black/60 via-transparent to-transparent' : 'bg-black/0 group-hover:bg-black/20'} transition-all duration-500 flex flex-col items-center justify-center p-8`}>
+
+          {!project.is_locked && (
+            <div className={`absolute inset-0 ${mode === 'theatrical' ? 'bg-gradient-to-t from-black/60 via-transparent to-transparent' : 'bg-black/0 group-hover:bg-black/20'} transition-all duration-500 flex flex-col items-center justify-center p-8`}>
              {mode === 'theatrical' ? (
                <span className="opacity-0 group-hover:opacity-100 text-white border border-white/20 rounded-full px-12 py-4 uppercase tracking-[0.4em] text-[10px] transition-all duration-500 transform group-hover:translate-y-0 translate-y-8 backdrop-blur-sm">
                  Screening
@@ -755,15 +684,16 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
                    </motion.div>
                  </div>
                  
-                 {/* Project Title Overlay */}
-                 <div className="absolute inset-x-0 bottom-12 flex justify-center px-8 z-10 transition-transform duration-700 ease-out translate-y-4 group-hover:translate-y-0">
-                   <h3 className="text-white text-2xl md:text-3xl lg:text-4xl font-display italic text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-                     {project.title}
-                   </h3>
-                 </div>
-               </div>
+                  {/* Project Title Overlay */}
+                  <div className="absolute inset-x-0 bottom-12 flex justify-center px-8 z-10 transition-transform duration-700 ease-out translate-y-4 group-hover:translate-y-0">
+                    <h3 className="text-white text-2xl md:text-3xl lg:text-4xl font-display italic text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                      {project.title}
+                    </h3>
+                  </div>
+                </div>
              )}
           </div>
+          )}
         </div>
       )}
 
