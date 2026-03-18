@@ -691,9 +691,10 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
               alt={project.title}
               className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             />
-          ) : getMediaUrl(project.thumbnail_url || project.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+          ) : project.media_url?.match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
             <video 
-              src={getMediaUrl(project.thumbnail_url || project.media_url)} 
+              src={getMediaUrl(project.media_url)} 
+              poster={project.thumbnail_url ? getMediaUrl(project.thumbnail_url) : undefined}
               muted 
               loop 
               playsInline
