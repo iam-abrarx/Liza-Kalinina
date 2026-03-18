@@ -277,55 +277,7 @@ export default function Home() {
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l-0 md:border-l border-black/5 pl-0 md:pl-16 lg:pl-32">
             {getMatchedProjects().map((project: any) => {
-              const isNarrative = activeCategory === "Narrative";
               const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
-
-              if (isNarrative) {
-                return (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="group border-b border-black/5 py-12 cursor-pointer relative"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase tracking-[0.4em] text-gray-400 group-hover:text-black transition-colors">
-                          {project.year} · {project.role}
-                        </span>
-                        <h2 className="text-5xl md:text-8xl font-display italic tracking-tighter group-hover:pl-4 transition-all duration-700">
-                          {project.title}
-                        </h2>
-                      </div>
-                      <div className="flex flex-col items-start md:items-end text-[10px] uppercase tracking-widest text-gray-500 gap-1">
-                        <span>Dir. {project.director}</span>
-                        <span>{project.client}</span>
-                      </div>
-                    </div>
-
-                    {(() => {
-                      const mediaUrl = getMediaUrl(project.media_url || '');
-                      const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov)/i) || mediaUrl.includes('blob.vercel');
-                      const vimeoId = getVimeoId(project.media_url);
-                      return (
-                        <div className="absolute top-1/2 right-32 -translate-y-1/2 w-64 aspect-2-1 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none overflow-hidden rotate-3 group-hover:rotate-0 scale-90 group-hover:scale-100 z-10 shadow-2xl translate-x-12 group-hover:translate-x-0 hidden lg:block bg-zinc-900">
-                          {project.thumbnail_url ? (
-                            <img src={getMediaUrl(project.thumbnail_url)} alt="" className="w-full h-full object-cover" />
-                          ) : isVideo ? (
-                            <video src={mediaUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
-                          ) : vimeoId ? (
-                            <img src={`https://vumbnail.com/${vimeoId}.jpg`} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <img src={mediaUrl} alt="" className="w-full h-full object-cover" />
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </motion.div>
-                );
-              }
 
               return (
                 <ProjectCard 
