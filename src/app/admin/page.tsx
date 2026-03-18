@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload, Pencil } from "lucide-react";
+import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil } from "lucide-react";
 import Link from "next/link";
+import { upload } from "@vercel/blob/client";
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -44,14 +45,11 @@ export default function AdminDashboard() {
 
     try {
       for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
+        const newBlob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload',
         });
-        const data = await res.json();
-        if (data.url) uploadedUrls.push(data.url);
+        if (newBlob.url) uploadedUrls.push(newBlob.url);
       }
       
       if (uploadedUrls.length > 0) {
@@ -613,7 +611,7 @@ export default function AdminDashboard() {
                         ) : (
                           <div className="flex items-center gap-1">
                             <span className="text-[10px] uppercase font-bold text-gray-500 hover:text-black">Upload File</span>
-                            <Upload size={14} className="text-gray-400" />
+                            <UploadIcon size={14} className="text-gray-400" />
                           </div>
                         )}
                       </label>
