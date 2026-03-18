@@ -787,7 +787,7 @@ export default function AdminDashboard() {
                     <div 
                       key={idx} 
                       onClick={() => setNewProject(prev => ({ ...prev, thumbnail_url: url as string }))}
-                      className={`min-w-[150px] aspect-video relative cursor-pointer border-2 transition-all ${
+                      className={`group min-w-[150px] aspect-video relative cursor-pointer border-2 transition-all ${
                         newProject.thumbnail_url === url 
                           ? 'border-black scale-[1.02]' 
                           : 'border-transparent opacity-50 hover:opacity-100'
