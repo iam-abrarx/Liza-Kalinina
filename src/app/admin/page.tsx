@@ -168,12 +168,11 @@ export default function AdminDashboard() {
           video.onseeked = () => resolve();
         });
         const canvas = document.createElement("canvas");
-        const scale = Math.min(1280 / video.videoWidth, 1);
-        canvas.width = video.videoWidth * scale;
-        canvas.height = video.videoHeight * scale;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
         const ctx = canvas.getContext("2d");
         ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-        thumbs.push(canvas.toDataURL("image/jpeg", 0.7)); // smaller payload
+        thumbs.push(canvas.toDataURL("image/jpeg", 0.95));
       }
       setThumbnailSuggestions(thumbs);
       showMessage("Thumbnails generated successfully");
