@@ -112,16 +112,11 @@ export default function Home() {
   const [hasPlayedTadam, setHasPlayedTadam] = useState(false);
 
   const getMatchedProjects = () => {
+    const dbCategory = CATEGORY_MAP[activeCategory];
+    if (!dbCategory) return [];
+    
     return [...projects, ...unlockedProjects].filter((project: any) => {
-      const dbCategory = CATEGORY_MAP[activeCategory];
-      const projectCat = (project.category || '').toUpperCase();
-      const activeCat = activeCategory.toUpperCase();
-      const dbCat = (dbCategory || '').toUpperCase();
-      
-      return projectCat === activeCat || 
-             projectCat === dbCat || 
-             projectCat === activeCat.replace(/S$/, '') ||
-             (activeCat === 'COMMERCIALS' && projectCat === 'COMMERCIAL');
+      return (project.category || '').toUpperCase() === dbCategory.toUpperCase();
     });
   };
   
