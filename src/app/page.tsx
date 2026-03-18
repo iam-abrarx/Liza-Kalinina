@@ -624,7 +624,7 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
             <img 
               src={project.thumbnail_url || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
               alt={project.title}
-              className="w-full h-full object-cover transition-transform duration-1000 ease-out will-change-transform group-hover:scale-105"
+              className="w-full h-full object-cover"
             />
           ) : project.media_url?.match(/\.(mp4|webm|ogg|mov)/i) || project.media_url?.startsWith('blob:') || project.media_url?.startsWith('data:video') ? (
             <video 
@@ -634,13 +634,13 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
               loop 
               playsInline
               preload="metadata"
-              className="w-full h-full object-cover transition-transform duration-1000 ease-out will-change-transform group-hover:scale-105"
+              className="w-full h-full object-cover"
             />
           ) : (
             <img 
               src={getMediaUrl(project.thumbnail_url || project.media_url)} 
               alt={project.title}
-              className="w-full h-full object-cover transition-transform duration-1000 ease-out will-change-transform group-hover:scale-105"
+              className="w-full h-full object-cover"
             />
           )}
 
