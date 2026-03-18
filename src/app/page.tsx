@@ -233,8 +233,8 @@ export default function Home() {
       >
         <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row gap-12 lg:gap-24 xl:gap-32">
           
-          <aside className="md:w-48 shrink-0">
-            <div className="sticky top-32 flex flex-row md:flex-col gap-8 md:gap-6 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 scrollbar-hide whitespace-nowrap border-b md:border-b-0 border-black/5 md:border-none -mx-6 px-6 md:mx-0 md:px-0">
+          <aside className="md:w-48 shrink-0 sticky top-0 md:relative z-30 bg-[var(--color-brand-bg)] -mx-6 px-6 md:mx-0 md:px-0 pt-4 pb-0 md:pt-0">
+            <div className="md:sticky md:top-32 flex flex-row md:flex-col gap-8 md:gap-6 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 scrollbar-hide whitespace-nowrap border-b md:border-b-0 border-black/5 md:border-none">
               {CATEGORIES.map((cat) => (
                 <div
                   key={cat}
