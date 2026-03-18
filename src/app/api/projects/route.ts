@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const isAdmin = searchParams.get('admin') === 'true';
+    const adminPassword = request.headers.get('x-admin-password');
+    const isAdmin = adminPassword === (process.env.ADMIN_PASSWORD || 'admin');
     
     const projects = await prisma.project.findMany({
       where: isAdmin ? {} : { is_public: true },
@@ -16,12 +16,18 @@ export async function GET(request: Request) {
     });
     return NextResponse.json(projects);
   } catch (error) {
+    console.error("Fetch Projects Error:", error);
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const adminPassword = request.headers.get('x-admin-password');
+    if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     
     const project = await prisma.project.create({

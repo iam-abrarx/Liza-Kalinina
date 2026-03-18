@@ -5,6 +5,13 @@ export const runtime = 'edge';
 
 export async function POST(request: Request) {
   const body = (await request.json()) as HandleUploadBody;
+  const { searchParams } = new URL(request.url);
+  const adminPassword = request.headers.get('x-admin-password') || searchParams.get('password');
+  
+  // Basic security check
+  if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const jsonResponse = await handleUpload({

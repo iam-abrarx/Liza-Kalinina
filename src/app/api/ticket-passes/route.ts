@@ -5,8 +5,13 @@ export const dynamic = 'force-dynamic';
 
 
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const adminPassword = request.headers.get('x-admin-password');
+    if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const passes = await prisma.ticketPass.findMany({
       include: { project: true }
     });
@@ -18,6 +23,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const adminPassword = request.headers.get('x-admin-password');
+    if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { pass_code, linked_project_id, expires_at } = await request.json();
 
     const pass = await prisma.ticketPass.create({

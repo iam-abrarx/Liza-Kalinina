@@ -398,46 +398,54 @@ export default function Home() {
           </aside>
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l-0 md:border-l border-black/5 pl-0 md:pl-16 lg:pl-32">
-            {[...projects, ...unlockedProjects].map((project: any) => {
-              const dbCategory = CATEGORY_MAP[activeCategory];
-              const isMatch = project.category === activeCategory || project.category === dbCategory;
-              const isNarrative = activeCategory === "Narrative";
-              const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
-              
-              if (!isMatch) return null;
+            {(() => {
+              const matchedProjects = [...projects, ...unlockedProjects].filter((project: any) => {
+                const dbCategory = CATEGORY_MAP[activeCategory];
+                const projectCat = (project.category || '').toUpperCase();
+                const activeCat = activeCategory.toUpperCase();
+                const dbCat = (dbCategory || '').toUpperCase();
+                
+                return projectCat === activeCat || 
+                       projectCat === dbCat || 
+                       projectCat === activeCat.replace(/S$/, '') ||
+                       (activeCat === 'COMMERCIALS' && projectCat === 'COMMERCIAL');
+              });
 
-              if (isNarrative) {
-                return (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="group border-b border-black/5 py-12 cursor-pointer relative"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase tracking-[0.4em] text-gray-400 group-hover:text-black transition-colors">
-                          {project.year} · {project.role}
-                        </span>
-                        <h2 className="text-5xl md:text-8xl font-display italic tracking-tighter group-hover:pl-4 transition-all duration-700">
-                          {project.title}
-                        </h2>
-                      </div>
-                      <div className="flex flex-col items-start md:items-end text-[10px] uppercase tracking-widest text-gray-500 gap-1">
-                        <span>Dir. {project.director}</span>
-                        <span>{project.client}</span>
-                      </div>
-                    </div>
+              return matchedProjects.map((project: any) => {
+                const isNarrative = activeCategory === "Narrative";
+                const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
 
-                    {/* Hover Visual Teaser */}
-                    <div className="absolute top-1/2 right-32 -translate-y-1/2 w-64 aspect-2-1 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none overflow-hidden rotate-3 group-hover:rotate-0 scale-90 group-hover:scale-100 z-10 shadow-2xl translate-x-12 group-hover:translate-x-0 hidden lg:block">
-                      <img src={project.media_url} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  </motion.div>
-                );
-              }
+                if (isNarrative) {
+                  return (
+                    <motion.div
+                      key={project.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      className="group border-b border-black/5 py-12 cursor-pointer relative"
+                      onClick={() => setSelectedProject(project)}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4">
+                        <div className="flex flex-col gap-2">
+                          <span className="text-[10px] uppercase tracking-[0.4em] text-gray-400 group-hover:text-black transition-colors">
+                            {project.year} · {project.role}
+                          </span>
+                          <h2 className="text-5xl md:text-8xl font-display italic tracking-tighter group-hover:pl-4 transition-all duration-700">
+                            {project.title}
+                          </h2>
+                        </div>
+                        <div className="flex flex-col items-start md:items-end text-[10px] uppercase tracking-widest text-gray-500 gap-1">
+                          <span>Dir. {project.director}</span>
+                          <span>{project.client}</span>
+                        </div>
+                      </div>
+
+                      <div className="absolute top-1/2 right-32 -translate-y-1/2 w-64 aspect-2-1 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none overflow-hidden rotate-3 group-hover:rotate-0 scale-90 group-hover:scale-100 z-10 shadow-2xl translate-x-12 group-hover:translate-x-0 hidden lg:block">
+                        <img src={project.media_url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    </motion.div>
+                  );
+                }
 
                 return (
                   <ProjectCard 
@@ -447,7 +455,8 @@ export default function Home() {
                     onSelect={setSelectedProject} 
                   />
                 );
-              })}
+              });
+            })()}
             
             {activeCategory === "Featured" && (
               <motion.div 
@@ -469,20 +478,36 @@ export default function Home() {
               </motion.div>
             )}
 
-            {/* Filter fallback state */}
-            {([...projects, ...unlockedProjects]).filter((p: any) => p.category === activeCategory || p.category === CATEGORY_MAP[activeCategory]).length === 0 && (
-               <div className="py-32 text-center italic font-display text-xl text-gray-400">
-                 No projects loaded for {activeCategory} yet.
-                 {activeCategory === "Featured" && (
-                   <button 
-                     onClick={() => setShowFeaturedModal(true)}
-                     className="block mx-auto mt-8 text-black border-b border-black/30 text-sm uppercase tracking-widest pb-1 hover:border-black transition-colors"
-                   >
-                     Enter your code to unlock featured works
-                   </button>
-                 )}
-               </div>
-            )}
+            {(() => {
+              const matchedProjectsCount = [...projects, ...unlockedProjects].filter((project: any) => {
+                const dbCategory = CATEGORY_MAP[activeCategory];
+                const projectCat = (project.category || '').toUpperCase();
+                const activeCat = activeCategory.toUpperCase();
+                const dbCat = (dbCategory || '').toUpperCase();
+                
+                return projectCat === activeCat || 
+                       projectCat === dbCat || 
+                       projectCat === activeCat.replace(/S$/, '') ||
+                       (activeCat === 'COMMERCIALS' && projectCat === 'COMMERCIAL');
+              }).length;
+
+              if (matchedProjectsCount === 0) {
+                return (
+                  <div className="py-32 text-center italic font-display text-xl text-gray-400">
+                    No projects loaded for {activeCategory} yet.
+                    {activeCategory === "Featured" && (
+                      <button 
+                        onClick={() => setShowFeaturedModal(true)}
+                        className="block mx-auto mt-8 text-black border-b border-black/30 text-sm uppercase tracking-widest pb-1 hover:border-black transition-colors"
+                      >
+                        Enter your code to unlock featured works
+                      </button>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         </div>
       </section>

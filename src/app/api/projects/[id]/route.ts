@@ -10,6 +10,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const adminPassword = request.headers.get('x-admin-password');
+  
+  if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   console.log(`[API] Attempting to delete project: ${id}`);
   
   try {
@@ -36,6 +42,12 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    const adminPassword = request.headers.get('x-admin-password');
+
+    if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     
     const project = await prisma.project.update({

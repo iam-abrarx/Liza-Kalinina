@@ -57,12 +57,16 @@ export default function AdminDashboard() {
     const uploadedUrls: string[] = [];
 
     try {
+      const file = files[0];
+      const localUrl = URL.createObjectURL(file);
+      generateThumbnails(localUrl);
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const uniqueName = `${Date.now()}-${file.name}`;
         const newBlob = await upload(uniqueName, file, {
           access: 'public',
-          handleUploadUrl: '/api/upload',
+          handleUploadUrl: `/api/upload?password=${encodeURIComponent(password)}`,
           onUploadProgress: (progress) => {
             setUploadProgress(Math.round(((i * 100) + progress.percentage) / files.length));
           }
@@ -238,7 +242,7 @@ export default function AdminDashboard() {
       const uniqueName = `${Date.now()}-${file.name}`;
       const newBlob = await upload(uniqueName, file, {
         access: 'public',
-        handleUploadUrl: '/api/upload',
+        handleUploadUrl: `/api/upload?password=${encodeURIComponent(password)}`,
       });
       if (newBlob.url) {
         setNewProject(prev => ({ ...prev, thumbnail_url: newBlob.url }));
@@ -275,15 +279,19 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const [projRes, passRes] = await Promise.all([
-        fetch('/api/projects?admin=true'),
-        fetch('/api/ticket-passes')
-      ]);
+      const [projectsRes, passesRes] = await Promise.all([
+        fetch('/api/projects', {
+          headers: { 'x-admin-password': password }
+        }),
+        fetch('/api/ticket-passes', {
+          headers: { 'x-admin-password': password }
+        })
+    ]);
       
-      if (!projRes.ok || !passRes.ok) throw new Error("API unavailable");
+      if (!projectsRes.ok || !passesRes.ok) throw new Error("API unavailable");
       
-      setProjects(await projRes.json());
-      setPasses(await passRes.json());
+      setProjects(await projectsRes.json());
+      setPasses(await passesRes.json());
     } catch (error) {
       console.error("Failed to fetch data:", error);
       setProjects([]);
@@ -302,7 +310,10 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/projects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': password 
+        },
         body: JSON.stringify(newProject)
       });
       if (res.ok) {
@@ -363,7 +374,10 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`/api/projects/${editingProjectId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': password 
+        },
         body: JSON.stringify(newProject)
       });
       if (res.ok) {
@@ -403,7 +417,10 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/ticket-passes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': password 
+        },
         body: JSON.stringify(newPass)
       });
       if (res.ok) {
@@ -425,7 +442,10 @@ export default function AdminDashboard() {
   const handleDeleteProject = async (id: string) => {
     if (!confirm("Are you sure you want to delete this project?")) return;
     try {
-      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/projects/${id}`, { 
+        method: 'DELETE',
+        headers: { 'x-admin-password': password }
+      });
       const data = await res.json();
       if (res.ok) {
         showMessage("Project deleted");
@@ -441,7 +461,10 @@ export default function AdminDashboard() {
   const handleDeletePass = async (id: string) => {
     if (!confirm("Are you sure you want to delete this ticket pass?")) return;
     try {
-      const res = await fetch(`/api/ticket-passes/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/ticket-passes/${id}`, { 
+        method: 'DELETE',
+        headers: { 'x-admin-password': password }
+      });
       const data = await res.json();
       if (res.ok) {
         showMessage("Pass deleted");
