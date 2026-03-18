@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         description: body.description,
         long_description: body.long_description,
         gallery: body.gallery || [],
-        is_public: body.category !== 'PREMIERE',
+        is_public: body.category !== 'FEATURED',
         sort_order: body.sort_order || 0,
       }
     });

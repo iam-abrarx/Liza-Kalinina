@@ -9,15 +9,24 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  console.log(`[API] Attempting to delete project: ${id}`);
+  
   try {
-    const { id } = await params;
-    await prisma.project.delete({
+    const deleted = await prisma.project.delete({
       where: { id }
     });
-    return NextResponse.json({ message: 'Project deleted' });
-  } catch (error) {
-    console.error("Delete Error:", error);
-    return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
+    console.log(`[API] Successfully deleted project: ${id}`);
+    return NextResponse.json({ message: 'Project deleted', id: deleted.id });
+  } catch (error: any) {
+    console.error(`[API] Delete Error for project ${id}:`, error);
+    
+    // Check for specific Prisma errors (e.g., P2025: Record not found)
+    if (error.code === 'P2025') {
+       return NextResponse.json({ error: 'Project not found in database. It might be local dummy data.' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ error: `Failed to delete project: ${error.message}` }, { status: 500 });
   }
 }
 
@@ -44,7 +53,7 @@ export async function PATCH(
         description: body.description,
         long_description: body.long_description,
         gallery: body.gallery,
-        is_public: body.category !== 'PREMIERE',
+        is_public: body.category !== 'FEATURED',
         sort_order: body.sort_order,
       }
     });

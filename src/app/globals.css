@@ -1,11 +1,18 @@
 @import "tailwindcss";
+@font-face {
+  font-family: "Cutive Mono";
+  src: url("/fonts/CutiveMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 @theme {
   --color-brand-bg: #f4f4f0;
   --color-brand-ink: #111111;
 
-  --font-display: "Playfair Display", serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: "Cutive Mono", monospace;
+  --font-body: "Cutive Mono", monospace;
 }
 
 @layer base {
@@ -15,6 +22,8 @@
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
   }
 
   h1,
@@ -31,5 +40,12 @@
 @layer utilities {
   .aspect-2-1 {
     aspect-ratio: 2 / 1;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

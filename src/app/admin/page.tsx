@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload } from "lucide-react";
+import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload, Pencil } from "lucide-react";
 import Link from "next/link";
-import { DUMMY_PROJECTS, DUMMY_PASSES } from "@/data/dummy";
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -16,6 +15,9 @@ export default function AdminDashboard() {
   const [isPassFormOpen, setIsPassFormOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingMeta, setIsFetchingMeta] = useState(false);
+  const [isGeneratingThumbs, setIsGeneratingThumbs] = useState(false);
+  const [thumbnailSuggestions, setThumbnailSuggestions] = useState<string[]>([]);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [newProject, setNewProject] = useState({
     title: "",
     category: "COMMERCIAL",
@@ -34,28 +36,36 @@ export default function AdminDashboard() {
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean = false) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
+    const uploadedUrls: string[] = [];
 
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (data.url) {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.url) uploadedUrls.push(data.url);
+      }
+      
+      if (uploadedUrls.length > 0) {
         if (isGallery) {
-          setNewProject(prev => ({ ...prev, gallery: [...prev.gallery, data.url] }));
+          setNewProject(prev => ({ 
+            ...prev, 
+            gallery: [...prev.gallery, ...uploadedUrls].slice(0, 10) 
+          }));
         } else {
-          setNewProject({ ...newProject, media_url: data.url });
+          setNewProject(prev => ({ ...prev, media_url: uploadedUrls[0] }));
         }
-        showMessage("File uploaded successfully");
+        showMessage(`${uploadedUrls.length} file(s) uploaded successfully`);
       } else {
-        showMessage(data.error || "Upload failed", "error");
+        showMessage("Upload failed", "error");
       }
     } catch (error) {
       showMessage("Error uploading file", "error");
@@ -109,6 +119,49 @@ export default function AdminDashboard() {
       setIsFetchingMeta(false);
     }
   };
+
+  const generateThumbnails = async (videoUrl: string) => {
+    setIsGeneratingThumbs(true);
+    setThumbnailSuggestions([]);
+    try {
+      const video = document.createElement("video");
+      video.src = videoUrl;
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.playsInline = true;
+      
+      await new Promise<void>((resolve, reject) => {
+        video.onloadeddata = () => resolve();
+        video.onerror = () => reject("Failed to load video");
+      });
+
+      const duration = video.duration;
+      // Extract 5 frames across the video
+      const fractions = [0.1, 0.3, 0.5, 0.7, 0.9];
+      const thumbs: string[] = [];
+
+      for (const frac of fractions) {
+        video.currentTime = duration * frac;
+        await new Promise<void>((resolve) => {
+          video.onseeked = () => resolve();
+        });
+        const canvas = document.createElement("canvas");
+        const scale = Math.min(1280 / video.videoWidth, 1);
+        canvas.width = video.videoWidth * scale;
+        canvas.height = video.videoHeight * scale;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+        thumbs.push(canvas.toDataURL("image/jpeg", 0.7)); // smaller payload
+      }
+      setThumbnailSuggestions(thumbs);
+      showMessage("Thumbnails generated successfully");
+    } catch (e) {
+      console.error(e);
+      showMessage("Error generating thumbnails", "error");
+    } finally {
+      setIsGeneratingThumbs(false);
+    }
+  };
   const [newPass, setNewPass] = useState({
     pass_code: "",
     linked_project_id: "",
@@ -136,16 +189,9 @@ export default function AdminDashboard() {
       setProjects(await projRes.json());
       setPasses(await passRes.json());
     } catch (error) {
-      console.log("Using dummy data fallback in Admin");
-      setProjects(DUMMY_PROJECTS);
-      // Map DUMMY_PASSES to include project info for display
-      const mappedPasses = DUMMY_PASSES.map((tp, idx) => ({
-        id: `dummy-${idx}`,
-        pass_code: tp.pass_code,
-        project: DUMMY_PROJECTS.find(p => p.id === tp.linked_project_id),
-        expires_at: null
-      }));
-      setPasses(mappedPasses);
+      console.error("Failed to fetch data:", error);
+      setProjects([]);
+      setPasses([]);
     }
   };
 
@@ -193,6 +239,68 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEditProject = (project: any) => {
+    setEditingProjectId(project.id);
+    setNewProject({
+      title: project.title || "",
+      category: project.category || "COMMERCIAL",
+      year: project.year || new Date().getFullYear().toString(),
+      media_url: project.media_url || "",
+      thumbnail_url: project.thumbnail_url || "",
+      role: project.role || "Director of Photography",
+      director: project.director || "",
+      client: project.client || "",
+      production_company: project.production_company || "",
+      awards: project.awards || "",
+      description: project.description || "",
+      long_description: project.long_description || "",
+      gallery: project.gallery || [],
+      sort_order: project.sort_order || 0
+    });
+    setIsProjectFormOpen(true);
+  };
+
+  const handleUpdateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProjectId) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/projects/${editingProjectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProject)
+      });
+      if (res.ok) {
+        showMessage("Project updated successfully");
+        setIsProjectFormOpen(false);
+        setEditingProjectId(null);
+        setNewProject({
+          title: "",
+          category: "COMMERCIAL",
+          year: new Date().getFullYear().toString(),
+          media_url: "",
+          thumbnail_url: "",
+          role: "Director of Photography",
+          director: "",
+          client: "",
+          production_company: "",
+          awards: "",
+          description: "",
+          long_description: "",
+          gallery: [],
+          sort_order: 0
+        });
+        fetchData();
+      } else {
+        showMessage("Failed to update project", "error");
+      }
+    } catch (error) {
+      showMessage("Error updating project", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCreatePass = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -222,12 +330,15 @@ export default function AdminDashboard() {
     if (!confirm("Are you sure you want to delete this project?")) return;
     try {
       const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      const data = await res.json();
       if (res.ok) {
         showMessage("Project deleted");
         fetchData();
+      } else {
+        showMessage(data.error || "Failed to delete project", "error");
       }
     } catch (error) {
-      showMessage("Error deleting project", "error");
+      showMessage("Error connecting to server", "error");
     }
   };
 
@@ -235,12 +346,15 @@ export default function AdminDashboard() {
     if (!confirm("Are you sure you want to delete this ticket pass?")) return;
     try {
       const res = await fetch(`/api/ticket-passes/${id}`, { method: 'DELETE' });
+      const data = await res.json();
       if (res.ok) {
         showMessage("Pass deleted");
         fetchData();
+      } else {
+        showMessage(data.error || "Failed to delete pass", "error");
       }
     } catch (error) {
-      showMessage("Error deleting pass", "error");
+      showMessage("Error connecting to server", "error");
     }
   };
 
@@ -285,7 +399,7 @@ export default function AdminDashboard() {
       {/* Toast Message */}
       {message.text && (
         <div className={`fixed top-8 right-8 z-[200] px-6 py-3 rounded-md shadow-xl flex items-center gap-3 transition-all ${
-          message.type === 'error' ? 'bg-red-600 text-white' : 'bg-black text-white'
+          message.type === 'error' ? 'bg-black text-white' : 'bg-black text-white'
         }`}>
           {message.type === 'error' ? <X size={18} /> : <Check size={18} />}
           <span className="text-sm font-medium">{message.text}</span>
@@ -293,9 +407,15 @@ export default function AdminDashboard() {
       )}
 
       <header className="flex justify-between items-center mb-16 pb-6 border-b border-black/10">
-        <div>
-          <h1 className="text-3xl md:text-5xl font-display italic">Dashboard</h1>
-          <p className="text-sm uppercase tracking-widest text-gray-500 mt-2">Liza Kalinina Portfolio</p>
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-3xl md:text-5xl font-display italic">Dashboard</h1>
+            <p className="text-sm uppercase tracking-widest text-gray-500 mt-2">Liza Kalinina Portfolio</p>
+          </div>
+          <div className="mt-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-tighter uppercase flex items-center gap-2 bg-green-100 text-green-700">
+            <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-green-500" />
+            Live Database
+          </div>
         </div>
         <Link href="/" className="text-sm font-medium border border-black/20 px-6 py-2 rounded-full hover:bg-black hover:text-white transition-colors">
           View Live Site
@@ -307,12 +427,12 @@ export default function AdminDashboard() {
         <section>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-display">Manage Projects</h2>
-            <button 
-              onClick={() => setIsProjectFormOpen(true)}
-              className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-4 py-2 rounded-sm hover:-translate-y-1 transition-transform"
-            >
-              <Plus size={16} /> New Project
-            </button>
+              <button 
+                onClick={() => { setEditingProjectId(null); setIsProjectFormOpen(true); }}
+                className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-4 py-2 rounded-sm hover:-translate-y-1 transition-transform"
+              >
+                <Plus size={16} /> New Project
+              </button>
           </div>
           
           <div className="flex flex-col gap-4">
@@ -339,12 +459,19 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`text-[10px] px-2 py-1 rounded-full uppercase tracking-wider ${p.category === 'PREMIERE' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                      {p.category === 'PREMIERE' ? 'Private' : 'Public'}
+                    <span className={`text-[10px] px-2 py-1 rounded-full uppercase tracking-wider ${p.category === 'FEATURED' ? 'bg-black text-white' : 'bg-green-100 text-green-700'}`}>
+                      {p.category === 'FEATURED' ? 'Private' : 'Public'}
                     </span>
                     <button 
+                      onClick={() => handleEditProject(p)}
+                      className="text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Edit Project"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button 
                       onClick={() => handleDeleteProject(p.id)}
-                      className="text-gray-400 hover:text-red-600 transition-colors"
+                      className="text-gray-400 hover:text-black transition-colors"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -373,7 +500,7 @@ export default function AdminDashboard() {
             ) : (
               passes.map(tp => (
                 <div key={tp.id} className="p-4 border border-black/10 bg-white relative overflow-hidden flex justify-between items-center">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-red-600/80" />
+                  <div className="absolute top-0 left-0 w-1 h-full bg-black/80" />
                   <div className="pl-4">
                     <h3 className="font-mono text-xl tracking-widest text-[#111]">{tp.pass_code}</h3>
                     <p className="text-sm text-gray-600 mt-2">Unlocks: <span className="font-medium">{tp.project?.title || 'Unknown Project'}</span></p>
@@ -381,7 +508,7 @@ export default function AdminDashboard() {
                   </div>
                   <button 
                     onClick={() => handleDeletePass(tp.id)}
-                    className="text-gray-400 hover:text-red-600 transition-colors pr-2"
+                    className="text-gray-400 hover:text-black transition-colors pr-2"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -397,13 +524,13 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-sm flex items-center justify-end">
           <div className="w-full max-w-2xl h-full bg-[var(--color-brand-bg)] p-8 md:p-12 overflow-y-auto shadow-2xl">
             <div className="flex justify-between items-center mb-12">
-              <h2 className="text-3xl font-display italic">Create New Project</h2>
-              <button onClick={() => setIsProjectFormOpen(false)} className="text-gray-400 hover:text-black transition-colors">
+              <h2 className="text-3xl font-display italic">{editingProjectId ? "Edit Project" : "Create New Project"}</h2>
+              <button onClick={() => { setIsProjectFormOpen(false); setEditingProjectId(null); }} className="text-gray-400 hover:text-black transition-colors">
                 <X size={32} strokeWidth={1} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateProject} className="flex flex-col gap-8">
+            <form onSubmit={editingProjectId ? handleUpdateProject : handleCreateProject} className="flex flex-col gap-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="flex flex-col gap-2">
                   <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Title</label>
@@ -425,8 +552,9 @@ export default function AdminDashboard() {
                     <option value="COMMERCIAL">Commercials</option>
                     <option value="MUSIC_VIDEO">Music Videos</option>
                     <option value="NARRATIVE">Narrative</option>
+                    <option value="DOCUMENTARY">Documentaries</option>
                     <option value="STILLS">Stills</option>
-                    <option value="PREMIERE">Featured (Private)</option>
+                    <option value="FEATURED">Featured (Private)</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -453,6 +581,22 @@ export default function AdminDashboard() {
                         {isFetchingMeta ? "FETCHING..." : "FETCH DETAILS"}
                         {!isFetchingMeta && <LinkIcon size={12} />}
                       </button>
+
+                      {/* Generate Thumbnails Button */}
+                      {!newProject.media_url.includes('vimeo.com') && newProject.media_url && (
+                        <>
+                          <div className="h-3 w-[1px] bg-black/10" />
+                          <button
+                            type="button"
+                            onClick={() => generateThumbnails(newProject.media_url)}
+                            disabled={isGeneratingThumbs}
+                            className="text-[10px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-1 transition-colors"
+                            title="Generate high-quality thumbnails from this local video"
+                          >
+                            {isGeneratingThumbs ? "GENERATING..." : "GENERATE THUMBNAILS"}
+                          </button>
+                        </>
+                      )}
 
                       <div className="h-3 w-[1px] bg-black/10" />
 
@@ -565,6 +709,7 @@ export default function AdminDashboard() {
                   {[
                     newProject.media_url && !newProject.media_url.includes('vimeo.com') ? newProject.media_url : null,
                     newProject.thumbnail_url && newProject.thumbnail_url.includes('vimeocdn.com') ? newProject.thumbnail_url : null,
+                    ...thumbnailSuggestions,
                     ...newProject.gallery
                   ].filter(Boolean).map((url, idx) => (
                     <div 
@@ -593,10 +738,11 @@ export default function AdminDashboard() {
 
               <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Gallery (Detailed Pictures)</label>
+                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Gallery (Max 10 images)</label>
                   <label className="cursor-pointer text-black hover:opacity-70 transition-opacity flex items-center gap-2">
                     <input 
                       type="file" 
+                      multiple
                       className="hidden" 
                       onChange={(e) => handleFileUpload(e, true)}
                       disabled={isUploading}
@@ -632,7 +778,7 @@ export default function AdminDashboard() {
                 disabled={isLoading}
                 className="bg-black text-white py-4 uppercase tracking-[0.2em] text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-50 mt-4"
               >
-                {isLoading ? "Unloading..." : "Publish Project"}
+                {isLoading ? "Saving..." : (editingProjectId ? "Update Project" : "Publish Project")}
               </button>
             </form>
           </div>
@@ -670,7 +816,7 @@ export default function AdminDashboard() {
                   className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium appearance-none"
                 >
                   <option value="">Select a Featured project...</option>
-                  {projects.filter(p => p.category === 'PREMIERE').map(p => (
+                  {projects.filter(p => p.category === 'FEATURED').map(p => (
                     <option key={p.id} value={p.id}>{p.title}</option>
                   ))}
                 </select>

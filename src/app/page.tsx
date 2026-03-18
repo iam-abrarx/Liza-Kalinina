@@ -4,12 +4,12 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Lock, ArrowRight, X, Plus, LogOut } from "lucide-react";
-import { DUMMY_PROJECTS, DUMMY_PASSES } from "@/data/dummy";
 
 const CATEGORIES = [
   "Commercials",
   "Music Videos",
   "Narrative",
+  "Documentaries",
   "Stills",
   "Featured",
 ];
@@ -18,9 +18,10 @@ const CATEGORY_MAP: Record<string, string> = {
   "Commercials": "COMMERCIAL",
   "Music Videos": "MUSIC_VIDEO",
   "Narrative": "NARRATIVE",
+  "Documentaries": "DOCUMENTARY",
   "Fashion": "FASHION",
   "Stills": "STILLS",
-  "Featured": "PREMIERE"
+  "Featured": "FEATURED"
 };
 
 const getVimeoId = (url: string) => {
@@ -111,7 +112,7 @@ export default function Home() {
   const [ticketPass, setTicketPass] = useState("");
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
-  const [premiereError, setPremiereError] = useState("");
+  const [featuredError, setFeaturedError] = useState("");
   const [hasPlayedTadam, setHasPlayedTadam] = useState(false);
   
   const fetchProjects = async () => {
@@ -121,8 +122,8 @@ export default function Home() {
       const data = await res.json();
       setProjects(data);
     } catch (error) {
-      console.log("Using dummy projects fallback");
-      setProjects(DUMMY_PROJECTS);
+      console.error("Failed to fetch projects:", error);
+      setProjects([]);
     }
   };
 
@@ -139,10 +140,10 @@ export default function Home() {
   const validatePass = async (code: string, isSilent: boolean = false) => {
     if (!code) return;
     if (!isSilent) setIsValidating(true);
-    setPremiereError("");
+    setFeaturedError("");
 
     try {
-      const res = await fetch('/api/premiere', {
+      const res = await fetch('/api/featured', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ passCode: code })
@@ -157,16 +158,7 @@ export default function Home() {
       }
       throw new Error("Validation failed");
     } catch (error) {
-      // Static Fallback
-      const pass = DUMMY_PASSES.find(p => p.pass_code.toLowerCase() === code.toLowerCase());
-      if (pass) {
-        const project = DUMMY_PROJECTS.find(p => p.id === pass.linked_project_id);
-        if (project) {
-          handleSuccessfulValidation(project, code, isSilent);
-          return;
-        }
-      }
-      if (!isSilent) setPremiereError("Invalid Access Code");
+      if (!isSilent) setFeaturedError("Invalid Access Code");
     } finally {
       if (!isSilent) setIsValidating(false);
     }
@@ -211,11 +203,8 @@ export default function Home() {
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.05]);
 
   const playTadam = () => {
-    if (hasPlayedTadam) return;
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3'); // A deep cinematic impact
-    audio.volume = 0.5;
-    audio.play().catch(() => {}); // Catch autoplay blocks
-    setHasPlayedTadam(true);
+    // Sound removed as requested
+    return;
   };
 
   const handleCategoryClick = (cat: string) => {
@@ -268,7 +257,7 @@ export default function Home() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-6">
-                <Lock size={48} strokeWidth={1} className="mx-auto text-red-600 animate-pulse" />
+                <Lock size={48} strokeWidth={1} className="mx-auto text-white animate-pulse" />
                 <h2 className="text-4xl md:text-5xl font-display italic">Featured Access</h2>
                 <p className="text-sm text-white/40 leading-relaxed max-w-xs mx-auto">
                   Enter your unique access code to unlock featured screenings and confidential project treatments.
@@ -285,9 +274,9 @@ export default function Home() {
                     className="w-full bg-transparent border-b border-white/20 focus:border-white py-6 text-center text-2xl tracking-[0.3em] font-mono outline-none transition-colors uppercase placeholder:text-white/10"
                     autoFocus
                   />
-                  {premiereError && (
-                    <p className="absolute -bottom-8 inset-x-0 text-red-500 text-[10px] uppercase tracking-widest font-bold">
-                      {premiereError}
+                  {featuredError && (
+                    <p className="absolute -bottom-8 inset-x-0 text-white/60 text-[10px] uppercase tracking-widest font-bold">
+                      {featuredError}
                     </p>
                   )}
                 </div>
@@ -353,7 +342,7 @@ export default function Home() {
                 Director of Photography
               </p>
               <p className="text-[var(--color-brand-ink)]/40 text-[9px] tracking-[0.2em] uppercase">
-                Based in Moscow · Available Worldwide
+                Based in Paris · Available Worldwide
               </p>
             </div>
             {/* Minimalist Animated Scroll Line */}
@@ -367,24 +356,24 @@ export default function Home() {
       >
         <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row gap-12 lg:gap-24 xl:gap-32">
           
-          <aside className="md:w-64 shrink-0">
-            <div className="sticky top-32 flex flex-col gap-6">
+          <aside className="md:w-48 shrink-0">
+            <div className="sticky top-32 flex flex-row md:flex-col gap-8 md:gap-6 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 scrollbar-hide whitespace-nowrap border-b md:border-b-0 border-black/5 md:border-none -mx-6 px-6 md:mx-0 md:px-0">
               {CATEGORIES.map((cat) => (
                 <div
                   key={cat}
-                  className={`flex items-center justify-between w-full group/prem ${cat === "Featured" ? "mt-2 border-t border-current/10 pt-4" : ""}`}
+                  className={`flex items-center justify-start md:justify-between shrink-0 w-auto md:w-full group/prem ${cat === "Featured" ? "md:mt-2 md:border-t md:border-current/10 md:pt-4" : ""}`}
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
                     className={`text-left text-lg md:text-xl transition-all duration-500 ${
                       activeCategory === cat && !showFeaturedModal
-                        ? (activeCategory === "Featured" ? "text-red-600 font-normal italic" : "text-[var(--color-brand-ink)] font-normal italic")
+                        ? (activeCategory === "Featured" ? "text-[var(--color-brand-ink)] font-normal italic" : "text-[var(--color-brand-ink)] font-normal italic")
                         : "text-gray-400 font-light hover:text-gray-600"
                     }`}
                   >
                     {cat === "Featured" ? (
                       <span className="flex items-center gap-2">
-                         {cat} <span className={`inline-block w-2 h-2 rounded-full ${showFeaturedModal ? 'bg-red-600' : 'bg-red-600/50'} transition-colors animate-pulse`} />
+                         {cat} <span className={`inline-block w-2 h-2 rounded-full ${showFeaturedModal ? 'bg-black' : 'bg-black/20'} transition-colors animate-pulse`} />
                       </span>
                     ) : (
                       cat
@@ -397,7 +386,7 @@ export default function Home() {
                         e.stopPropagation();
                         handleLockFeatured();
                       }}
-                      className="p-2 hover:bg-black/5 rounded-full transition-all text-red-500"
+                      className="p-2 hover:bg-black/5 rounded-full transition-all text-black/40"
                       title="End Featured Session"
                     >
                       <LogOut size={16} />
@@ -408,7 +397,7 @@ export default function Home() {
             </div>
           </aside>
 
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l border-black/5 pl-0 md:pl-16 lg:pl-32">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l-0 md:border-l border-black/5 pl-0 md:pl-16 lg:pl-32">
             {[...projects, ...unlockedProjects].map((project: any) => {
               const dbCategory = CATEGORY_MAP[activeCategory];
               const isMatch = project.category === activeCategory || project.category === dbCategory;
@@ -429,7 +418,7 @@ export default function Home() {
                   >
                     <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4">
                       <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase tracking-[0.4em] text-gray-400 group-hover:text-red-500 transition-colors">
+                        <span className="text-[10px] uppercase tracking-[0.4em] text-gray-400 group-hover:text-black transition-colors">
                           {project.year} · {project.role}
                         </span>
                         <h2 className="text-5xl md:text-8xl font-display italic tracking-tighter group-hover:pl-4 transition-all duration-700">
@@ -472,7 +461,7 @@ export default function Home() {
                 </div>
                 <button 
                   onClick={() => setShowFeaturedModal(true)}
-                  className="flex items-center gap-4 border border-black/10 hover:border-red-600 hover:bg-red-600 px-12 py-5 rounded-full text-[var(--color-brand-ink)] hover:text-white transition-all group"
+                  className="flex items-center gap-4 border border-black/10 hover:border-black hover:bg-black px-12 py-5 rounded-full text-[var(--color-brand-ink)] hover:text-white transition-all group"
                 >
                   <span className="text-sm uppercase tracking-widest font-medium">Enter New Code</span>
                   <Plus size={20} className="group-hover:rotate-90 transition-transform" />
@@ -487,7 +476,7 @@ export default function Home() {
                  {activeCategory === "Featured" && (
                    <button 
                      onClick={() => setShowFeaturedModal(true)}
-                     className="block mx-auto mt-8 text-red-600 border-b border-red-600/30 text-sm uppercase tracking-widest pb-1 hover:border-red-600 transition-colors"
+                     className="block mx-auto mt-8 text-black border-b border-black/30 text-sm uppercase tracking-widest pb-1 hover:border-black transition-colors"
                    >
                      Enter your code to unlock featured works
                    </button>
@@ -545,12 +534,12 @@ export default function Home() {
                 className="relative w-full aspect-video shadow-2xl z-[205] group"
               >
               {/* Ambient Glow / Back-lighting */}
-              <div className="absolute inset-0 -z-10 translate-y-4 scale-110 blur-[100px] bg-red-600/20 opacity-50 transition-opacity duration-1000" />
+              <div className="absolute inset-0 -z-10 translate-y-4 scale-110 blur-[100px] bg-white/5 opacity-50 transition-opacity duration-1000" />
               
               <div className="relative w-full h-full bg-black overflow-hidden">
-                {selectedProject.category === 'PREMIERE' && (
+                {selectedProject.category === 'FEATURED' && (
                   <div className="absolute top-8 left-8 z-[210] flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
                     <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-white drop-shadow-md">Featured Now</span>
                   </div>
                 )}
@@ -616,7 +605,7 @@ export default function Home() {
             >
               <div className="flex flex-col gap-4">
                 <h3 className="text-4xl md:text-6xl text-white font-display italic">{selectedProject.title}</h3>
-                <p className="text-xl text-red-600 font-display italic">{selectedProject.category} · {selectedProject.year}</p>
+                <p className="text-xl text-white/40 font-display italic">{selectedProject.category} · {selectedProject.year}</p>
                 <div className="space-y-6 mt-4">
                   <p className="text-lg text-white/80 leading-relaxed max-w-xl">
                     {selectedProject.description}
@@ -634,7 +623,7 @@ export default function Home() {
                 <p className="uppercase tracking-[0.3em] font-medium">DP: {selectedProject.role}</p>
                 <p className="uppercase tracking-[0.3em] font-medium opacity-50 mt-4">Production: {selectedProject.production_company}</p>
                 {selectedProject.awards && (
-                  <p className="text-red-600/60 italic font-display mt-8 text-right max-w-xs">{selectedProject.awards}</p>
+                  <p className="text-white/40 italic font-display mt-8 text-right max-w-xs">{selectedProject.awards}</p>
                 )}
               </div>
             </motion.div>
@@ -678,109 +667,176 @@ function ProjectCard({ project, mode, onSelect }: { project: any, mode: string, 
     <motion.article 
       ref={ref}
       style={{ scale, opacity }}
-      className="flex flex-col gap-8 group"
+      className="flex flex-col gap-8"
     >
-      <div 
-        className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-gray-200'} overflow-hidden cursor-pointer`}
-        onClick={handleProjectClick}
-      >
-        {getVimeoId(project.media_url) ? (
-          <img 
-            src={project.thumbnail_url || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-          />
-        ) : getMediaUrl(project.thumbnail_url || project.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
-          <video 
-            src={getMediaUrl(project.thumbnail_url || project.media_url)} 
-            muted 
-            autoPlay 
-            loop 
-            playsInline
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-          />
-        ) : (
-          <img 
-            src={getMediaUrl(project.thumbnail_url || project.media_url)} 
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-          />
-        )}
-        <div className={`absolute inset-0 ${mode === 'theatrical' ? 'bg-gradient-to-t from-black/60 via-transparent to-transparent' : 'bg-black/0 group-hover:bg-black/20'} transition-all duration-500 flex flex-col items-center justify-center p-8`}>
-           {mode === 'theatrical' ? (
-             <span className="opacity-0 group-hover:opacity-100 text-white border border-red-600 rounded-full px-12 py-4 uppercase tracking-[0.4em] text-[10px] transition-all duration-500 transform group-hover:translate-y-0 translate-y-8 backdrop-blur-sm">
-               Screening
-             </span>
-           ) : (
-             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none p-6 flex flex-col justify-between">
-               {/* Viewfinder Corners */}
-               <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-white/80" />
-               <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-white/80" />
-               <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-white/80" />
-               <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-white/80" />
-               
-               {/* Center Shutter/Aperture - Minimalist */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                 <motion.div 
-                   animate={{ 
-                     rotate: isCapturing ? 90 : 0,
-                     scale: isCapturing ? 0.8 : 1
-                   }}
-                   transition={{ duration: 0.3, ease: "circOut" }}
-                   className="relative w-14 h-14 rounded-full border border-white/20 flex items-center justify-center overflow-hidden"
-                 >
-                   {/* Shutter Blades - Thinner */}
-                   {[0, 60, 120, 180, 240, 300].map((deg) => (
-                     <div 
-                       key={deg}
-                       style={{ transform: `rotate(${deg}deg) translateY(-50%)` }}
-                       className="absolute top-1/2 left-1/2 w-7 h-[1px] bg-white/30 origin-left"
-                     />
-                   ))}
-                   <div className="w-5 h-5 rounded-full border border-white/30" />
+      {(project.media_url || project.thumbnail_url) && (
+        <div 
+          className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-gray-200'} overflow-hidden cursor-pointer group`}
+          onClick={handleProjectClick}
+          onMouseEnter={(e) => {
+            const video = e.currentTarget.querySelector('video');
+            if (video) video.play().catch(() => {});
+          }}
+          onMouseLeave={(e) => {
+            const video = e.currentTarget.querySelector('video');
+            if (video) {
+              video.pause();
+              video.currentTime = 0;
+            }
+          }}
+        >
+          {getVimeoId(project.media_url) ? (
+            <img 
+              src={project.thumbnail_url || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
+              alt={project.title}
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+            />
+          ) : getMediaUrl(project.thumbnail_url || project.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+            <video 
+              src={getMediaUrl(project.thumbnail_url || project.media_url)} 
+              muted 
+              loop 
+              playsInline
+              preload="metadata"
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+            />
+          ) : (
+            <img 
+              src={getMediaUrl(project.thumbnail_url || project.media_url)} 
+              alt={project.title}
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+            />
+          )}
+          <div className={`absolute inset-0 ${mode === 'theatrical' ? 'bg-gradient-to-t from-black/60 via-transparent to-transparent' : 'bg-black/0 group-hover:bg-black/20'} transition-all duration-500 flex flex-col items-center justify-center p-8`}>
+             {mode === 'theatrical' ? (
+               <span className="opacity-0 group-hover:opacity-100 text-white border border-white/20 rounded-full px-12 py-4 uppercase tracking-[0.4em] text-[10px] transition-all duration-500 transform group-hover:translate-y-0 translate-y-8 backdrop-blur-sm">
+                 Screening
+               </span>
+             ) : (
+               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none p-6 flex flex-col justify-between">
+                 {/* Viewfinder Corners */}
+                 <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-white/80" />
+                 <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-white/80" />
+                 <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-white/80" />
+                 <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-white/80" />
+                 
+                 {/* Center Shutter/Aperture - Minimalist */}
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
                    <motion.div 
-                     animate={{ opacity: isCapturing ? 1 : 0 }}
-                     className="absolute inset-0 bg-white/20"
-                   />
-                 </motion.div>
+                     animate={{ 
+                       rotate: isCapturing ? 90 : 0,
+                       scale: isCapturing ? 0.8 : 1
+                     }}
+                     transition={{ duration: 0.3, ease: "circOut" }}
+                     className="relative w-14 h-14 rounded-full border border-white/20 flex items-center justify-center overflow-hidden"
+                   >
+                     {/* Shutter Blades - Thinner */}
+                     {[0, 60, 120, 180, 240, 300].map((deg) => (
+                       <div 
+                         key={deg}
+                         style={{ transform: `rotate(${deg}deg) translateY(-50%)` }}
+                         className="absolute top-1/2 left-1/2 w-7 h-[1px] bg-white/30 origin-left"
+                       />
+                     ))}
+                     <div className="w-5 h-5 rounded-full border border-white/30" />
+                     <motion.div 
+                       animate={{ opacity: isCapturing ? 1 : 0 }}
+                       className="absolute inset-0 bg-white/20"
+                     />
+                   </motion.div>
+                 </div>
+                 
+                 {/* Project Title Overlay */}
+                 <div className="absolute inset-x-0 bottom-12 flex justify-center px-8 z-10 transition-transform duration-700 ease-out translate-y-4 group-hover:translate-y-0">
+                   <h3 className="text-white text-2xl md:text-3xl lg:text-4xl font-display italic text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                     {project.title}
+                   </h3>
+                 </div>
                </div>
-             </div>
-           )}
+             )}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-24 max-w-7xl">
-        <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+      <div className="flex flex-col gap-6 lg:gap-8 max-w-4xl">
+        <div className="flex flex-col gap-4">
           <h2 className={`text-4xl md:text-5xl lg:text-7xl ${mode === 'theatrical' ? 'text-[var(--color-brand-ink)] font-display italic tracking-tight' : 'text-[var(--color-brand-ink)]'}`}>
             {project.title}
           </h2>
-          <p className={`text-xl italic font-display ${mode === 'theatrical' ? 'text-red-600' : 'text-gray-500'}`}>
-            {project.category} · {project.year}
-          </p>
-          <p className={`text-base leading-relaxed max-w-xl mt-4 ${mode === 'theatrical' ? 'text-[var(--color-brand-ink)]/70' : 'text-gray-700'}`}>
-            {project.description}
-          </p>
         </div>
 
-        <div className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-2 text-sm border-l border-black/10 text-gray-500 pl-6 lg:pl-8`}>
-          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 pb-4">
-            <span className="uppercase tracking-widest text-[9px] opacity-50">Role</span>
-            <strong className="font-normal text-[var(--color-brand-ink)]">{project.role}</strong>
+        <div className={`flex flex-col gap-2 text-sm text-gray-500`}>
+          
+          {/* Mobile Paragraph Layout */}
+          <p className="sm:hidden text-xs leading-loose text-gray-500">
+            {project.year && project.year.trim() && (
+              <span className="inline-block mr-3">
+                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Year</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.year}</strong>
+              </span>
+            )}
+            {project.role && project.role.trim() && (
+              <span className="inline-block mr-3">
+                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Role</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.role}</strong>
+              </span>
+            )}
+            {project.director && project.director.trim() && (
+              <span className="inline-block mr-3">
+                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Director</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.director}</strong>
+              </span>
+            )}
+            {project.client && project.client.trim() && (
+              <span className="inline-block mr-3">
+                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Client</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.client}</strong>
+              </span>
+            )}
+            {project.production_company && project.production_company.trim() && (
+              <span className="inline-block mr-3">
+                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Studio</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.production_company}</strong>
+              </span>
+            )}
+          </p>
+
+          {/* Desktop/Tablet Grid Layout */}
+          <div className="hidden sm:flex flex-row flex-wrap gap-8 lg:gap-16 mt-4">
+            {project.year && project.year.trim() && (
+              <div className="flex flex-col gap-1">
+                <span className="uppercase tracking-widest text-[9px] opacity-50">Year</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.year}</strong>
+              </div>
+            )}
+            {project.role && project.role.trim() && (
+              <div className="flex flex-col gap-1">
+                <span className="uppercase tracking-widest text-[9px] opacity-50">Role</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.role}</strong>
+              </div>
+            )}
+            {project.director && project.director.trim() && (
+              <div className="flex flex-col gap-1">
+                <span className="uppercase tracking-widest text-[9px] opacity-50">Director</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.director}</strong>
+              </div>
+            )}
+            {project.client && project.client.trim() && (
+              <div className="flex flex-col gap-1">
+                <span className="uppercase tracking-widest text-[9px] opacity-50">Client</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.client}</strong>
+              </div>
+            )}
+            {project.production_company && project.production_company.trim() && (
+              <div className="flex flex-col gap-1">
+                <span className="uppercase tracking-widest text-[9px] opacity-50">Studio</span>
+                <strong className="font-normal text-[var(--color-brand-ink)]">{project.production_company}</strong>
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 py-4">
-            <span className="uppercase tracking-widest text-[9px] opacity-50">Director</span>
-            <strong className="font-normal text-[var(--color-brand-ink)]">{project.director}</strong>
-          </div>
-          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 py-4">
-            <span className="uppercase tracking-widest text-[9px] opacity-50">Client</span>
-            <strong className="font-normal text-[var(--color-brand-ink)]">{project.client}</strong>
-          </div>
-          <div className="grid grid-cols-[1fr_2fr] gap-4 items-baseline border-b border-black/5 py-4">
-            <span className="uppercase tracking-widest text-[9px] opacity-50">Studio</span>
-            <strong className="font-normal text-[var(--color-brand-ink)]">{project.production_company}</strong>
-          </div>
-          {project.awards && (
-            <div className={`mt-6 pt-2 font-normal italic font-display ${mode === 'theatrical' ? 'text-red-600/80' : 'text-[#b09e8d]'}`}>
+
+          {project.awards && project.awards.trim() && (
+            <div className={`mt-2 sm:mt-6 pt-2 font-normal italic font-display ${mode === 'theatrical' ? 'text-black/30' : 'text-[#b09e8d]'}`}>
               {project.awards}
             </div>
           )}

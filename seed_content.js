@@ -2,7 +2,7 @@
 const projects = [
   {
     title: "Showreel 2026",
-    category: "PREMIERE",
+    category: "FEATURED",
     year: "2026",
     media_url: "https://vimeo.com/1132272734",
     role: "Director of Photography",
@@ -39,7 +39,7 @@ const projects = [
   },
   {
     title: "80 Meters Under Ice",
-    category: "NARRATIVE",
+    category: "DOCUMENTARY",
     year: "2024",
     media_url: "/uploads/80 meters under ice documentary.mov",
     role: "Director of Photography",
@@ -145,7 +145,7 @@ async function seed() {
     if (res.ok) {
       console.log(`Created project: ${project.title}`);
       const data = await res.json();
-      if (project.category === 'PREMIERE') {
+      if (project.category === 'FEATURED') {
         const passRes = await fetch('http://localhost:3000/api/ticket-passes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

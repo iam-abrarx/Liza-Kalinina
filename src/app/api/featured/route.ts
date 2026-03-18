@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ project: ticket.project });
   } catch (error) {
-    console.error("Premiere Validation Error:", error);
+    console.error("Featured Validation Error:", error);
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
   }
 }

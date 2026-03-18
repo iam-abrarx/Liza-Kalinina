@@ -46,6 +46,7 @@ async function migrate() {
   const projects = await prisma.project.findMany();
   const totalProjects = projects.length;
   console.log(`\n🚀 Starting Migration of ${totalProjects} Projects to Vercel Blob...`);
+  console.log(`📏 Limit: 250MB. Oversized projects will be removed from production.`);
 
   for (let pIndex = 0; pIndex < totalProjects; pIndex++) {
     const project = projects[pIndex];
@@ -64,9 +65,10 @@ async function migrate() {
           const fileName = path.basename(filePath);
           const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
 
-          if (stats.size > 200 * 1024 * 1024) {
-            console.warn(`\n  ⚠️  SKIPPING: "${fileName}" is ${sizeMB}MB (User limit: 200MB).`);
-            continue; // Move to next item
+          if (stats.size > 250 * 1024 * 1024) {
+            console.warn(`\n  🗑️  REMOVING: "${project.title}" since "${fileName}" is ${sizeMB}MB (Exceeds 250MB).`);
+            await prisma.project.delete({ where: { id: project.id } });
+            continue; // Move to next project
           }
           
           const fileStream = fs.createReadStream(filePath);
@@ -76,6 +78,7 @@ async function migrate() {
             token: token,
             access: 'public',
             contentType: fileName.toLowerCase().endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
+            allowOverwrite: true,
           });
           
           newMediaUrl = blob.url;
@@ -97,8 +100,8 @@ async function migrate() {
                   const fileName = path.basename(filePath);
                   const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
 
-                  if (stats.size > 200 * 1024 * 1024) {
-                    console.warn(`\n  ⚠️  SKIPPING GALLERY: "${fileName}" is ${sizeMB}MB (User limit: 200MB).`);
+                  if (stats.size > 250 * 1024 * 1024) {
+                    console.warn(`\n  ⚠️  SKIPPING GALLERY: "${fileName}" is ${sizeMB}MB (Exceeds 250MB).`);
                     continue;
                   }
                   
@@ -109,6 +112,7 @@ async function migrate() {
                     token: token,
                     access: 'public',
                     contentType: fileName.toLowerCase().endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
+                    allowOverwrite: true,
                   });
                   newGallery[i] = blob.url;
                   updatedNeeded = true;
@@ -121,14 +125,18 @@ async function migrate() {
     }
 
     if (updatedNeeded) {
-      await prisma.project.update({
-        where: { id: project.id },
-        data: { media_url: newMediaUrl, gallery: newGallery },
-      });
+      // Check if project still exists (just in case)
+      const exists = await prisma.project.findUnique({ where: { id: project.id } });
+      if (exists) {
+        await prisma.project.update({
+          where: { id: project.id },
+          data: { media_url: newMediaUrl, gallery: newGallery },
+        });
+      }
     }
   }
 
-  console.log('\n✨ Asset Migration Finished Successfully!');
+  console.log('\n✨ Asset Migration and Cleanup Finished Successfully!');
 }
 
 migrate()
