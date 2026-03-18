@@ -65,7 +65,12 @@ export default function AdminDashboard() {
             gallery: [...prev.gallery, ...uploadedUrls].slice(0, 10) 
           }));
         } else {
-          setNewProject(prev => ({ ...prev, media_url: uploadedUrls[0] }));
+          const url = uploadedUrls[0];
+          setNewProject(prev => ({ ...prev, media_url: url }));
+          // Automatically trigger thumbnail generation for direct videos
+          if (url.match(/\.(mp4|webm|ogg|mov)/i)) {
+            generateThumbnails(url);
+          }
         }
         showMessage(`${uploadedUrls.length} file(s) uploaded successfully`);
       } else {
@@ -165,6 +170,28 @@ export default function AdminDashboard() {
       showMessage("Error generating thumbnails", "error");
     } finally {
       setIsGeneratingThumbs(false);
+    }
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const newBlob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+      });
+      if (newBlob.url) {
+        setNewProject(prev => ({ ...prev, thumbnail_url: newBlob.url }));
+        setThumbnailSuggestions(prev => [newBlob.url, ...prev]);
+        showMessage("Custom thumbnail uploaded");
+      }
+    } catch (error: any) {
+      showMessage(error.message || "Upload failed", "error");
+    } finally {
+      setIsUploading(false);
     }
   };
   const [newPass, setNewPass] = useState({
@@ -738,6 +765,19 @@ export default function AdminDashboard() {
                         Add gallery photos or enter Media URL to pick a cover
                      </div>
                   )}
+
+                  {/* Manual Upload Button */}
+                  <label className="min-w-[150px] aspect-video flex flex-col items-center justify-center border-2 border-dashed border-black/5 hover:border-black/20 cursor-pointer transition-colors group">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className="hidden" 
+                      onChange={handleThumbnailUpload}
+                      disabled={isUploading}
+                    />
+                    <UploadIcon size={18} className="text-gray-300 group-hover:text-black mb-1" />
+                    <span className="text-[8px] uppercase font-bold tracking-widest text-gray-400 group-hover:text-black">Upload Custom</span>
+                  </label>
                 </div>
               </div>
 
