@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [isGeneratingThumbs, setIsGeneratingThumbs] = useState(false);
   const [thumbnailProgress, setThumbnailProgress] = useState(0);
   const [thumbnailSuggestions, setThumbnailSuggestions] = useState<string[]>([]);
+  const [formTab, setFormTab] = useState<'basic' | 'media' | 'narrative' | 'gallery'>('basic');
   const thumbnailScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollThumbnails = (direction: 'left' | 'right') => {
@@ -676,319 +677,368 @@ export default function AdminDashboard() {
       {/* Project Creation Overlay */}
       {isProjectFormOpen && (
         <div className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-sm flex items-center justify-end">
-          <div className="w-full max-w-2xl h-full bg-[var(--color-brand-bg)] p-8 md:p-12 overflow-y-auto shadow-2xl">
-            <div className="flex justify-between items-center mb-12">
-              <h2 className="text-3xl font-display italic">{editingProjectId ? "Edit Project" : "Create New Project"}</h2>
+          <div className="w-full max-w-3xl h-full bg-[var(--color-brand-bg)] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-8 md:px-12 md:py-8 border-b border-black/5 bg-white/50 backdrop-blur-md sticky top-0 z-10">
+              <div>
+                <h2 className="text-3xl font-display italic leading-none">{editingProjectId ? "Edit Project" : "Create Project"}</h2>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 mt-2">Step {formTab === 'basic' ? '1' : formTab === 'media' ? '2' : formTab === 'narrative' ? '3' : '4'} of 4</p>
+              </div>
               <button onClick={() => { setIsProjectFormOpen(false); setEditingProjectId(null); }} className="text-gray-400 hover:text-black transition-colors">
                 <X size={32} strokeWidth={1} />
               </button>
             </div>
 
-            <form onSubmit={editingProjectId ? handleUpdateProject : handleCreateProject} className="flex flex-col gap-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Title</label>
-                  <input 
-                    required
-                    value={newProject.title}
-                    onChange={e => setNewProject({...newProject, title: e.target.value})}
-                    className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                    placeholder="e.g. Midnight Motion"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Category</label>
-                  <select 
-                    value={newProject.category}
-                    onChange={e => setNewProject({...newProject, category: e.target.value})}
-                    className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium appearance-none"
-                  >
-                    <option value="COMMERCIAL">Commercials</option>
-                    <option value="MUSIC_VIDEO">Music Videos</option>
-                    <option value="NARRATIVE">Narrative</option>
-                    <option value="DOCUMENTARY">Documentaries</option>
-                    <option value="STILLS">Stills</option>
-                    <option value="FEATURED">Featured (Private)</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Year</label>
-                  <input 
-                    required
-                    value={newProject.year}
-                    onChange={e => setNewProject({...newProject, year: e.target.value})}
-                    className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                  />
-                </div>
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] uppercase tracking-widest text-gray-400">Media URL (Vimeo link or direct video)</label>
-                    <div className="flex items-center gap-4">
-                      {/* Fetch Button */}
-                      <button
-                        type="button"
-                        onClick={handleFetchVimeoMeta}
-                        disabled={isFetchingMeta || !newProject.media_url.includes('vimeo.com')}
-                        className="text-[10px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-1 transition-colors"
-                        title="Auto-fill title and year from Vimeo"
+            {/* Tab Navigation */}
+            <div className="flex border-b border-black/5 px-8 md:px-12 bg-white/30">
+              {[
+                { id: 'basic', label: 'Details' },
+                { id: 'media', label: 'Video & Cover' },
+                { id: 'narrative', label: 'Story & Awards' },
+                { id: 'gallery', label: 'Gallery' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setFormTab(tab.id as any)}
+                  className={`py-4 px-6 text-[10px] uppercase tracking-widest font-bold transition-all border-b-2 ${
+                    formTab === tab.id 
+                      ? 'border-black text-black' 
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <form onSubmit={editingProjectId ? handleUpdateProject : handleCreateProject} className="flex-1 overflow-y-auto p-8 md:p-12 flex flex-col gap-12">
+              
+              {/* Tab 1: Basic & Professional Details */}
+              {formTab === 'basic' && (
+                <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Title</label>
+                      <input 
+                        required
+                        value={newProject.title}
+                        onChange={e => setNewProject({...newProject, title: e.target.value})}
+                        className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium text-lg"
+                        placeholder="Midnight Motion"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400">Category</label>
+                      <select 
+                        value={newProject.category}
+                        onChange={e => setNewProject({...newProject, category: e.target.value})}
+                        className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2.5 font-medium appearance-none"
                       >
-                        {isFetchingMeta ? "FETCHING..." : "FETCH DETAILS"}
-                        {!isFetchingMeta && <LinkIcon size={12} />}
-                      </button>
+                        <option value="COMMERCIAL">Commercials</option>
+                        <option value="MUSIC_VIDEO">Music Videos</option>
+                        <option value="NARRATIVE">Narrative</option>
+                        <option value="DOCUMENTARY">Documentaries</option>
+                        <option value="FASHION">Fashion</option>
+                        <option value="STILLS">Stills</option>
+                        <option value="FEATURED">Featured (Private)</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400">Release Year</label>
+                      <input 
+                        required
+                        value={newProject.year}
+                        onChange={e => setNewProject({...newProject, year: e.target.value})}
+                        className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400">Sort Order</label>
+                      <input 
+                        type="number"
+                        value={newProject.sort_order}
+                        onChange={e => setNewProject({...newProject, sort_order: parseInt(e.target.value) || 0})}
+                        className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
+                      />
+                    </div>
+                  </div>
 
-                      {/* Generate Thumbnails Button */}
-                      {newProject.media_url && (
-                        <>
-                          <div className="h-3 w-[1px] bg-black/10" />
-                          <button
-                            type="button"
-                            onClick={() => generateThumbnails(newProject.media_url)}
-                            disabled={isGeneratingThumbs}
-                            className="text-[10px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-1 transition-colors"
-                            title="Generate high-quality thumbnails from this local video"
-                          >
-                            {isGeneratingThumbs ? `GENERATING... ${thumbnailProgress}%` : "GENERATE THUMBNAILS"}
-                          </button>
-                        </>
-                      )}
-
-                      <div className="h-3 w-[1px] bg-black/10" />
-
-                      {/* Upload Button */}
-                      <label className="cursor-pointer hover:text-black text-gray-400 transition-colors flex items-center gap-2">
+                  <div className="pt-8 border-t border-black/5">
+                    <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold text-black/20 mb-8">Professional Credits</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] uppercase tracking-widest text-gray-400">Your Role</label>
                         <input 
-                            type="file" 
-                            className="hidden" 
-                            onChange={handleFileUpload}
-                            disabled={isUploading}
+                          value={newProject.role}
+                          onChange={e => setNewProject({...newProject, role: e.target.value})}
+                          className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
                         />
-                        {isUploading ? (
-                          <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING... {uploadProgress}%</span>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <span className="text-[10px] uppercase font-bold text-gray-500 hover:text-black">Upload File</span>
-                            <UploadIcon size={14} className="text-gray-400" />
-                          </div>
-                        )}
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] uppercase tracking-widest text-gray-400">Director</label>
+                        <input 
+                          value={newProject.director}
+                          onChange={e => setNewProject({...newProject, director: e.target.value})}
+                          className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] uppercase tracking-widest text-gray-400">Client / Brand</label>
+                        <input 
+                          value={newProject.client}
+                          onChange={e => setNewProject({...newProject, client: e.target.value})}
+                          className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] uppercase tracking-widest text-gray-400">Production House</label>
+                        <input 
+                          value={newProject.production_company}
+                          onChange={e => setNewProject({...newProject, production_company: e.target.value})}
+                          className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Media & Cover Selection */}
+              {formTab === 'media' && (
+                <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <div className="flex flex-col gap-6 p-6 bg-black/5 rounded-lg border border-black/5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Project Media Source</label>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleFetchVimeoMeta}
+                          disabled={isFetchingMeta || !newProject.media_url.includes('vimeo.com')}
+                          className="text-[9px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-1 transition-colors bg-white px-3 py-1.5 rounded-full shadow-sm"
+                        >
+                          {isFetchingMeta ? "FETCHING..." : "FETCH DATA"}
+                          {!isFetchingMeta && <LinkIcon size={10} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => generateThumbnails(newProject.media_url)}
+                          disabled={isGeneratingThumbs || !newProject.media_url || newProject.media_url.includes('vimeo.com')}
+                          className="text-[9px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-1 transition-colors bg-white px-3 py-1.5 rounded-full shadow-sm"
+                        >
+                          {isGeneratingThumbs ? `PROCESSED ${thumbnailProgress}%` : "EXTRACT COVERS"}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <input 
+                        required
+                        value={newProject.media_url}
+                        onChange={e => setNewProject({...newProject, media_url: e.target.value})}
+                        className="w-full bg-white border border-black/10 focus:border-black outline-none p-4 rounded-md font-medium text-sm shadow-inner"
+                        placeholder="Paste Vimeo link or direct video URL..."
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between px-2">
+                      <p className="text-[10px] text-gray-400 italic">MP4, WebM, MOV, HLS or Vimeo URLs are supported.</p>
+                      <label className="cursor-pointer group">
+                        <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+                        <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-black transition-colors flex items-center gap-2">
+                          {isUploading ? `UPLOADING ${uploadProgress}%` : "OR UPLOAD VIDEO FILE"}
+                          {!isUploading && <UploadIcon size={12} />}
+                        </span>
                       </label>
                     </div>
                   </div>
-                  <div className="relative">
-                    <input 
-                      required
-                      value={newProject.media_url}
-                      onChange={e => setNewProject({...newProject, media_url: e.target.value})}
-                      className="w-full bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <p className="text-[10px] text-gray-400 italic">Supports Vimeo links and direct video/HLS URLs.</p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Role</label>
-                  <input 
-                    value={newProject.role}
-                    onChange={e => setNewProject({...newProject, role: e.target.value})}
-                    className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Director</label>
-                  <input 
-                    value={newProject.director}
-                    onChange={e => setNewProject({...newProject, director: e.target.value})}
-                    className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Client / Brand</label>
-                  <input 
-                    value={newProject.client}
-                    onChange={e => setNewProject({...newProject, client: e.target.value})}
-                    className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Production House</label>
-                  <input 
-                    value={newProject.production_company}
-                    onChange={e => setNewProject({...newProject, production_company: e.target.value})}
-                    className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400">Awards & Festivals</label>
-                <input 
-                  value={newProject.awards}
-                  onChange={e => setNewProject({...newProject, awards: e.target.value})}
-                  className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                  placeholder="Official Selection — Cannes..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400">Short Description</label>
-                <textarea 
-                  rows={2}
-                  value={newProject.description}
-                  onChange={e => setNewProject({...newProject, description: e.target.value})}
-                  className="bg-transparent border border-black/10 focus:border-black outline-none p-3 font-light text-sm"
-                  placeholder="Short project overview for the grid..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400">Full Story / Narrative Detail (Optional)</label>
-                <textarea 
-                  rows={6}
-                  value={newProject.long_description}
-                  onChange={e => setNewProject({...newProject, long_description: e.target.value})}
-                  className="bg-transparent border border-black/10 focus:border-black outline-none p-3 font-light text-sm"
-                  placeholder="The full story behind the project. Exclusive details for Narrative mode..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Thumbnail / Cover Selection</label>
-                </div>
-                
-                <div className="relative group/scroll">
-                   {/* Scroll Arrows */}
-                   <button 
-                     type="button"
-                     onClick={() => scrollThumbnails('left')}
-                     className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover/scroll:opacity-100 transition-opacity hover:bg-black -left-2"
-                   >
-                     <ChevronLeft size={20} />
-                   </button>
-                   <button 
-                     type="button"
-                     onClick={() => scrollThumbnails('right')}
-                     className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover/scroll:opacity-100 transition-opacity hover:bg-black -right-2"
-                   >
-                     <ChevronRight size={20} />
-                   </button>
-
-                  <div 
-                    ref={thumbnailScrollRef}
-                    className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-black/10 scrollbar-track-transparent py-2 px-1 scroll-smooth"
-                  >
-                  {/* Candidates for Thumbnail */}
-                  {[
-                    newProject.media_url && !newProject.media_url.includes('vimeo.com') ? newProject.media_url : null,
-                    newProject.thumbnail_url && newProject.thumbnail_url.includes('vimeocdn.com') ? newProject.thumbnail_url : null,
-                    ...thumbnailSuggestions,
-                    ...newProject.gallery
-                  ].filter(Boolean).map((url, idx) => (
-                    <div 
-                      key={idx} 
-                      onClick={() => setNewProject(prev => ({ ...prev, thumbnail_url: url as string }))}
-                      className={`group min-w-[150px] aspect-video relative cursor-pointer border-2 transition-all ${
-                        newProject.thumbnail_url === url 
-                          ? 'border-black scale-[1.02]' 
-                          : 'border-transparent opacity-50 hover:opacity-100'
-                      }`}
-                    >
-                      <img src={url as string} alt="" className="w-full h-full object-cover" />
-                      
-                      {/* Remove Button for Suggestions */}
-                      {thumbnailSuggestions.includes(url as string) && (
-                        <button 
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeThumbnailCandidate(url as string);
-                          }}
-                          className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black"
-                        >
-                          <X size={10} />
-                        </button>
-                      )}
-
-                      {newProject.thumbnail_url === url && (
-                        <div className="absolute bottom-2 left-2 bg-black text-white px-2 py-0.5 text-[8px] uppercase tracking-widest font-bold">COVER</div>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {(!newProject.media_url || newProject.media_url.includes('vimeo.com')) && !newProject.thumbnail_url && newProject.gallery.length === 0 && (
-                     <div className="w-full py-6 border border-dashed border-black/5 flex items-center justify-center text-gray-400 italic text-[10px]">
-                        Add gallery photos or enter Media URL to pick a cover
-                     </div>
-                  )}
-
-                  {/* Manual Upload Button */}
-                  <label className="min-w-[150px] aspect-video flex flex-col items-center justify-center border-2 border-dashed border-black/5 hover:border-black/20 cursor-pointer transition-colors group">
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      className="hidden" 
-                      onChange={handleThumbnailUpload}
-                      disabled={isUploading}
-                    />
-                    <UploadIcon size={18} className="text-gray-300 group-hover:text-black mb-1" />
-                    <span className="text-[8px] uppercase font-bold tracking-widest text-gray-400 group-hover:text-black">Upload Custom</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400">Project Gallery (Max 10 images)</label>
-                  <label className="cursor-pointer text-black hover:opacity-70 transition-opacity flex items-center gap-2">
-                    <input 
-                      type="file" 
-                      multiple
-                      className="hidden" 
-                      onChange={(e) => handleFileUpload(e, true)}
-                      disabled={isUploading}
-                    />
-                    {isUploading ? (
-                      <span className="text-[10px] uppercase font-bold text-black animate-pulse">UPLOADING... {uploadProgress}%</span>
-                    ) : (
-                      <>
-                        <Plus size={14} />
-                        <span className="text-[10px] uppercase font-bold tracking-widest">Add Picture</span>
-                      </>
-                    )}
-                  </label>
-                </div>
-                
-                <div className="grid grid-cols-4 gap-4">
-                  {newProject.gallery.map((url, idx) => (
-                    <div key={idx} className="aspect-square bg-gray-100 relative group border border-black/5">
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                  <div className="flex flex-col gap-4">
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Project Thumbnail / Cover Selection</label>
+                    <div className="relative group/scroll">
+                      {/* Scroll Arrows */}
                       <button 
                         type="button"
-                        onClick={() => removeGalleryImage(idx)}
-                        className="absolute top-1 right-1 bg-black text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => scrollThumbnails('left')}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover/scroll:opacity-100 transition-opacity hover:bg-black -left-4 shadow-lg"
                       >
-                        <X size={12} />
+                        <ChevronLeft size={20} />
                       </button>
+                      <button 
+                        type="button"
+                        onClick={() => scrollThumbnails('right')}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover/scroll:opacity-100 transition-opacity hover:bg-black -right-4 shadow-lg"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+
+                      <div 
+                        ref={thumbnailScrollRef}
+                        className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-black/10 scrollbar-track-transparent py-4 px-1 scroll-smooth"
+                      >
+                        {[
+                          newProject.media_url && !newProject.media_url.includes('vimeo.com') ? newProject.media_url : null,
+                          newProject.thumbnail_url && newProject.thumbnail_url.includes('vimeocdn.com') ? newProject.thumbnail_url : null,
+                          ...thumbnailSuggestions,
+                          ...newProject.gallery
+                        ].filter(Boolean).map((url, idx) => (
+                          <div 
+                            key={idx} 
+                            onClick={() => setNewProject(prev => ({ ...prev, thumbnail_url: url as string }))}
+                            className={`group min-w-[200px] aspect-video relative cursor-pointer border-4 transition-all rounded overflow-hidden shadow-sm hover:shadow-md ${
+                              newProject.thumbnail_url === url 
+                                ? 'border-black scale-[1.02]' 
+                                : 'border-transparent opacity-60 hover:opacity-100'
+                            }`}
+                          >
+                            <img src={url as string} alt="" className="w-full h-full object-cover" />
+                            
+                            {thumbnailSuggestions.includes(url as string) && (
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeThumbnailCandidate(url as string);
+                                }}
+                                className="absolute top-2 right-2 bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black"
+                              >
+                                <X size={12} />
+                              </button>
+                            )}
+
+                            {newProject.thumbnail_url === url && (
+                              <div className="absolute inset-x-0 bottom-0 bg-black text-white py-1.5 text-[8px] uppercase tracking-[0.3em] font-bold text-center">Selected Cover</div>
+                            )}
+                          </div>
+                        ))}
+                        
+                        <label className="min-w-[200px] aspect-video flex flex-col items-center justify-center border-2 border-dashed border-black/10 hover:border-black/30 bg-black/5 cursor-pointer transition-all rounded group">
+                          <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailUpload} disabled={isUploading} />
+                          <UploadIcon size={24} className="text-gray-300 group-hover:text-black mb-2 transition-colors" />
+                          <span className="text-[9px] uppercase font-bold tracking-widest text-gray-400 group-hover:text-black">Upload Custom Cover</span>
+                        </label>
+                      </div>
                     </div>
-                  ))}
-                  {newProject.gallery.length === 0 && (
-                    <div className="col-span-4 py-8 border-2 border-dashed border-black/5 rounded-sm flex flex-col items-center justify-center text-gray-400">
-                      <p className="text-xs italic uppercase tracking-widest opacity-50">No gallery images added</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Narrative & Awards */}
+              {formTab === 'narrative' && (
+                <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Awards & Festivals</label>
+                    <input 
+                      value={newProject.awards}
+                      onChange={e => setNewProject({...newProject, awards: e.target.value})}
+                      className="bg-transparent border-b border-black/10 focus:border-black outline-none py-3 font-medium text-base italic"
+                      placeholder="e.g. Winner — Best Cinematography, Cannes 2024"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Short Project Overview</label>
+                    <textarea 
+                      rows={3}
+                      value={newProject.description}
+                      onChange={e => setNewProject({...newProject, description: e.target.value})}
+                      className="bg-white border border-black/10 focus:border-black outline-none p-4 rounded-md font-light text-sm shadow-sm leading-relaxed"
+                      placeholder="Brief context for the homepage grid..."
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Detailed Narrative Story</label>
+                    <textarea 
+                      rows={8}
+                      value={newProject.long_description}
+                      onChange={e => setNewProject({...newProject, long_description: e.target.value})}
+                      className="bg-white border border-black/10 focus:border-black outline-none p-4 rounded-md font-light text-sm shadow-sm leading-relaxed"
+                      placeholder="The full story, creative process, or technical details for the expanded view..."
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 4: Behind the Frames (Gallery) */}
+              {formTab === 'gallery' && (
+                <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <div className="flex justify-between items-center p-6 bg-black text-white rounded-lg">
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-widest opacity-60 mb-1 font-bold">Behind the Frames</h4>
+                      <p className="text-sm italic font-display">{newProject.gallery.length} Images Uploaded</p>
                     </div>
+                    <label className="cursor-pointer bg-white text-black px-6 py-2.5 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-gray-200 transition-colors flex items-center gap-2">
+                      <input 
+                        type="file" 
+                        multiple
+                        className="hidden" 
+                        onChange={(e) => handleFileUpload(e, true)}
+                        disabled={isUploading}
+                      />
+                      {isUploading ? `UPLOADING ${uploadProgress}%` : "Add Pictures"}
+                      {!isUploading && <Plus size={14} />}
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                    {newProject.gallery.map((url, idx) => (
+                      <div key={idx} className="aspect-square bg-gray-100 relative group rounded-lg overflow-hidden border border-black/5 shadow-sm hover:shadow-md transition-all">
+                        <img src={url} alt="" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                        <button 
+                          type="button"
+                          onClick={() => removeGalleryImage(idx)}
+                          className="absolute top-2 right-2 bg-black text-white p-2 rounded-full translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all hover:bg-red-500"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    {newProject.gallery.length === 0 && (
+                      <div className="col-span-full py-20 border-2 border-dashed border-black/10 rounded-xl flex flex-col items-center justify-center text-gray-300 gap-4">
+                        <div className="w-16 h-16 rounded-full border-2 border-black/5 flex items-center justify-center">
+                          <Plus size={32} className="opacity-20" />
+                        </div>
+                        <p className="text-xs italic uppercase tracking-widest font-bold opacity-30">No gallery images added yet</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Sticky Footer in Form */}
+              <div className="mt-auto pt-10 border-t border-black/5 flex items-center justify-between sticky bottom-0 bg-[var(--color-brand-bg)] py-4">
+                <div className="flex gap-4">
+                  {formTab !== 'basic' && (
+                    <button 
+                      type="button"
+                      onClick={() => setFormTab(formTab === 'media' ? 'basic' : formTab === 'narrative' ? 'media' : 'narrative')}
+                      className="px-8 py-3 border border-black/10 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-black/5 transition-colors"
+                    >
+                      Back
+                    </button>
+                  )}
+                  {formTab !== 'gallery' && (
+                    <button 
+                      type="button"
+                      onClick={() => setFormTab(formTab === 'basic' ? 'media' : formTab === 'media' ? 'narrative' : 'gallery')}
+                      className="px-8 py-3 bg-black text-white rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-gray-800 transition-colors"
+                    >
+                      Next Step
+                    </button>
                   )}
                 </div>
+                
+                <button 
+                  type="submit"
+                  disabled={isLoading}
+                  className={`px-12 py-3 rounded-full uppercase tracking-[0.2em] text-[10px] font-bold transition-all ${
+                    isLoading ? 'bg-gray-200 text-gray-400' : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:-translate-y-1'
+                  }`}
+                >
+                  {isLoading ? "Saving..." : (editingProjectId ? "Save Changes" : "Publish Project")}
+                </button>
               </div>
-
-              <button 
-                type="submit"
-                disabled={isLoading}
-                className="bg-black text-white py-4 uppercase tracking-[0.2em] text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-50 mt-4"
-              >
-                {isLoading ? "Saving..." : (editingProjectId ? "Update Project" : "Publish Project")}
-              </button>
             </form>
           </div>
         </div>
