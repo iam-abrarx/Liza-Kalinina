@@ -31,9 +31,9 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(sanitizedProjects);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Fetch Projects Error:", error);
-    return NextResponse.json({ error: 'Failed to fetch projects', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
 

@@ -1,0 +1,11 @@
+public/uploads/
+node_modules/
+.next/
+.git/
+*.mov
+*.mp4
+*.MOV
+*.MP4
+*.avi
+*.mkv
+*.webm
