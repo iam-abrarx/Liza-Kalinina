@@ -2,9 +2,7 @@ const nextConfig: any = {
   images: {
     unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // No-op for eslint as it's handled by Turbopack/Next.js CLI now
   typescript: {
     ignoreBuildErrors: true,
   },

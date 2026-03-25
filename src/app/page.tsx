@@ -117,7 +117,7 @@ export default function Home() {
   
   const fetchProjects = async () => {
     try {
-      const res = await fetch('/api/projects');
+      const res = await fetch('/api/projects', { cache: 'no-store' });
       if (!res.ok) throw new Error("API unavailable");
       const data = await res.json();
       setProjects(data);
