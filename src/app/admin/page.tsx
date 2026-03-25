@@ -214,10 +214,16 @@ export default function AdminDashboard() {
       } else {
         // === Direct video: extract frames via canvas ===
         const video = document.createElement("video");
+        
+        // CORS is required for remote URLs (Vercel Blob) but should not be set for local Blob URLs
+        if (!videoUrl.startsWith('blob:')) {
+          video.crossOrigin = "anonymous";
+        }
+        
         video.src = videoUrl;
         video.muted = true;
         video.playsInline = true;
-        // Do NOT set crossOrigin for blob storage URLs — it causes canvas tainting
+        video.preload = "auto";
 
         setThumbnailProgress(5);
         await new Promise<void>((resolve, reject) => {
@@ -234,22 +240,34 @@ export default function AdminDashboard() {
         for (let i = 0; i < fractions.length; i++) {
           const frac = fractions[i];
           video.currentTime = duration * frac;
+          
           await new Promise<void>((resolve) => {
-            const seekTimeout = setTimeout(resolve, 5000); // don't hang forever
-            video.onseeked = () => { clearTimeout(seekTimeout); resolve(); };
+            const onSeeked = () => {
+              video.removeEventListener('seeked', onSeeked);
+              resolve();
+            };
+            video.addEventListener('seeked', onSeeked);
+            setTimeout(resolve, 3000); // safety timeout
           });
+
           const canvas = document.createElement("canvas");
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           const ctx = canvas.getContext("2d");
-          ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
           try {
-            thumbs.push(canvas.toDataURL("image/jpeg", 0.95));
-          } catch {
-            // Canvas tainted — skip this frame
-            console.warn("Canvas tainted, skipping frame at", frac);
+            ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+            thumbs.push(dataUrl);
+            
+            // If this is the second frame (25%), pick it as default if none selected
+            if (i === 1 && !newProject.thumbnail_url) {
+              setNewProject(prev => ({ ...prev, thumbnail_url: dataUrl }));
+            }
+          } catch (e) {
+            console.warn("Frame extraction failed for", videoUrl, e);
           }
-          // Update progress: 15% for loading + 85% spread across frames
+          
           setThumbnailProgress(Math.round(15 + ((i + 1) / fractions.length) * 85));
         }
         
