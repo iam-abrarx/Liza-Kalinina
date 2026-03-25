@@ -369,26 +369,26 @@ export default function Home() {
               className="relative z-[205] w-full max-w-5xl mt-8 grid grid-cols-1 md:grid-cols-2 gap-12 pb-32"
             >
               <div className="flex flex-col gap-4">
-                <h3 className="text-2xl md:text-4xl text-white font-display italic">{selectedProject.title}</h3>
-                <p className="text-xs md:text-sm text-white/40 font-display italic tracking-widest uppercase">{selectedProject.category} · {selectedProject.year}</p>
-                <div className="space-y-6 mt-4">
-                  <p className="text-sm text-white/80 leading-relaxed max-w-xl">
+                <h3 className="text-xl md:text-2xl text-white font-display italic leading-tight">{selectedProject.title}</h3>
+                <p className="text-[10px] text-white/30 font-display tracking-[0.4em] uppercase">{selectedProject.category} · {selectedProject.year}</p>
+                <div className="space-y-4 mt-6">
+                  <p className="text-[11px] md:text-xs text-white/60 leading-relaxed max-w-lg font-light">
                     {selectedProject.description}
                   </p>
                   {selectedProject.long_description && (
-                    <p className="text-xs text-white/40 leading-relaxed max-w-xl font-light italic">
+                    <p className="text-[10px] text-white/30 leading-relaxed max-w-lg font-light italic">
                       {selectedProject.long_description}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col justify-end items-end gap-1.5 text-[10px] text-white/30">
-                <p className="uppercase tracking-[0.3em] font-medium">Director: {selectedProject.director}</p>
-                <p className="uppercase tracking-[0.3em] font-medium">DP: {selectedProject.role}</p>
-                <p className="uppercase tracking-[0.3em] font-medium opacity-50 mt-2">Production: {selectedProject.production_company}</p>
+              <div className="flex flex-col justify-end items-end gap-1 text-[9px] text-white/20">
+                <p className="uppercase tracking-[0.4em] font-medium">Director: {selectedProject.director}</p>
+                <p className="uppercase tracking-[0.4em] font-medium">DP: {selectedProject.role}</p>
+                <p className="uppercase tracking-[0.4em] font-medium opacity-50 mt-1">Production: {selectedProject.production_company}</p>
                 {selectedProject.awards && (
-                  <p className="text-white/30 italic font-display mt-6 text-right max-w-xs text-[11px]">{selectedProject.awards}</p>
+                  <p className="text-white/20 italic font-display mt-4 text-right max-w-xs text-[10px]">{selectedProject.awards}</p>
                 )}
               </div>
             </motion.div>
