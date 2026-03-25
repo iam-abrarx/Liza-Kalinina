@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil, ChevronLeft, ChevronRight, Image as ImageIcon, Video as VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
+import { useThumbnailGenerator } from "@/hooks/useThumbnailGenerator";
+import { useProjectForm } from "@/hooks/useProjectForm";
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -11,16 +14,19 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
 
-  // Form states
-  const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
-  const [isPassFormOpen, setIsPassFormOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isFetchingMeta, setIsFetchingMeta] = useState(false);
-  const [isGeneratingThumbs, setIsGeneratingThumbs] = useState(false);
-  const [thumbnailProgress, setThumbnailProgress] = useState(0);
-  const [thumbnailSuggestions, setThumbnailSuggestions] = useState<string[]>([]);
-  const [formTab, setFormTab] = useState<'basic' | 'media' | 'narrative' | 'gallery'>('basic');
+  // Custom hooks
+  const { 
+    newProject, setNewProject, editingProjectId, formTab, setFormTab, 
+    isProjectFormOpen, openNewProjectForm, openEditProjectForm, closeForm 
+  } = useProjectForm();
+  
+  const { isUploading, uploadProgress, uploadFiles, uploadThumbnail } = useMediaUpload(password);
+  
+  const { 
+    isFetchingMeta, isGeneratingThumbs, thumbnailProgress, thumbnailSuggestions, 
+    fetchVimeoMeta, generateThumbnails, removeThumbnailCandidate, addThumbnailCandidate, setThumbnailSuggestions
+  } = useThumbnailGenerator();
+
   const thumbnailScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollThumbnails = (direction: 'left' | 'right') => {
@@ -32,49 +38,32 @@ export default function AdminDashboard() {
       });
     }
   };
-  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [newProject, setNewProject] = useState({
-    title: "",
-    category: "COMMERCIAL",
-    year: new Date().getFullYear().toString(),
-    media_url: "",
-    thumbnail_url: "",
-    role: "Director of Photography",
-    director: "",
-    client: "",
-    production_company: "",
-    awards: "",
-    description: "",
-    long_description: "",
-    gallery: [] as string[],
-    sort_order: 0
-  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [isPassFormOpen, setIsPassFormOpen] = useState(false);
+
+  const showMessage = (text: string, type: string = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean = false) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
-    const uploadedUrls: string[] = [];
-
     try {
-      const file = files[0];
-      const localUrl = URL.createObjectURL(file);
-      generateThumbnails(localUrl);
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const uniqueName = `${Date.now()}-${file.name}`;
-        const newBlob = await upload(uniqueName, file, {
-          access: 'public',
-          handleUploadUrl: `/api/upload?password=${encodeURIComponent(password)}`,
-          onUploadProgress: (progress) => {
-            setUploadProgress(Math.round(((i * 100) + progress.percentage) / files.length));
-          }
+      if (!isGallery) {
+        const file = files[0];
+        const localUrl = URL.createObjectURL(file);
+        await generateThumbnails(localUrl, (url) => {
+            if (!newProject.thumbnail_url) {
+                setNewProject(prev => ({ ...prev, thumbnail_url: url }));
+            }
         });
-        if (newBlob.url) uploadedUrls.push(newBlob.url);
       }
+
+      const uploadedUrls = await uploadFiles(files);
       
       if (uploadedUrls.length > 0) {
         if (isGallery) {
@@ -86,21 +75,73 @@ export default function AdminDashboard() {
           const url = uploadedUrls[0];
           setNewProject(prev => ({ ...prev, media_url: url }));
           
-          // Only trigger thumbnail generation if the early local capture was empty
           if (url.match(/\.(mp4|webm|ogg|mov)/i) && thumbnailSuggestions.length === 0) {
-            generateThumbnails(url);
+              const res = await generateThumbnails(url);
+              if (res && res.unique) {
+                showMessage(`${res.unique.length} thumbnails generated`);
+              }
           }
         }
         showMessage(`${uploadedUrls.length} file(s) uploaded successfully`);
-      } else {
-        showMessage("Upload failed", "error");
       }
     } catch (error: any) {
-      console.error('Upload error:', error);
       showMessage(error.message || "Error uploading file", "error");
-    } finally {
-      setIsUploading(false);
     }
+  };
+
+  const handleFetchVimeoMeta = async () => {
+    if (!newProject.media_url || !newProject.media_url.includes('vimeo.com')) {
+      showMessage("Please enter a valid Vimeo URL first", "error");
+      return;
+    }
+    try {
+        const data = await fetchVimeoMeta(newProject.media_url);
+        let year = newProject.year;
+        if (data.upload_date) {
+          year = data.upload_date.split('-')[0];
+        }
+        setNewProject(prev => ({
+          ...prev,
+          title: data.title || prev.title,
+          year: year,
+          thumbnail_url: data.thumbnail_url || prev.thumbnail_url,
+          director: data.author_name || prev.director
+        }));
+        showMessage(`Fetched: "${data.title}" (${year})`);
+    } catch (error: any) {
+        showMessage(error.message || "Error fetching Vimeo details", "error");
+    }
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await uploadThumbnail(file);
+      if (url) {
+        setNewProject(prev => ({ ...prev, thumbnail_url: url }));
+        addThumbnailCandidate(url);
+        showMessage("Custom thumbnail uploaded");
+      }
+    } catch (error: any) {
+      showMessage(error.message || "Upload failed", "error");
+    }
+  };
+
+  const executeGenerateThumbnails = async (url: string) => {
+      try {
+          const res = await generateThumbnails(url, (selectedUrl) => {
+            if (!newProject.thumbnail_url) {
+               setNewProject(prev => ({ ...prev, thumbnail_url: selectedUrl }));
+            }
+          });
+          if (res) {
+            showMessage(`${res.unique ? res.unique.length : 0} thumbnails generated`);
+          }
+      } catch (error: any) {
+          showMessage(error.message || "Error generating thumbnails", "error");
+      }
   };
 
   const removeGalleryImage = (index: number) => {
@@ -110,209 +151,8 @@ export default function AdminDashboard() {
     }));
   };
 
-  const handleFetchVimeoMeta = async () => {
-    const url = newProject.media_url;
-    if (!url || !url.includes('vimeo.com')) {
-      showMessage("Please enter a valid Vimeo URL first", "error");
-      return;
-    }
-
-    setIsFetchingMeta(true);
-    try {
-      // Try multiple URL formats to maximize success rate
-      const urlsToTry: string[] = [url];
-
-      // For unlisted videos like vimeo.com/12345/abcdef, also try the clean ID-only URL
-      const unlistedMatch = url.match(/vimeo\.com\/(\d+)\/([a-zA-Z0-9]+)/);
-      if (unlistedMatch) {
-        // The full URL with hash should work for unlisted videos
-        urlsToTry.push(`https://vimeo.com/${unlistedMatch[1]}/${unlistedMatch[2]}`);
-        urlsToTry.push(`https://vimeo.com/${unlistedMatch[1]}`);
-      }
-
-      // Deduplicate
-      const uniqueUrls = [...new Set(urlsToTry)];
-      let data: any = null;
-
-      for (const tryUrl of uniqueUrls) {
-        try {
-          const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(tryUrl)}`);
-          if (res.ok) {
-            data = await res.json();
-            break; // Success!
-          }
-        } catch { /* try next URL */ }
-      }
-
-      if (!data) {
-        throw new Error("Could not fetch details. This video may be password-protected or private. Please enter details manually.");
-      }
-
-      // Extract title and year
-      let year = newProject.year;
-      if (data.upload_date) {
-        year = data.upload_date.split('-')[0];
-      }
-
-      // Also try to extract author/director info
-      setNewProject(prev => ({
-        ...prev,
-        title: data.title || prev.title,
-        year: year,
-        thumbnail_url: data.thumbnail_url || prev.thumbnail_url,
-        director: data.author_name || prev.director
-      }));
-      
-      showMessage(`Fetched: "${data.title}" (${year})`);
-    } catch (error: any) {
-      console.error(error);
-      showMessage(error.message || "Error fetching Vimeo details", "error");
-    } finally {
-      setIsFetchingMeta(false);
-    }
-  };
-
-  const generateThumbnails = async (videoUrl: string) => {
-    setIsGeneratingThumbs(true);
-    setThumbnailProgress(0);
-    setThumbnailSuggestions([]);
-    try {
-      const vimeoMatch = videoUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-      
-      if (vimeoMatch) {
-        // === Vimeo: fetch high-res covers from vumbnail API ===
-        const vimeoId = vimeoMatch[1];
-        const thumbs: string[] = [];
-        
-        setThumbnailProgress(20);
-        // Vumbnail supports different sizes: _large, _medium, default
-        const sizes = ['', '_large'];
-        for (const size of sizes) {
-          thumbs.push(`https://vumbnail.com/${vimeoId}${size}.jpg`);
-        }
-        setThumbnailProgress(50);
-
-        // Also try Vimeo oEmbed for the official thumbnail
-        try {
-          const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.thumbnail_url) {
-              // Get max resolution by removing size suffix
-              const hiRes = data.thumbnail_url.replace(/_\d+x\d+/, '');
-              const midRes = data.thumbnail_url.replace(/_\d+x\d+/, '_1280x720');
-              thumbs.unshift(hiRes, midRes);
-            }
-          }
-        } catch { /* ignore fetch errors */ }
-
-        setThumbnailProgress(90);
-        // Deduplicate
-        const unique = [...new Set(thumbs)];
-        setThumbnailSuggestions(unique);
-        setThumbnailProgress(100);
-        showMessage(`${unique.length} Vimeo thumbnails found`);
-      } else {
-        // === Direct video: extract frames via canvas ===
-        const video = document.createElement("video");
-        
-        // CORS is required for remote URLs (Vercel Blob) but should not be set for local Blob URLs
-        if (!videoUrl.startsWith('blob:')) {
-          video.crossOrigin = "anonymous";
-        }
-        
-        video.src = videoUrl;
-        video.muted = true;
-        video.playsInline = true;
-        video.preload = "auto";
-
-        setThumbnailProgress(5);
-        await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => reject("Video load timed out after 15s"), 15000);
-          video.onloadeddata = () => { clearTimeout(timeout); resolve(); };
-          video.onerror = () => { clearTimeout(timeout); reject("Failed to load video"); };
-        });
-        setThumbnailProgress(15);
-
-        const duration = video.duration;
-        const fractions = [0.1, 0.25, 0.5, 0.7, 0.9];
-        const thumbs: string[] = [];
-
-        for (let i = 0; i < fractions.length; i++) {
-          const frac = fractions[i];
-          video.currentTime = duration * frac;
-          
-          await new Promise<void>((resolve) => {
-            const onSeeked = () => {
-              video.removeEventListener('seeked', onSeeked);
-              resolve();
-            };
-            video.addEventListener('seeked', onSeeked);
-            setTimeout(resolve, 3000); // safety timeout
-          });
-
-          const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d");
-          
-          try {
-            ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-            thumbs.push(dataUrl);
-            
-            // If this is the second frame (25%), pick it as default if none selected
-            if (i === 1 && !newProject.thumbnail_url) {
-              setNewProject(prev => ({ ...prev, thumbnail_url: dataUrl }));
-            }
-          } catch (e) {
-            console.warn("Frame extraction failed for", videoUrl, e);
-          }
-          
-          setThumbnailProgress(Math.round(15 + ((i + 1) / fractions.length) * 85));
-        }
-        
-        if (thumbs.length > 0) {
-          setThumbnailSuggestions(thumbs);
-          showMessage(`${thumbs.length} thumbnails generated`);
-        } else {
-          showMessage("Could not extract frames — try uploading a custom cover instead", "error");
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      showMessage(typeof e === 'string' ? e : "Error generating thumbnails", "error");
-    } finally {
-      setIsGeneratingThumbs(false);
-      setThumbnailProgress(0);
-    }
-  };
-
-  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const uniqueName = `${Date.now()}-${file.name}`;
-      const newBlob = await upload(uniqueName, file, {
-        access: 'public',
-        handleUploadUrl: `/api/upload?password=${encodeURIComponent(password)}`,
-      });
-      if (newBlob.url) {
-        setNewProject(prev => ({ ...prev, thumbnail_url: newBlob.url }));
-        setThumbnailSuggestions(prev => [newBlob.url, ...prev]);
-        showMessage("Custom thumbnail uploaded");
-      }
-    } catch (error: any) {
-      showMessage(error.message || "Upload failed", "error");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const removeThumbnailCandidate = (url: string) => {
-    setThumbnailSuggestions(prev => prev.filter(t => t !== url));
+  const proxyRemoveThumbnailCandidate = (url: string) => {
+    removeThumbnailCandidate(url);
     if (newProject.thumbnail_url === url) {
       setNewProject(prev => ({ ...prev, thumbnail_url: "" }));
     }
@@ -323,8 +163,7 @@ export default function AdminDashboard() {
     expires_at: ""
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState({ text: "", type: "" });
+
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -354,10 +193,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const showMessage = (text: string, type: string = "success") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-  };
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,23 +208,7 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         showMessage("Project created successfully");
-        setIsProjectFormOpen(false);
-        setNewProject({
-            title: "",
-            category: "COMMERCIAL",
-            year: new Date().getFullYear().toString(),
-            media_url: "",
-            thumbnail_url: "",
-            role: "Director of Photography",
-            director: "",
-            client: "",
-            production_company: "",
-            awards: "",
-            description: "",
-            long_description: "",
-            gallery: [],
-            sort_order: 0
-        });
+        closeForm();
         fetchData();
       } else {
         showMessage("Failed to create project", "error");
@@ -402,24 +221,7 @@ export default function AdminDashboard() {
   };
 
   const handleEditProject = (project: any) => {
-    setEditingProjectId(project.id);
-    setNewProject({
-      title: project.title || "",
-      category: project.category || "COMMERCIAL",
-      year: project.year || new Date().getFullYear().toString(),
-      media_url: project.media_url || "",
-      thumbnail_url: project.thumbnail_url || "",
-      role: project.role || "Director of Photography",
-      director: project.director || "",
-      client: project.client || "",
-      production_company: project.production_company || "",
-      awards: project.awards || "",
-      description: project.description || "",
-      long_description: project.long_description || "",
-      gallery: project.gallery || [],
-      sort_order: project.sort_order || 0
-    });
-    setIsProjectFormOpen(true);
+    openEditProjectForm(project);
   };
 
   const handleUpdateProject = async (e: React.FormEvent) => {
@@ -437,24 +239,7 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         showMessage("Project updated successfully");
-        setIsProjectFormOpen(false);
-        setEditingProjectId(null);
-        setNewProject({
-          title: "",
-          category: "COMMERCIAL",
-          year: new Date().getFullYear().toString(),
-          media_url: "",
-          thumbnail_url: "",
-          role: "Director of Photography",
-          director: "",
-          client: "",
-          production_company: "",
-          awards: "",
-          description: "",
-          long_description: "",
-          gallery: [],
-          sort_order: 0
-        });
+        closeForm();
         fetchData();
       } else {
         showMessage("Failed to update project", "error");
@@ -602,7 +387,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-display">Manage Projects</h2>
               <button 
-                onClick={() => { setEditingProjectId(null); setIsProjectFormOpen(true); }}
+                onClick={openNewProjectForm}
                 className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-4 py-2 rounded-sm hover:-translate-y-1 transition-transform"
               >
                 <Plus size={16} /> New Project
@@ -617,7 +402,9 @@ export default function AdminDashboard() {
                 <div key={p.id} className="p-4 border border-black/10 bg-white flex justify-between items-center group hover:border-black/30 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-20 aspect-video bg-zinc-900 overflow-hidden border border-black/5 flex items-center justify-center">
-                      {getVimeoId(p.media_url) ? (
+                      {p.thumbnail_url ? (
+                        <img src={getMediaUrl(p.thumbnail_url)} alt="" className="w-full h-full object-cover" />
+                      ) : getVimeoId(p.media_url) ? (
                         <div className="flex flex-col items-center">
                           <span className="text-[8px] font-bold text-white/40">VIMEO</span>
                         </div>
@@ -725,7 +512,7 @@ export default function AdminDashboard() {
               </div>
               <button 
                 type="button"
-                onClick={() => { setIsProjectFormOpen(false); setEditingProjectId(null); }} 
+                onClick={closeForm} 
                 className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-black hover:bg-black/5 rounded-full transition-all"
                 title="Close Form"
               >
@@ -942,22 +729,27 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Action Hub */}
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-4 h-full">
                       <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Library Actions</label>
-                      <div className="flex gap-2 h-full">
-                        <label className="flex-1 flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group">
+                      <div className="grid grid-cols-2 gap-2 flex-1">
+                        <label className="flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group aspect-square lg:aspect-auto">
                            <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailUpload} disabled={isUploading} />
-                           <UploadIcon size={18} className="mb-1 group-hover:-translate-y-0.5 transition-transform" />
-                           <span className="text-[9px] uppercase font-black tracking-widest">Update Cover</span>
+                           <UploadIcon size={20} className="mb-1 group-hover:-translate-y-0.5 transition-transform" />
+                           <span className="text-[9px] uppercase font-black tracking-widest">Cover</span>
+                        </label>
+                        <label className="flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group aspect-square lg:aspect-auto">
+                           <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, false)} disabled={isUploading} />
+                           <VideoIcon size={20} className="mb-1 group-hover:-translate-y-1 transition-transform" />
+                           <span className="text-[9px] uppercase font-black tracking-widest">Video</span>
                         </label>
                         <button 
                           type="button"
-                          onClick={() => generateThumbnails(newProject.media_url)}
+                          onClick={() => executeGenerateThumbnails(newProject.media_url)}
                           disabled={isGeneratingThumbs || !newProject.media_url}
-                          className="flex-1 flex flex-col items-center justify-center bg-white border-2 border-black/5 rounded-xl hover:border-black transition-all active:scale-95 group disabled:opacity-30 disabled:grayscale"
+                          className="col-span-2 flex flex-col items-center justify-center bg-white border-2 border-black/5 rounded-xl hover:border-black transition-all active:scale-95 group disabled:opacity-30 disabled:grayscale py-4"
                         >
                           <VideoIcon size={18} className="mb-1 group-hover:scale-110 transition-transform text-gray-400 group-hover:text-black" />
-                          <span className="text-[8px] uppercase font-black tracking-widest text-gray-400 group-hover:text-black">Scan Video</span>
+                          <span className="text-[8px] uppercase font-black tracking-widest text-gray-400 group-hover:text-black">Scan Current Media</span>
                         </button>
                       </div>
                     </div>
@@ -1013,7 +805,7 @@ export default function AdminDashboard() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                removeThumbnailCandidate(url);
+                                proxyRemoveThumbnailCandidate(url);
                               }}
                               className="absolute top-3 right-3 bg-black/80 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black"
                             >

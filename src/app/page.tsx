@@ -417,6 +417,17 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
   const [unlockCode, setUnlockCode] = useState("");
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (isHovered && videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    } else if (!isHovered && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, [isHovered]);
 
   const handleUnlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -479,19 +490,8 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
         <div 
           className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-white'} overflow-hidden ${project.is_locked ? '' : 'cursor-pointer group'}`}
           onClick={project.is_locked ? undefined : handleProjectClick}
-          onMouseEnter={(e) => {
-            if (project.is_locked) return;
-            const video = e.currentTarget.querySelector('video');
-            if (video) video.play().catch(() => {});
-          }}
-          onMouseLeave={(e) => {
-            if (project.is_locked) return;
-            const video = e.currentTarget.querySelector('video');
-            if (video) {
-              video.pause();
-              video.currentTime = 0;
-            }
-          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           {project.is_locked ? (
             <>
@@ -531,28 +531,28 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
                 </form>
               </div>
             </>
-          ) : getVimeoId(project.media_url) ? (
-            <img 
-              src={getMediaUrl(project.thumbnail_url) || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
-              alt={project.title}
-              className="w-full h-full object-cover"
-            />
-          ) : project.media_url?.match(/\.(mp4|webm|ogg|mov)/i) || project.media_url?.startsWith('blob:') || project.media_url?.startsWith('data:video') ? (
-            <video 
-              src={getMediaUrl(project.media_url)} 
-              poster={project.thumbnail_url ? getMediaUrl(project.thumbnail_url) : undefined}
-              muted 
-              loop 
-              playsInline
-              preload="metadata"
-              className="w-full h-full object-cover"
-            />
           ) : (
-            <img 
-              src={getMediaUrl(project.thumbnail_url || project.media_url)} 
-              alt={project.title}
-              className="w-full h-full object-cover"
-            />
+            <div className="relative w-full h-full">
+              {/* Base Thumbnail - Always visible underneath */}
+              <img 
+                src={getMediaUrl(project.thumbnail_url) || (getVimeoId(project.media_url) ? `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg` : getMediaUrl(project.media_url))} 
+                alt={project.title}
+                className="w-full h-full object-cover"
+              />
+
+              {/* Video Preview Overlay - Local videos only */}
+              {!getVimeoId(project.media_url) && (project.media_url?.match(/\.(mp4|webm|ogg|mov)/i) || project.media_url?.startsWith('blob:') || project.media_url?.startsWith('data:video')) && (
+                <video 
+                  ref={videoRef}
+                  src={getMediaUrl(project.media_url)} 
+                  muted 
+                  loop 
+                  playsInline
+                  preload="metadata"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                />
+              )}
+            </div>
           )}
           {!project.is_locked && (
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-500 flex items-end justify-start p-8 pb-10">
