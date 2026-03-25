@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil, ChevronLeft, ChevronRight, Image as ImageIcon, Video as VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
 
@@ -840,123 +840,156 @@ export default function AdminDashboard() {
 
               {/* Tab 2: Media & Cover Selection */}
               {formTab === 'media' && (
-                <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  <div className="flex flex-col gap-6 p-8 bg-white rounded-xl border border-black/[0.03] shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] uppercase tracking-widest text-gray-400 font-black">Video Resource</label>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleFetchVimeoMeta}
-                          disabled={isFetchingMeta || !newProject.media_url.includes('vimeo.com')}
-                          className="text-[9px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-2 transition-all bg-gray-50 px-4 py-2 rounded-full border border-black/5"
-                        >
-                          {isFetchingMeta ? "FETCHING..." : "AUTO-FILL VIMEO"}
-                          {!isFetchingMeta && <LinkIcon size={10} />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => generateThumbnails(newProject.media_url)}
-                          disabled={isGeneratingThumbs || !newProject.media_url}
-                          className="text-[9px] uppercase font-bold text-gray-500 hover:text-black disabled:opacity-30 flex items-center gap-2 transition-all bg-gray-50 px-4 py-2 rounded-full border border-black/5"
-                        >
-                          {isGeneratingThumbs ? `PROCESSED ${thumbnailProgress}%` : "RE-GENERATE COVERS"}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="relative">
-                      <input 
-                        required
-                        value={newProject.media_url}
-                        onChange={e => setNewProject({...newProject, media_url: e.target.value})}
-                        className="w-full bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white transition-all outline-none p-4 rounded-xl font-medium text-sm shadow-inner"
-                        placeholder="Paste Vimeo link or direct .mp4/.mov URL..."
-                      />
-                      {newProject.media_url && (
-                        <button 
-                          type="button"
-                          onClick={() => setNewProject(p => ({ ...p, media_url: "" }))}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
+                <div className="flex flex-col gap-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  
+                  {/* 1. Primary Cover Preview Area */}
+                  <div className="flex flex-col gap-4">
+                    <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Active Project Cover</label>
+                    <div className="relative group/cover aspect-2-1 w-full bg-zinc-900 rounded-2xl overflow-hidden border border-black/5 shadow-2xl transition-all hover:shadow-black/20">
+                      {newProject.thumbnail_url ? (
+                        <>
+                          <img 
+                            src={getMediaUrl(newProject.thumbnail_url)} 
+                            alt="Selected Cover" 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-8 flex justify-between items-end">
+                            <div>
+                              <p className="text-[8px] uppercase tracking-widest text-white/60 mb-1">Source URL</p>
+                              <p className="text-[10px] text-white font-mono opacity-80 max-w-md truncate">{newProject.thumbnail_url}</p>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={() => setNewProject(p => ({ ...p, thumbnail_url: "" }))}
+                              className="bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white p-3 rounded-full transition-all backdrop-blur-md"
+                              title="Clear Cover Image"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white/20">
+                          <ImageIcon size={48} strokeWidth={1} />
+                          <p className="text-[10px] uppercase tracking-[0.3em] font-bold">No Cover Assigned</p>
+                        </div>
                       )}
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
-                      <p className="text-[10px] text-gray-400 italic">Supports Vimeo passwords via URL hash (e.g. vimeo.com/123/abcd)</p>
-                      <label className="cursor-pointer group flex items-center gap-4">
-                        <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
-                        <div className="h-[1px] w-8 bg-black/5" />
-                        <span className="text-[10px] uppercase font-black text-black transition-all border-b border-black/10 group-hover:border-black flex items-center gap-3">
-                          {isUploading ? `UPLOADING ${uploadProgress}%` : "UPLOAD NEW VIDEO"}
-                          {!isUploading && <UploadIcon size={14} />}
-                        </span>
-                      </label>
+                      
+                      {isUploading && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white gap-4 z-20">
+                          <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                          <span className="text-[10px] uppercase tracking-widest font-black">Processing Upload...</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-6">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] uppercase tracking-widest text-gray-400 font-black">Selection: Cover Image</label>
-                      {newProject.thumbnail_url && (
+                  {/* 2. Unified Action Toolbar */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Video URL Input */}
+                    <div className="md:col-span-2 flex flex-col gap-4">
+                      <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Video Resource (Vimeo or MP4)</label>
+                      <div className="relative group">
+                        <input 
+                          required
+                          value={newProject.media_url}
+                          onChange={e => setNewProject({...newProject, media_url: e.target.value})}
+                          className="w-full bg-white border-2 border-black/5 focus:border-black transition-all outline-none p-4 rounded-xl font-medium text-sm shadow-sm"
+                          placeholder="vimeo.com/123456789"
+                        />
+                        {newProject.media_url && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                             {newProject.media_url.includes('vimeo.com') && (
+                               <button
+                                 type="button"
+                                 onClick={handleFetchVimeoMeta}
+                                 disabled={isFetchingMeta}
+                                 className="p-2 bg-black text-white rounded-lg hover:scale-105 active:scale-95 transition-all text-[9px] font-bold uppercase"
+                                 title="Auto-fill from Vimeo"
+                               >
+                                 {isFetchingMeta ? "..." : "Auto"}
+                               </button>
+                             )}
+                             <button 
+                               type="button"
+                               onClick={() => setNewProject(p => ({ ...p, media_url: "" }))}
+                               className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                             >
+                               <X size={16} />
+                             </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Hub */}
+                    <div className="flex flex-col gap-4">
+                      <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Library Actions</label>
+                      <div className="flex gap-2 h-full">
+                        <label className="flex-1 flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group">
+                           <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailUpload} disabled={isUploading} />
+                           <UploadIcon size={18} className="mb-1 group-hover:-translate-y-0.5 transition-transform" />
+                           <span className="text-[9px] uppercase font-black tracking-widest">Update Cover</span>
+                        </label>
                         <button 
                           type="button"
-                          onClick={() => setNewProject(p => ({ ...p, thumbnail_url: "" }))}
-                          className="text-[9px] uppercase font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
+                          onClick={() => generateThumbnails(newProject.media_url)}
+                          disabled={isGeneratingThumbs || !newProject.media_url}
+                          className="flex-1 flex flex-col items-center justify-center bg-white border-2 border-black/5 rounded-xl hover:border-black transition-all active:scale-95 group disabled:opacity-30 disabled:grayscale"
                         >
-                          Clear Selection <X size={10} />
+                          <VideoIcon size={18} className="mb-1 group-hover:scale-110 transition-transform text-gray-400 group-hover:text-black" />
+                          <span className="text-[8px] uppercase font-black tracking-widest text-gray-400 group-hover:text-black">Scan Video</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Suggestions Grid */}
+                  <div className="flex flex-col gap-6 pt-12 border-t border-black/5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[10px] uppercase tracking-[0.4em] font-black text-black/20">Discovery: Thumbnail Options</h4>
+                      {thumbnailSuggestions.length > 0 && (
+                        <button 
+                          type="button"
+                          onClick={() => setThumbnailSuggestions([])}
+                          className="text-[9px] font-black text-red-400 hover:text-red-600 transition-colors uppercase"
+                        >
+                          Clear History
                         </button>
                       )}
                     </div>
 
-                    <div className="relative group/scroll px-1">
-                      {/* Scroll Arrows */}
-                      <button 
-                        type="button"
-                        onClick={() => scrollThumbnails('left')}
-                        className="absolute left-[-10px] top-1/2 -translate-y-1/2 z-20 bg-white text-black p-3 rounded-full shadow-2xl opacity-0 group-hover/scroll:opacity-100 transition-all hover:scale-110 border border-black/5"
-                      >
-                        <ChevronLeft size={20} />
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => scrollThumbnails('right')}
-                        className="absolute right-[-10px] top-1/2 -translate-y-1/2 z-20 bg-white text-black p-3 rounded-full shadow-2xl opacity-0 group-hover/scroll:opacity-100 transition-all hover:scale-110 border border-black/5"
-                      >
-                        <ChevronRight size={20} />
-                      </button>
-
-                      <div 
-                        ref={thumbnailScrollRef}
-                        className="flex gap-5 overflow-x-auto pb-8 pt-2 no-scrollbar scroll-smooth"
-                      >
-                        {/* Selected / Current Cover if from elsewhere */}
-                        {newProject.thumbnail_url && ![...thumbnailSuggestions, ...newProject.gallery].includes(newProject.thumbnail_url) && (
-                           <div 
-                             onClick={() => setNewProject(prev => ({ ...prev, thumbnail_url: newProject.thumbnail_url }))}
-                             className="group min-w-[240px] aspect-video relative cursor-pointer border-4 border-black scale-[1.02] rounded-xl overflow-hidden shadow-xl"
-                           >
-                             <img src={newProject.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                             <div className="absolute inset-x-0 bottom-0 bg-black text-white py-2 text-[8px] uppercase tracking-[0.4em] font-black text-center">Current Cover</div>
-                           </div>
-                        )}
-
-                        {/* Suggestions from Extractor */}
+                    {thumbnailSuggestions.length === 0 ? (
+                      <div className="py-20 flex flex-col items-center justify-center text-gray-300 border-2 border-dashed border-black/5 rounded-2xl bg-black/[0.01]">
+                        <ImageIcon size={32} strokeWidth={1} className="mb-4 opacity-40 text-black" />
+                        <p className="text-[10px] uppercase tracking-widest font-medium max-w-[200px] text-center leading-relaxed">
+                          Enter a Video URL then click "Scan Video" or upload a custom image to see options here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                         {thumbnailSuggestions.map((url, idx) => (
                           <div 
                             key={`suggest-${idx}`} 
-                            onClick={() => setNewProject(prev => ({ ...prev, thumbnail_url: url }))}
-                            className={`group min-w-[240px] aspect-video relative cursor-pointer border-4 transition-all rounded-xl overflow-hidden shadow-sm hover:shadow-xl ${
+                            onClick={() => {
+                              setNewProject(prev => ({ ...prev, thumbnail_url: url }));
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className={`group aspect-video relative cursor-pointer border-4 transition-all rounded-xl overflow-hidden shadow-sm hover:shadow-xl ${
                               newProject.thumbnail_url === url 
-                                ? 'border-black scale-[1.02]' 
-                                : 'border-transparent opacity-60 hover:opacity-100 hover:translate-y-[-4px]'
+                                ? 'border-black scale-[1.05] z-10' 
+                                : 'border-transparent opacity-60 hover:opacity-100 hover:scale-[1.02]'
                             }`}
                           >
                             <img src={url} alt="" className="w-full h-full object-cover" />
                             
-                            {/* Remove button (The Cross) */}
+                            {/* Source Type Indicator */}
+                            <div className="absolute top-3 left-3 flex gap-1">
+                               <div className="bg-black/80 px-2 py-1 rounded text-[7px] uppercase font-black text-white backdrop-blur-sm">
+                                 {url.startsWith('https://i.vimeocdn.com') ? 'VIMEO' : url.startsWith('data:') ? 'FRAME' : 'UPLOAD'}
+                               </div>
+                            </div>
+
                             <button 
                               type="button"
                               onClick={(e) => {
@@ -964,31 +997,16 @@ export default function AdminDashboard() {
                                 removeThumbnailCandidate(url);
                               }}
                               className="absolute top-3 right-3 bg-black/80 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black"
-                              title="Dismiss suggestion"
                             >
-                              <X size={12} />
+                              <X size={10} />
                             </button>
 
                             {newProject.thumbnail_url === url && (
-                              <div className="absolute inset-x-0 bottom-0 bg-black text-white py-2 text-[8px] uppercase tracking-[0.4em] font-black text-center">Selected</div>
+                              <div className="absolute inset-x-0 bottom-0 bg-black text-white py-2 text-[8px] uppercase tracking-[0.4em] font-black text-center animate-in slide-in-from-bottom-2 duration-300">Selected</div>
                             )}
                           </div>
                         ))}
-
-                        {/* Manual Upload Button */}
-                        <label className="min-w-[240px] aspect-video flex flex-col items-center justify-center border-2 border-dashed border-black/10 hover:border-black/30 hover:bg-white bg-black/[0.02] cursor-pointer transition-all rounded-xl group relative">
-                          <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailUpload} disabled={isUploading} />
-                          <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform border border-black/5">
-                            <UploadIcon size={20} className="text-gray-400 group-hover:text-black transition-colors" />
-                          </div>
-                          <span className="text-[9px] uppercase font-black tracking-widest text-gray-400 group-hover:text-black">Upload Custom</span>
-                        </label>
                       </div>
-                    </div>
-                    {thumbnailSuggestions.length === 0 && !newProject.thumbnail_url && (
-                       <p className="text-[10px] text-gray-400 italic text-center py-4 bg-black/5 rounded-lg border border-dashed border-black/5">
-                         Enter a Video URL and click "Generate Covers" or upload a custom image.
-                       </p>
                     )}
                   </div>
                 </div>
