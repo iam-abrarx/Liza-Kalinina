@@ -57,6 +57,7 @@ export async function PATCH(
         category: body.category as any,
         year: body.year,
         media_url: body.media_url,
+        thumbnail_url: body.thumbnail_url,
         role: body.role,
         director: body.director,
         client: body.client,
