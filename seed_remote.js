@@ -1,4 +1,3 @@
-
 const projects = [
   {
     title: "Showreel 2026",
@@ -41,7 +40,7 @@ const projects = [
     title: "80 Meters Under Ice",
     category: "DOCUMENTARY",
     year: "2024",
-    media_url: "/uploads/80 meters under ice documentary.mov",
+    media_url: "https://liza-portfolio.vercel.app/uploads/80_meters_under_ice.mov",
     role: "Director of Photography",
     director: "Liza Kalinina",
     client: "Documentary",
@@ -53,7 +52,7 @@ const projects = [
     title: "Desert Rider",
     category: "COMMERCIAL",
     year: "2023",
-    media_url: "/uploads/Desert rider.mov",
+    media_url: "https://liza-portfolio.vercel.app/uploads/Desert_rider.mov",
     role: "Director of Photography",
     director: "Various",
     client: "Automotive",
@@ -65,7 +64,7 @@ const projects = [
     title: "Verizon Business",
     category: "COMMERCIAL",
     year: "2023",
-    media_url: "/uploads/Enterprise Intelligence _ Private 5G Network from Verizon Business.mp4",
+    media_url: "https://liza-portfolio.vercel.app/uploads/Verizon_Business.mp4",
     role: "Director of Photography",
     director: "Various",
     client: "Verizon",
@@ -77,7 +76,7 @@ const projects = [
     title: "Maggi Nestle Commercial",
     category: "COMMERCIAL",
     year: "2023",
-    media_url: "/uploads/Maggi Nestle commercial .MP4",
+    media_url: "https://liza-portfolio.vercel.app/uploads/Maggi_Nestle.MP4",
     role: "Director of Photography",
     director: "Various",
     client: "Nestle",
@@ -89,7 +88,7 @@ const projects = [
     title: "Sirotkin Music Clip",
     category: "MUSIC_VIDEO",
     year: "2024",
-    media_url: "/uploads/Sirotkin Music Clip.mp4",
+    media_url: "https://liza-portfolio.vercel.app/uploads/Sirotkin_Music.mp4",
     role: "Director of Photography",
     director: "Various",
     client: "Sirotkin",
@@ -101,7 +100,7 @@ const projects = [
     title: "Thunder Saudi Arabia",
     category: "COMMERCIAL",
     year: "2023",
-    media_url: "/uploads/Thunder Saudi Arabia commercial .mov",
+    media_url: "https://liza-portfolio.vercel.app/uploads/Thunder_Saudi_Arabia.mov",
     role: "Director of Photography",
     director: "Various",
     client: "Various",
@@ -113,7 +112,7 @@ const projects = [
     title: "Veterinary Clinic Commercial",
     category: "COMMERCIAL",
     year: "2023",
-    media_url: "/uploads/veterinary_clinic_commercial (2160p).mp4",
+    media_url: "https://liza-portfolio.vercel.app/uploads/vet_clinic.mp4",
     role: "Director of Photography",
     director: "Various",
     client: "Various",
@@ -125,7 +124,7 @@ const projects = [
     title: "Quarantine Room",
     category: "NARRATIVE",
     year: "2024",
-    media_url: "/uploads/Карантинная комната.mov",
+    media_url: "https://liza-portfolio.vercel.app/uploads/Quarantine_Room.mov",
     role: "Director of Photography",
     director: "Liza Kalinina",
     client: "Narrative",
@@ -135,37 +134,57 @@ const projects = [
   }
 ];
 
+const BASE_URL = process.argv[2]; // e.g. https://portfolio-v2.vercel.app
+const ADMIN_PASSWORD = process.argv[3] || 'admin';
+
+if (!BASE_URL) {
+  console.error("Please provide the Vercel base URL as the first argument.");
+  console.error("Usage: node seed_remote.js https://your-site.vercel.app [admin_password]");
+  process.exit(1);
+}
+
 async function seed() {
+  console.log(`Starting remote seed for: ${BASE_URL}`);
+  
   for (const project of projects) {
-    const res = await fetch('http://localhost:3000/api/projects', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-admin-password': 'admin'
-      },
-      body: JSON.stringify(project)
-    });
-    if (res.ok) {
-      console.log(`Created project: ${project.title}`);
-      const data = await res.json();
-      if (project.category === 'FEATURED') {
-        const passRes = await fetch('http://localhost:3000/api/ticket-passes', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-admin-password': 'admin'
-          },
-          body: JSON.stringify({
-            pass_code: "showreel2026",
-            linked_project_id: data.id
-          })
-        });
-        if (passRes.ok) console.log(`Created pass for: ${project.title}`);
+    try {
+      const res = await fetch(`${BASE_URL}/api/projects`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': ADMIN_PASSWORD
+        },
+        body: JSON.stringify(project)
+      });
+      
+      if (res.ok) {
+        console.log(`✅ Created: ${project.title}`);
+        const data = await res.json();
+        
+        if (project.category === 'FEATURED') {
+          const passRes = await fetch(`${BASE_URL}/api/ticket-passes`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-admin-password': ADMIN_PASSWORD
+            },
+            body: JSON.stringify({
+              pass_code: "showreel2026",
+              linked_project_id: data.id
+            })
+          });
+          if (passRes.ok) console.log(`   🎟️ Created pass for: ${project.title}`);
+        }
+      } else {
+        const error = await res.text();
+        console.error(`❌ Failed: ${project.title} - ${res.status} ${error}`);
       }
-    } else {
-      console.error(`Failed to create project: ${project.title}`);
+    } catch (err) {
+      console.error(`💥 Error seeding ${project.title}:`, err.message);
     }
   }
+  
+  console.log("Remote seeding complete.");
 }
 
 seed();
