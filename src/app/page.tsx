@@ -496,7 +496,7 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
           {project.is_locked ? (
             <>
               <img 
-                src={project.thumbnail_url} 
+                src={getMediaUrl(project.thumbnail_url)} 
                 alt={project.title}
                 className="w-full h-full object-cover blur-2xl scale-110 opacity-50"
               />
@@ -533,7 +533,7 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
             </>
           ) : getVimeoId(project.media_url) ? (
             <img 
-              src={project.thumbnail_url || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
+              src={getMediaUrl(project.thumbnail_url) || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
               alt={project.title}
               className="w-full h-full object-cover"
             />
