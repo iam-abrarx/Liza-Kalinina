@@ -85,8 +85,9 @@ export default function AdminDashboard() {
         } else {
           const url = uploadedUrls[0];
           setNewProject(prev => ({ ...prev, media_url: url }));
-          // Automatically trigger thumbnail generation for direct videos
-          if (url.match(/\.(mp4|webm|ogg|mov)/i)) {
+          
+          // Only trigger thumbnail generation if the early local capture was empty
+          if (url.match(/\.(mp4|webm|ogg|mov)/i) && thumbnailSuggestions.length === 0) {
             generateThumbnails(url);
           }
         }
