@@ -39,9 +39,10 @@ const getMediaUrl = (url: string) => {
   return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
 };
 
+
 function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
-    const timer = setTimeout(onComplete, 2500);
+    const timer = setTimeout(onComplete, 3000);
     return () => clearTimeout(timer);
   }, [onComplete]);
 
@@ -51,51 +52,45 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
       exit={{ opacity: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }}
       className="fixed inset-0 z-[500] bg-[var(--color-brand-bg)] flex flex-col items-center justify-center pointer-events-none"
     >
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-12 w-full max-w-md px-12">
         <div className="overflow-hidden">
           <motion.h1 
             initial={{ y: 60 }}
             animate={{ y: 0 }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-4xl md:text-6xl font-display italic tracking-tighter"
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-lg md:text-xl font-display italic tracking-[0.3em] uppercase whitespace-nowrap"
           >
             Liza Kalinina
           </motion.h1>
         </div>
         
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
-          transition={{ delay: 0.8, duration: 1 }}
-          className="flex flex-col items-center gap-8"
-        >
-          <p className="text-[10px] uppercase tracking-[0.5em] font-medium">Director of Photography</p>
-          
-          {/* Minimalist Shutter Loader */}
-          <div className="relative w-12 h-12 flex items-center justify-center">
+        <div className="w-full flex flex-col items-center gap-6">
+          {/* Minimalist Loading Bar */}
+          <div className="w-full h-[1px] bg-black/5 relative overflow-hidden">
             <motion.div 
-              animate={{ rotate: 180 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 rounded-full border border-black/5"
-            >
-              {[0, 60, 120, 180, 240, 300].map((deg) => (
-                <div 
-                  key={deg}
-                  style={{ transform: `rotate(${deg}deg) translateY(-50%)` }}
-                  className="absolute top-1/2 left-1/2 w-6 h-[1px] bg-black/10 origin-left"
-                />
-              ))}
-            </motion.div>
-            <div className="w-4 h-4 rounded-full border border-black/20" />
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 2.5, ease: "easeInOut" }}
+              className="absolute inset-y-0 left-0 bg-black/20"
+            />
           </div>
-        </motion.div>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.3 }}
+            transition={{ delay: 1, duration: 1 }}
+            className="text-[9px] uppercase tracking-[0.6em] font-medium"
+          >
+            Director of Photography
+          </motion.p>
+        </div>
       </div>
       
       {/* Cinematic Reveal Bars */}
       <motion.div 
         initial={{ scaleY: 1 }}
         animate={{ scaleY: 0 }}
-        transition={{ delay: 2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ delay: 2.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="absolute inset-0 bg-black/5 origin-top pointer-events-none"
       />
     </motion.div>
@@ -170,82 +165,34 @@ export default function Home() {
             key="main-content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1 }}
           >
       {/* Global modal removed, replaced by inline ProjectCard unlocking */}
 
-      <nav className="fixed top-0 w-full p-6 md:px-12 md:py-8 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-[var(--color-brand-bg)]/80 backdrop-blur-xl border-b border-[var(--color-brand-ink)]/5 transition-all duration-500">
-        <Link href="/" className="text-xs md:text-sm tracking-[0.3em] uppercase font-bold">Liza Kalinina</Link>
-        <Link href="/contact" className="text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity">Contact</Link>
+      <nav className="fixed top-0 w-full p-4 md:px-12 md:py-6 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-white border-b border-black/5 pointer-events-none">
+        <Link href="/" className="text-xs md:text-sm tracking-[0.3em] uppercase font-bold pointer-events-auto">Liza Kalinina</Link>
+        <Link href="/contact" className="text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity pointer-events-auto">Contact</Link>
       </nav>
 
-      {/* Hero Cover Component */}
-      <section className="relative h-screen w-full overflow-hidden flex flex-col items-center justify-center">
-        <motion.div 
-          style={{ 
-            y: heroY, 
-            opacity: heroOpacity, 
-            scale: heroScale
-          }}
-          className="absolute inset-0 z-0 bg-[var(--color-brand-bg)]"
-        />
-        
-        {/* Massive Editorial Title */}
-        <div className="z-10 text-center flex flex-col items-center pointer-events-none px-4">
-          <motion.div
-            initial={{ y: 150, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col items-center"
-          >
-            <span className="text-[var(--color-brand-ink)]/40 text-[10px] sm:text-xs tracking-[0.8em] uppercase font-bold mb-4 ml-4">
-              The Works of
-            </span>
-            <motion.h1 
-              className="text-[var(--color-brand-ink)] text-[clamp(3.5rem,15vw,15rem)] font-display italic leading-[0.75] tracking-tighter opacity-90 drop-shadow-[0_20px_50px_rgba(0,0,0,0.05)] select-none cursor-default"
-            >
-              Liza Kalinina
-            </motion.h1>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 1 }}
-            className="flex flex-col items-center mt-12 gap-8"
-          >
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-[var(--color-brand-ink)] text-xs tracking-[0.4em] uppercase font-bold">
-                Director of Photography
-              </p>
-              <p className="text-[var(--color-brand-ink)]/40 text-[9px] tracking-[0.2em] uppercase">
-                Based in Paris · Available Worldwide
-              </p>
-            </div>
-            {/* Minimalist Animated Scroll Line */}
-            <div className="h-24 w-[1px] bg-gradient-to-b from-[var(--color-brand-ink)]/60 to-transparent animate-pulse delay-700" />
-          </motion.div>
-        </div>
-      </section>
 
       <section 
-        className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-24 pb-48 px-6 md:px-12 lg:px-24"
+        className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-44 pb-48 px-0 md:px-0"
       >
-        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row gap-12 lg:gap-24 xl:gap-32">
+        <div className="max-w-full mx-auto flex flex-col md:flex-row">
           
-          <aside className="md:w-32 shrink-0 sticky top-0 md:relative z-30 bg-[var(--color-brand-bg)] -mx-6 px-6 md:mx-0 md:px-0 pt-4 pb-0 md:pt-0">
-            <div className="md:sticky md:top-32 flex flex-row md:flex-col gap-8 md:gap-6 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 scrollbar-hide whitespace-nowrap border-b md:border-b-0 border-black/5 md:border-none">
+          <aside className="md:w-64 shrink-0 sticky top-0 md:relative z-30 bg-[var(--color-brand-bg)] px-6 pt-8 pb-4 md:pt-0">
+            <div className="md:sticky md:top-32 flex flex-row md:flex-col gap-12 md:gap-8 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 scrollbar-hide whitespace-nowrap">
               {CATEGORIES.map((cat) => (
                 <div
                   key={cat}
-                  className={`flex items-center justify-start md:justify-between shrink-0 w-auto md:w-full group/prem ${cat === "Featured" ? "md:mt-2 md:border-t md:border-current/10 md:pt-4" : ""}`}
+                  className={`flex items-center justify-start md:justify-between shrink-0 w-auto md:w-full group/prem ${cat === "Featured" ? "md:mt-4 md:border-t md:border-current/10 md:pt-8" : ""}`}
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
-                    className={`text-left text-lg md:text-xl transition-all duration-500 ${
+                    className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 ${
                       activeCategory === cat
-                        ? "text-[var(--color-brand-ink)] font-normal italic"
-                        : "text-gray-400 font-light hover:text-gray-600"
+                        ? "text-[var(--color-brand-ink)] font-bold"
+                        : "text-gray-400 font-medium hover:text-gray-600"
                     }`}
                   >
                     {cat === "Featured" ? (
@@ -275,7 +222,7 @@ export default function Home() {
             </div>
           </aside>
 
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-16 md:gap-12 lg:gap-32 border-l-0 md:border-l border-black/5 pl-0 md:pl-16 lg:pl-32">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-px bg-white">
             {getMatchedProjects().map((project: any) => {
               const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
 
@@ -447,12 +394,12 @@ export default function Home() {
             </motion.div>
           </div>
         </motion.div>
-       )}
+        )}
       </AnimatePresence>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </main>
+    </motion.div>
+  )}
+</AnimatePresence>
+    </main>
   );
 }
 
@@ -526,12 +473,11 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
   return (
     <motion.article 
       ref={ref}
-      style={{ scale, opacity }}
-      className="flex flex-col gap-8"
+      className="relative flex flex-col"
     >
       {(project.media_url || project.thumbnail_url) && (
         <div 
-          className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-gray-200'} overflow-hidden ${project.is_locked ? '' : 'cursor-pointer group'}`}
+          className={`relative aspect-2-1 w-full ${mode === 'theatrical' ? 'bg-zinc-900 border border-black/10 shadow-xl' : 'bg-white'} overflow-hidden ${project.is_locked ? '' : 'cursor-pointer group'}`}
           onClick={project.is_locked ? undefined : handleProjectClick}
           onMouseEnter={(e) => {
             if (project.is_locked) return;
@@ -608,144 +554,15 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
               className="w-full h-full object-cover"
             />
           )}
-
           {!project.is_locked && (
-            <div className={`absolute inset-0 ${mode === 'theatrical' ? 'bg-gradient-to-t from-black/60 via-transparent to-transparent' : 'bg-black/0 group-hover:bg-black/20'} transition-all duration-500 flex flex-col items-center justify-center p-8`}>
-             {mode === 'theatrical' ? (
-               <span className="opacity-0 group-hover:opacity-100 text-white border border-white/20 rounded-full px-12 py-4 uppercase tracking-[0.4em] text-[10px] transition-all duration-500 transform group-hover:translate-y-0 translate-y-8 backdrop-blur-sm">
-                 Screening
-               </span>
-             ) : (
-               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none p-6 flex flex-col justify-between">
-                 {/* Viewfinder Corners */}
-                 <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-white/80" />
-                 <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-white/80" />
-                 <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-white/80" />
-                 <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-white/80" />
-                 
-                 {/* Center Shutter/Aperture - Minimalist */}
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                   <motion.div 
-                     animate={{ 
-                       rotate: isCapturing ? 90 : 0,
-                       scale: isCapturing ? 0.8 : 1
-                     }}
-                     transition={{ duration: 0.3, ease: "circOut" }}
-                     className="relative w-14 h-14 rounded-full border border-white/20 flex items-center justify-center overflow-hidden"
-                   >
-                     {/* Shutter Blades - Thinner */}
-                     {[0, 60, 120, 180, 240, 300].map((deg) => (
-                       <div 
-                         key={deg}
-                         style={{ transform: `rotate(${deg}deg) translateY(-50%)` }}
-                         className="absolute top-1/2 left-1/2 w-7 h-[1px] bg-white/30 origin-left"
-                       />
-                     ))}
-                     <div className="w-5 h-5 rounded-full border border-white/30" />
-                     <motion.div 
-                       animate={{ opacity: isCapturing ? 1 : 0 }}
-                       className="absolute inset-0 bg-white/20"
-                     />
-                   </motion.div>
-                 </div>
-                 
-                  {/* Project Title Overlay */}
-                  <div className="absolute inset-x-0 bottom-12 flex justify-center px-8 z-10 transition-transform duration-700 ease-out translate-y-4 group-hover:translate-y-0">
-                    <h3 className="text-white text-2xl md:text-3xl lg:text-4xl font-display italic text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-                      {project.title}
-                    </h3>
-                  </div>
-                </div>
-             )}
-          </div>
-          )}
-        </div>
-      )}
-
-      <div className="flex flex-col gap-6 lg:gap-8 max-w-4xl">
-        <div className="flex flex-col gap-4">
-          <h2 className={`text-4xl md:text-5xl lg:text-7xl ${mode === 'theatrical' ? 'text-[var(--color-brand-ink)] font-display italic tracking-tight' : 'text-[var(--color-brand-ink)]'}`}>
-            {project.title}
-          </h2>
-        </div>
-
-        <div className={`flex flex-col gap-2 text-sm text-gray-500`}>
-          
-          {/* Mobile Paragraph Layout */}
-          <p className="sm:hidden text-xs leading-loose text-gray-500">
-            {project.year && project.year.trim() && (
-              <span className="inline-block mr-3">
-                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Year</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.year}</strong>
-              </span>
-            )}
-            {project.role && project.role.trim() && (
-              <span className="inline-block mr-3">
-                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Role</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.role}</strong>
-              </span>
-            )}
-            {project.director && project.director.trim() && (
-              <span className="inline-block mr-3">
-                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Director</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.director}</strong>
-              </span>
-            )}
-            {project.client && project.client.trim() && (
-              <span className="inline-block mr-3">
-                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Client</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.client}</strong>
-              </span>
-            )}
-            {project.production_company && project.production_company.trim() && (
-              <span className="inline-block mr-3">
-                <span className="uppercase tracking-widest text-[9px] opacity-50 mr-2">Studio</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.production_company}</strong>
-              </span>
-            )}
-          </p>
-
-          {/* Desktop/Tablet Grid Layout */}
-          <div className="hidden sm:flex flex-row flex-wrap gap-8 lg:gap-16 mt-4">
-            {project.year && project.year.trim() && (
-              <div className="flex flex-col gap-1">
-                <span className="uppercase tracking-widest text-[9px] opacity-50">Year</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.year}</strong>
-              </div>
-            )}
-            {project.role && project.role.trim() && (
-              <div className="flex flex-col gap-1">
-                <span className="uppercase tracking-widest text-[9px] opacity-50">Role</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.role}</strong>
-              </div>
-            )}
-            {project.director && project.director.trim() && (
-              <div className="flex flex-col gap-1">
-                <span className="uppercase tracking-widest text-[9px] opacity-50">Director</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.director}</strong>
-              </div>
-            )}
-            {project.client && project.client.trim() && (
-              <div className="flex flex-col gap-1">
-                <span className="uppercase tracking-widest text-[9px] opacity-50">Client</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.client}</strong>
-              </div>
-            )}
-            {project.production_company && project.production_company.trim() && (
-              <div className="flex flex-col gap-1">
-                <span className="uppercase tracking-widest text-[9px] opacity-50">Studio</span>
-                <strong className="font-normal text-[var(--color-brand-ink)]">{project.production_company}</strong>
-              </div>
-            )}
-          </div>
-
-          {project.awards && project.awards.trim() && (
-            <div className={`mt-2 sm:mt-6 pt-2 font-normal italic font-display ${mode === 'theatrical' ? 'text-black/30' : 'text-[#b09e8d]'}`}>
-              {project.awards}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-500 flex items-end justify-start p-8 pb-10">
+              <h3 className="text-white text-[10px] md:text-xs font-medium opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-1 group-hover:translate-y-0 text-left tracking-[0.3em] uppercase leading-relaxed">
+                {project.title}
+              </h3>
             </div>
           )}
         </div>
-      </div>
+      )}
     </motion.article>
   );
 }

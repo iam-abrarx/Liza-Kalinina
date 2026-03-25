@@ -15,47 +15,54 @@ export default function Contact() {
       </nav>
 
       {/* Center Typographic Content */}
-      <section className="flex flex-col items-center justify-center flex-1 text-center max-w-4xl mx-auto w-full">
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-6xl md:text-8xl lg:text-9xl mb-8 -tracking-[0.04em]"
-        >
-          Get In Touch
-        </motion.h1>
-        
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.3 }}
-          className="text-lg md:text-2xl font-light text-gray-600 mb-16 italic font-display"
-        >
-          Worldwide Availability
-        </motion.p>
+      <section className="flex flex-col items-center justify-center flex-1 text-center max-w-4xl mx-auto w-full gap-16">
+        <div className="flex flex-col items-center gap-8">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[10px] md:text-xs uppercase tracking-[0.6em] font-bold text-black/40"
+          >
+            Contact
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="text-base md:text-xl font-display italic tracking-widest text-black/60"
+          >
+            Paris and available worldwide
+          </motion.p>
+        </div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="flex flex-col items-center gap-6"
+          className="flex flex-col items-center gap-12"
         >
-          <a 
-            href="mailto:Elisabeth.kalinina@gmail.com" 
-            className="text-xl md:text-3xl font-light hover:italic transition-all duration-300 relative group"
-          >
-            Elisabeth.kalinina@gmail.com
-            <span className="absolute -bottom-2 left-0 w-full h-[1px] bg-black/20 origin-left scale-x-100 group-hover:scale-x-0 transition-transform duration-500" />
-          </a>
+          <div className="flex flex-col items-center gap-4">
+            <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Email</span>
+            <a 
+              href="mailto:Elisabeth.kalinina@gmail.com" 
+              className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wider"
+            >
+              Elisabeth.kalinina@gmail.com
+            </a>
+          </div>
           
-          <a 
-            href="https://instagram.com/lizaleone_dp" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm tracking-[0.2em] uppercase font-medium mt-8 hover:text-gray-500 transition-colors"
-          >
-            Instagram : @lizaleone_dp
-          </a>
+          <div className="flex flex-col items-center gap-4">
+            <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Social</span>
+            <a 
+              href="https://instagram.com/lizaleone_dp" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs tracking-[0.3em] uppercase font-bold hover:opacity-50 transition-colors"
+            >
+              @lizaleone_dp
+            </a>
+          </div>
         </motion.div>
       </section>
 
