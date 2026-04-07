@@ -77,7 +77,7 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
           
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.6 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
             className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-medium whitespace-nowrap"
           >
@@ -175,7 +175,7 @@ export default function Home() {
         <Link href="/" className="flex items-center gap-4">
           <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-80 font-medium text-black">Director of Photography</span>
+          <span className="text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-bold text-black">Director of Photography</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/contact" className="hidden md:block text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity">Contact</Link>
@@ -315,7 +315,7 @@ export default function Home() {
 
       {/* Simple Footer */}
       <footer className="py-6 px-6 md:px-12 border-t border-black/10">
-        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black/90 font-display">
+        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black font-display font-bold">
           <span>© 2025 Elizabeth Kalinina</span>
           <div className="flex gap-8">
             <Link href="#" className="hover:text-black transition-colors font-bold">Instagram</Link>
