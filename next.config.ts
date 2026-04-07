@@ -1,5 +1,4 @@
 const nextConfig: any = {
-  output: process.env.EXPORT === 'true' ? 'export' : undefined,
   images: {
     unoptimized: true,
   },
