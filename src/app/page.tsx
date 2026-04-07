@@ -315,12 +315,11 @@ export default function Home() {
 
       {/* Simple Footer */}
       <footer className="py-6 px-6 md:px-12 border-t border-black/10">
-        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black/60 font-display">
-          <span>© 2026 Elizabeth Kalinina</span>
+        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black/90 font-display">
+          <span>© 2025 Elizabeth Kalinina</span>
           <div className="flex gap-8">
-            <Link href="#" className="hover:text-black/80 transition-colors">Instagram</Link>
-            <Link href="#" className="hover:text-black/80 transition-colors">Vimeo</Link>
-            <Link href="#" className="hover:text-black/80 transition-colors">IMDb</Link>
+            <Link href="#" className="hover:text-black transition-colors font-bold">Instagram</Link>
+            <Link href="#" className="hover:text-black transition-colors font-bold">Vimeo</Link>
           </div>
         </div>
       </footer>
