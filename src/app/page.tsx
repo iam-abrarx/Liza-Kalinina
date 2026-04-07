@@ -174,7 +174,7 @@ export default function Home() {
         <Link href="/" className="flex items-center gap-4">
           <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-bold text-black">Director of Photography</span>
+          <span className="text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-black text-black">Director of Photography</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/contact" className="hidden md:block text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity">Contact</Link>
