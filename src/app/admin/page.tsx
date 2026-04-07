@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil, ChevronLeft, ChevronRight, Image as ImageIcon, Video as VideoIcon } from "lucide-react";
 import Link from "next/link";
-import { upload } from "@vercel/blob/client";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
 import { useThumbnailGenerator } from "@/hooks/useThumbnailGenerator";
 import { useProjectForm } from "@/hooks/useProjectForm";
@@ -358,8 +357,8 @@ export default function AdminDashboard() {
   const getMediaUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-    const cleanUrl = url.replace(/^\/Elizabeth-Kalinina/, '');
-    return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
+    // Ensure local paths start with /
+    return url.startsWith('/') ? url : `/${url}`;
   };
 
   if (!isAuthenticated) {

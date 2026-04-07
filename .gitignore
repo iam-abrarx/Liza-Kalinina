@@ -38,17 +38,6 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
-# /public/uploads/
-/public/uploads/*.mov
-/public/uploads/*.mp4
-/public/uploads/*.MP4
-/public/uploads/*.webm
-/public/uploads/*.ogg
-# Allow thumbnails and images
-!/public/uploads/*.jpg
-!/public/uploads/*.png
-!/public/uploads/*.webp
-!/public/uploads/*.avif
-!/public/uploads/*.gif
-
-.env*.local
+# Uploads
+/public/uploads/*
+!/public/uploads/.gitkeep

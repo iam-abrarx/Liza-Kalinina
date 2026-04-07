@@ -1,9 +1,48 @@
+"use client";
 import { useState } from 'react';
-import { upload } from "@vercel/blob/client";
 
 export function useMediaUpload(password: string) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const performUpload = (file: File, onProgress?: (percent: number) => void): Promise<{ url: string }> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('password', password);
+
+      xhr.open('POST', '/api/upload', true);
+      
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          onProgress?.(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch (e) {
+            reject(new Error('Invalid response from server'));
+          }
+        } else {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            reject(new Error(response.error || 'Upload failed'));
+          } catch (e) {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(formData);
+    });
+  };
 
   const uploadFiles = async (files: File[]) => {
     if (files.length === 0) return [];
@@ -15,19 +54,14 @@ export function useMediaUpload(password: string) {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const uniqueName = `${Date.now()}-${file.name}`;
-        const newBlob = await upload(uniqueName, file, {
-          access: 'public',
-          handleUploadUrl: `/api/upload?password=${encodeURIComponent(password)}`,
-          onUploadProgress: (progress) => {
-            setUploadProgress(Math.round(((i * 100) + progress.percentage) / files.length));
-          }
+        const res = await performUpload(file, (percent) => {
+          setUploadProgress(Math.round(((i * 100) + percent) / files.length));
         });
-        if (newBlob.url) uploadedUrls.push(newBlob.url);
+        if (res.url) uploadedUrls.push(res.url);
       }
       return uploadedUrls;
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('Local Upload error:', error);
       throw error;
     } finally {
       setIsUploading(false);
@@ -38,12 +72,8 @@ export function useMediaUpload(password: string) {
     if (!file) return null;
     setIsUploading(true);
     try {
-      const uniqueName = `${Date.now()}-${file.name}`;
-      const newBlob = await upload(uniqueName, file, {
-        access: 'public',
-        handleUploadUrl: `/api/upload?password=${encodeURIComponent(password)}`,
-      });
-      return newBlob.url;
+      const res = await performUpload(file);
+      return res.url;
     } catch (error) {
       throw error;
     } finally {

@@ -1,41 +1,50 @@
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
-
-export const runtime = 'edge';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as HandleUploadBody;
-  const { searchParams } = new URL(request.url);
-  const adminPassword = request.headers.get('x-admin-password') || searchParams.get('password');
-  
-  // Basic security check
-  if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
-    const jsonResponse = await handleUpload({
-      body,
-      request,
-      onBeforeGenerateToken: async (pathname) => {
-        return {
-          allowedContentTypes: [
-            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-            'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo', 
-            'video/mpeg', 'video/x-matroska', 'video/avi', 'application/octet-stream'
-          ],
-        };
-      },
-      onUploadCompleted: async ({ blob }) => {
-        console.log('Upload completed:', blob.url);
-      },
-    });
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const password = formData.get('password') as string;
 
-    return NextResponse.json(jsonResponse);
-  } catch (error) {
+    // Security check
+    if (password !== (process.env.ADMIN_PASSWORD || 'admin')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!file) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Create unique filename
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const filename = `${uniqueSuffix}-${file.name.replace(/ /g, '_')}`;
+    
+    // Ensure uploads directory exists
+    const uploadsDir = join(process.cwd(), 'public', 'uploads');
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true });
+    }
+
+    const path = join(uploadsDir, filename);
+    await writeFile(path, buffer);
+
+    console.log(`[UPLOAD] File saved locally: /uploads/${filename}`);
+
+    return NextResponse.json({ 
+      url: `/uploads/${filename}`,
+      message: 'File uploaded successfully to local storage' 
+    });
+  } catch (error: any) {
+    console.error('[UPLOAD ERROR]', error);
     return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 }
+      { error: 'Server error during upload: ' + error.message },
+      { status: 500 }
     );
   }
 }
