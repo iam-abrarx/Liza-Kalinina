@@ -189,9 +189,9 @@ export default function AdminDashboard() {
 
     setIsLoading(true);
     try {
-      // We verify the password by trying to fetch projects. 
-      // If the API returns 200, the password is correct.
-      const res = await fetch('/api/projects', {
+      // Use the dedicated auth endpoint with POST for strict verification
+      const res = await fetch('/api/auth', {
+        method: 'POST',
         headers: { 'x-admin-password': password }
       });
       
