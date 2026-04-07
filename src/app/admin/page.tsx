@@ -177,10 +177,37 @@ export default function AdminDashboard() {
 
 
   useEffect(() => {
+    // Only auto-fetch if we already have a password in memory (e.g. from local storage or previous session)
     if (isAuthenticated) {
       fetchData();
     }
   }, [isAuthenticated]);
+
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!password) return;
+
+    setIsLoading(true);
+    try {
+      // We verify the password by trying to fetch projects. 
+      // If the API returns 200, the password is correct.
+      const res = await fetch('/api/projects', {
+        headers: { 'x-admin-password': password }
+      });
+      
+      if (res.ok) {
+        setIsAuthenticated(true);
+        showMessage("Logged in successfully");
+      } else {
+        const data = await res.json();
+        showMessage(data.error || "Invalid Password", "error");
+      }
+    } catch (error) {
+      showMessage("Connection failed", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -364,21 +391,25 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#111] text-white font-body px-4">
-        <div className="max-w-md w-full text-center">
+        <form onSubmit={handleLogin} className="max-w-md w-full text-center">
           <Lock size={48} strokeWidth={1} className="mx-auto mb-8 opacity-50" />
           <h1 className="text-3xl font-display mb-8 italic">Admin Login</h1>
           <input 
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && password === 'admin') setIsAuthenticated(true);
-            }}
             placeholder="Enter Admin Password"
-            className="w-full bg-transparent border-b border-white/20 focus:border-white py-4 text-center text-xl tracking-widest outline-none mb-4"
+            className="w-full bg-transparent border-b border-white/20 focus:border-white py-4 text-center text-xl tracking-widest outline-none mb-8"
+            autoFocus
           />
-          <p className="text-xs text-white/50">(Password is 'admin' for demo purposes)</p>
-        </div>
+          <button 
+            type="submit"
+            disabled={isLoading}
+            className="w-full border border-white/20 py-4 hover:bg-white hover:text-black transition-all uppercase tracking-widest font-bold text-xs"
+          >
+            {isLoading ? "Verifying..." : "Enter Dashboard"}
+          </button>
+        </form>
       </main>
     );
   }
