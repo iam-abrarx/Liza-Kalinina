@@ -746,7 +746,9 @@ export default function AdminDashboard() {
                       {isUploading && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white gap-4 z-20">
                           <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-                          <span className="text-[10px] uppercase tracking-widest font-black">Processing Upload...</span>
+                          <span className="text-[10px] uppercase tracking-widest font-black">
+                            Processing Upload... {uploadProgress}%
+                          </span>
                         </div>
                       )}
                     </div>
