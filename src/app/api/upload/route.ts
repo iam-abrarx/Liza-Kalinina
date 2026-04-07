@@ -5,14 +5,14 @@ import { existsSync } from 'fs';
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const password = formData.get('password') as string;
-
-    // Security check
-    if (password !== (process.env.ADMIN_PASSWORD || 'admin')) {
+    // Security check via header (consistent with all other APIs)
+    const adminPassword = request.headers.get('x-admin-password');
+    if (adminPassword !== (process.env.ADMIN_PASSWORD || 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });

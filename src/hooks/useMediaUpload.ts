@@ -10,9 +10,9 @@ export function useMediaUpload(password: string) {
       const xhr = new XMLHttpRequest();
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('password', password);
 
       xhr.open('POST', '/api/upload', true);
+      xhr.setRequestHeader('x-admin-password', password);
       
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
