@@ -10,8 +10,22 @@ export async function GET(request: Request) {
     const adminPassword = request.headers.get('x-admin-password');
     const isAdmin = adminPassword === (process.env.ADMIN_PASSWORD || 'admin');
     
-    const projects = await prisma.project.findMany({
-      orderBy: { sort_order: 'asc' }
+    // Fetch all projects
+    const allProjects = await prisma.project.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Manually sort projects for the "Priority Logic"
+    // 1-999 comes first (ascending), then 0 comes last (newest first)
+    const projects = [...allProjects].sort((a, b) => {
+      const pA = a.sort_order || 0;
+      const pB = b.sort_order || 0;
+
+      if (pA === 0 && pB === 0) return 0; // Maintain createdAt desc order
+      if (pA === 0) return 1;  // a goes to bottom
+      if (pB === 0) return -1; // b goes to bottom
+      
+      return pA - pB; // Both have priority, sort 1, 2, 3...
     });
     
     if (isAdmin) {
