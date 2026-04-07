@@ -591,12 +591,21 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
           ) : (
             <div className="relative w-full h-full">
               {/* Base Thumbnail - Always visible underneath */}
-              <img 
-                src={getMediaUrl(project.thumbnail_url) || (getVimeoId(project.media_url) ? `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg` : getMediaUrl(project.media_url))} 
-                alt={project.title}
-                className="w-full h-full object-cover"
-              />
-
+              {project.thumbnail_url || getVimeoId(project.media_url) ? (
+                <img 
+                  src={getMediaUrl(project.thumbnail_url) || `https://vumbnail.com/${getVimeoId(project.media_url)}.jpg`} 
+                  alt={project.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <video 
+                  src={`${getMediaUrl(project.media_url)}#t=0.001`}
+                  className="w-full h-full object-cover"
+                  preload="metadata"
+                  playsInline
+                  muted
+                />
+              )}
               {/* Video Preview Overlay - Local videos only */}
               {!getVimeoId(project.media_url) && (project.media_url?.match(/\.(mp4|webm|ogg|mov)/i) || project.media_url?.startsWith('blob:') || project.media_url?.startsWith('data:video')) && (
                 <video 
