@@ -8,8 +8,10 @@ export default function Contact() {
     <main className="min-h-screen bg-[var(--color-brand-bg)] flex flex-col justify-between p-6 md:p-12 lg:p-24 selection:bg-[#111] selection:text-[#F4F4F0]">
       {/* Navbar Minimal */}
       <nav className="w-full flex justify-between items-center text-[var(--color-brand-ink)]">
-        <Link href="/" className="text-sm tracking-widest uppercase font-medium hover:opacity-70 transition-opacity">
-          Liza Kalinina
+        <Link href="/" className="flex items-center gap-3 hover:opacity-70 transition-opacity">
+          <span className="text-sm tracking-widest uppercase font-medium">Elizabeth Kalinina</span>
+          <span className="hidden md:block w-px h-3 bg-black/10" />
+          <span className="hidden md:block text-[9px] tracking-[0.3em] uppercase opacity-40 font-medium">Director of Photography</span>
         </Link>
         <span className="text-sm border-b border-black/20 pb-1">Contact</span>
       </nav>
@@ -26,14 +28,7 @@ export default function Contact() {
             Contact
           </motion.h1>
           
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            className="text-base md:text-xl font-display italic tracking-widest text-black/60"
-          >
-            Paris and available worldwide
-          </motion.p>
+          {/* Location text removed as requested */}
         </div>
 
         <motion.div 
@@ -68,7 +63,7 @@ export default function Contact() {
 
       {/* Footer Minimal */}
       <footer className="w-full flex justify-center text-xs text-gray-400 tracking-widest uppercase mt-12">
-        © {new Date().getFullYear()} Liza Kalinina
+        © {new Date().getFullYear()} Elizabeth Kalinina
       </footer>
     </main>
   );

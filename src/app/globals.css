@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @font-face {
-  font-family: "Cutive Mono";
-  src: url("/fonts/CutiveMono-Regular.ttf") format("truetype");
+  font-family: "Julius Sans One";
+  src: url("/fonts/JuliusSansOne-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -11,8 +11,8 @@
   --color-brand-bg: #ffffff;
   --color-brand-ink: #111111;
 
-  --font-display: "Cutive Mono", monospace;
-  --font-body: "Cutive Mono", monospace;
+  --font-display: "Julius Sans One", sans-serif;
+  --font-body: "Julius Sans One", sans-serif;
 }
 
 @layer base {

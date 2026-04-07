@@ -52,10 +52,13 @@ export default function AdminDashboard() {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
+    let localUrl = '';
     try {
       if (!isGallery) {
         const file = files[0];
-        const localUrl = URL.createObjectURL(file);
+        localUrl = URL.createObjectURL(file);
+        // Set media_url immediately so the form can submit even if cloud upload is slow/fails
+        setNewProject(prev => ({ ...prev, media_url: localUrl }));
         await generateThumbnails(localUrl, (url) => {
             if (!newProject.thumbnail_url) {
                 setNewProject(prev => ({ ...prev, thumbnail_url: url }));
@@ -73,6 +76,7 @@ export default function AdminDashboard() {
           }));
         } else {
           const url = uploadedUrls[0];
+          // Upgrade from local blob URL to the permanent cloud URL
           setNewProject(prev => ({ ...prev, media_url: url }));
           
           if (url.match(/\.(mp4|webm|ogg|mov)/i) && thumbnailSuggestions.length === 0) {
@@ -83,9 +87,17 @@ export default function AdminDashboard() {
           }
         }
         showMessage(`${uploadedUrls.length} file(s) uploaded successfully`);
+      } else if (!isGallery) {
+        // Cloud upload returned empty but local URL is already set — keep it
+        showMessage("Video selected locally. Cloud upload pending.", "success");
       }
     } catch (error: any) {
-      showMessage(error.message || "Error uploading file", "error");
+      if (!isGallery && localUrl) {
+        // Keep the local URL even if cloud upload fails
+        showMessage("Video loaded locally. Cloud upload failed — you can still save.", "error");
+      } else {
+        showMessage(error.message || "Error uploading file", "error");
+      }
     }
   };
 
@@ -196,6 +208,11 @@ export default function AdminDashboard() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newProject.media_url) {
+      showMessage("Please provide a video URL or upload a video file", "error");
+      setFormTab('media');
+      return;
+    }
     setIsLoading(true);
     try {
       const res = await fetch('/api/projects', {
@@ -227,6 +244,11 @@ export default function AdminDashboard() {
   const handleUpdateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProjectId) return;
+    if (!newProject.media_url) {
+      showMessage("Please provide a video URL or upload a video file", "error");
+      setFormTab('media');
+      return;
+    }
     setIsLoading(true);
     try {
       const res = await fetch(`/api/projects/${editingProjectId}`, {
@@ -326,7 +348,7 @@ export default function AdminDashboard() {
   const getMediaUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-    const cleanUrl = url.replace(/^\/Liza-Kalinina/, '');
+    const cleanUrl = url.replace(/^\/Elizabeth-Kalinina/, '');
     return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
   };
 
@@ -369,7 +391,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-6">
           <div>
             <h1 className="text-3xl md:text-5xl font-display italic">Dashboard</h1>
-            <p className="text-sm uppercase tracking-widest text-gray-500 mt-2">Liza Kalinina Portfolio</p>
+            <p className="text-sm uppercase tracking-widest text-gray-500 mt-2">Elizabeth Kalinina Portfolio</p>
           </div>
           <div className="mt-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-tighter uppercase flex items-center gap-2 bg-green-100 text-green-700">
             <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-green-500" />
@@ -556,7 +578,7 @@ export default function AdminDashboard() {
                       <input 
                         required
                         value={newProject.title}
-                        onChange={e => setNewProject({...newProject, title: e.target.value})}
+                        onChange={e => setNewProject(prev => ({...prev, title: e.target.value}))}
                         className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3 font-medium text-lg transition-colors"
                         placeholder="Midnight Motion"
                       />
@@ -566,7 +588,7 @@ export default function AdminDashboard() {
                       <div className="relative">
                         <select 
                           value={newProject.category}
-                          onChange={e => setNewProject({...newProject, category: e.target.value})}
+                          onChange={e => setNewProject(prev => ({...prev, category: e.target.value}))}
                           className="w-full bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3.5 font-medium appearance-none transition-colors cursor-pointer"
                         >
                           <option value="COMMERCIAL">Commercials</option>
@@ -589,7 +611,7 @@ export default function AdminDashboard() {
                       <input 
                         required
                         value={newProject.year}
-                        onChange={e => setNewProject({...newProject, year: e.target.value})}
+                        onChange={e => setNewProject(prev => ({...prev, year: e.target.value}))}
                         className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3 font-medium transition-colors"
                       />
                     </div>
@@ -598,7 +620,7 @@ export default function AdminDashboard() {
                       <input 
                         type="number"
                         value={newProject.sort_order}
-                        onChange={e => setNewProject({...newProject, sort_order: parseInt(e.target.value) || 0})}
+                        onChange={e => setNewProject(prev => ({...prev, sort_order: parseInt(e.target.value) || 0}))}
                         className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3 font-medium transition-colors"
                       />
                     </div>
@@ -611,7 +633,7 @@ export default function AdminDashboard() {
                         <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Your Role</label>
                         <input 
                           value={newProject.role}
-                          onChange={e => setNewProject({...newProject, role: e.target.value})}
+                          onChange={e => setNewProject(prev => ({...prev, role: e.target.value}))}
                           className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-2 font-medium transition-colors"
                         />
                       </div>
@@ -619,7 +641,7 @@ export default function AdminDashboard() {
                         <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Director</label>
                         <input 
                           value={newProject.director}
-                          onChange={e => setNewProject({...newProject, director: e.target.value})}
+                          onChange={e => setNewProject(prev => ({...prev, director: e.target.value}))}
                           className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-2 font-medium transition-colors"
                         />
                       </div>
@@ -627,7 +649,7 @@ export default function AdminDashboard() {
                         <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Client / Brand</label>
                         <input 
                           value={newProject.client}
-                          onChange={e => setNewProject({...newProject, client: e.target.value})}
+                          onChange={e => setNewProject(prev => ({...prev, client: e.target.value}))}
                           className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-2 font-medium transition-colors"
                         />
                       </div>
@@ -635,7 +657,7 @@ export default function AdminDashboard() {
                         <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Production House</label>
                         <input 
                           value={newProject.production_company}
-                          onChange={e => setNewProject({...newProject, production_company: e.target.value})}
+                          onChange={e => setNewProject(prev => ({...prev, production_company: e.target.value}))}
                           className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-2 font-medium transition-colors"
                         />
                       </div>
@@ -697,11 +719,10 @@ export default function AdminDashboard() {
                       <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Video Resource (Vimeo or MP4)</label>
                       <div className="relative group">
                         <input 
-                          required
                           value={newProject.media_url}
-                          onChange={e => setNewProject({...newProject, media_url: e.target.value})}
+                          onChange={e => setNewProject(prev => ({...prev, media_url: e.target.value}))}
                           className="w-full bg-white border-2 border-black/5 focus:border-black transition-all outline-none p-4 rounded-xl font-medium text-sm shadow-sm"
-                          placeholder="vimeo.com/123456789"
+                          placeholder="vimeo.com/123456789 (or upload a video →)"
                         />
                         {newProject.media_url && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -830,7 +851,7 @@ export default function AdminDashboard() {
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-black">Awards & Accolades</label>
                     <input 
                       value={newProject.awards}
-                      onChange={e => setNewProject({...newProject, awards: e.target.value})}
+                      onChange={e => setNewProject(prev => ({...prev, awards: e.target.value}))}
                       className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-4 font-medium text-lg italic transition-colors"
                       placeholder="e.g. Winner — Best Cinematography, Cannes 2026"
                     />
@@ -842,7 +863,7 @@ export default function AdminDashboard() {
                       <textarea 
                         rows={3}
                         value={newProject.description}
-                        onChange={e => setNewProject({...newProject, description: e.target.value})}
+                        onChange={e => setNewProject(prev => ({...prev, description: e.target.value}))}
                         className="bg-white border-2 border-transparent focus:border-black outline-none p-5 rounded-xl font-light text-sm shadow-sm leading-relaxed transition-all resize-none"
                         placeholder="A short punchy intro for the project grid..."
                       />
@@ -853,7 +874,7 @@ export default function AdminDashboard() {
                       <textarea 
                         rows={10}
                         value={newProject.long_description}
-                        onChange={e => setNewProject({...newProject, long_description: e.target.value})}
+                        onChange={e => setNewProject(prev => ({...prev, long_description: e.target.value}))}
                         className="bg-white border-2 border-transparent focus:border-black outline-none p-6 rounded-xl font-light text-sm shadow-sm leading-relaxed transition-all resize-none"
                         placeholder="Detailed background, story, equipment, and creative vision. This appears in the expanded view for Narrative category..."
                       />

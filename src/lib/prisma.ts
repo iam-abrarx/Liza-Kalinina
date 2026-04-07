@@ -6,9 +6,10 @@ export const prisma =
   globalForPrisma.prisma || new PrismaClient({
     datasources: {
       db: {
-        url: "postgresql://neondb_owner:npg_A3ziIBODrZQ7@ep-winter-sea-adiipfo7-pooler.c-2.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require"
+        url: process.env.DATABASE_URL
       }
     }
   })
+
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

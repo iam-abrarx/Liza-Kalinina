@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { Lock, ArrowRight, X, Plus, LogOut } from "lucide-react";
+import { Lock, ArrowRight, X, Plus, LogOut, Menu } from "lucide-react";
 
 const CATEGORIES = [
   "Commercials",
@@ -34,7 +34,7 @@ const getMediaUrl = (url: string) => {
   if (!url) return '';
   if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
   // Remove legacy prefix if it exists
-  const cleanUrl = url.replace(/^\/Liza-Kalinina/, '');
+  const cleanUrl = url.replace(/^\/Elizabeth-Kalinina/, '');
   // Ensure it starts with /
   return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
 };
@@ -52,15 +52,15 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
       exit={{ opacity: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }}
       className="fixed inset-0 z-[500] bg-[var(--color-brand-bg)] flex flex-col items-center justify-center pointer-events-none"
     >
-      <div className="flex flex-col items-center gap-12 w-full max-w-md px-12">
+      <div className="flex flex-col items-center gap-12 w-full max-w-md px-6 md:px-12">
         <div className="overflow-hidden">
           <motion.h1 
             initial={{ y: 60 }}
             animate={{ y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-lg md:text-xl font-display italic tracking-[0.3em] uppercase whitespace-nowrap"
+            className="text-xl md:text-4xl font-display italic tracking-[0.15em] md:tracking-[0.3em] uppercase text-center"
           >
-            Liza Kalinina
+            Elizabeth Kalinina
           </motion.h1>
         </div>
         
@@ -79,7 +79,7 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.3 }}
             transition={{ delay: 1, duration: 1 }}
-            className="text-[9px] uppercase tracking-[0.6em] font-medium"
+            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-medium whitespace-nowrap"
           >
             Director of Photography
           </motion.p>
@@ -105,6 +105,7 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState("Commercials");
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [hasPlayedTadam, setHasPlayedTadam] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getMatchedProjects = () => {
     const dbCategory = CATEGORY_MAP[activeCategory];
@@ -138,6 +139,7 @@ export default function Home() {
     } else {
       setActiveCategory(cat);
     }
+    setMobileMenuOpen(false);
   };
 
   const { scrollYProgress } = useScroll({
@@ -169,19 +171,70 @@ export default function Home() {
           >
       {/* Global modal removed, replaced by inline ProjectCard unlocking */}
 
-      <nav className="fixed top-0 w-full p-4 md:px-12 md:py-6 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-white border-b border-black/5 pointer-events-none">
-        <Link href="/" className="text-xs md:text-sm tracking-[0.3em] uppercase font-bold pointer-events-auto">Liza Kalinina</Link>
-        <Link href="/contact" className="text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity pointer-events-auto">Contact</Link>
+      <nav className="fixed top-0 w-full p-4 md:px-12 md:py-6 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-white border-b border-black/5">
+        <Link href="/" className="flex items-center gap-4">
+          <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
+          <span className="hidden md:block w-px h-4 bg-black/10" />
+          <span className="text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-60 font-medium">Director of Photography</span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/contact" className="hidden md:block text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity">Contact</Link>
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            className="md:hidden p-1"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-40 bg-white pt-[70px] px-8 flex flex-col gap-6 md:hidden"
+          >
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryClick(cat)}
+                className={`text-left text-base uppercase tracking-[0.2em] transition-all duration-300 py-2 border-b border-black/5 ${
+                  activeCategory === cat
+                    ? "text-black font-bold"
+                    : "text-gray-500 font-medium"
+                }`}
+              >
+                {cat === "Featured" ? (
+                  <span className="flex items-center gap-2">
+                    {cat} <span className="inline-block w-2 h-2 rounded-full bg-black/20 animate-pulse" />
+                  </span>
+                ) : cat}
+              </button>
+            ))}
+            <Link 
+              href="/contact" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left text-base uppercase tracking-[0.2em] transition-all duration-300 py-2 border-b border-black/5 text-gray-500 font-medium"
+            >
+              Contact
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       <section 
-        className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-44 pb-48 px-0 md:px-0"
+        className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-24 md:pt-44 pb-12 px-0 md:px-0"
       >
         <div className="max-w-full mx-auto flex flex-col md:flex-row">
           
-          <aside className="md:w-64 shrink-0 sticky top-0 md:relative z-30 bg-[var(--color-brand-bg)] px-6 pt-8 pb-4 md:pt-0">
-            <div className="md:sticky md:top-32 flex flex-row md:flex-col gap-12 md:gap-8 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 scrollbar-hide whitespace-nowrap">
+          <aside className="hidden md:block md:w-64 shrink-0 md:relative z-30 bg-[var(--color-brand-bg)] px-6 md:pt-0 md:pb-0">
+            <div className="md:sticky md:top-32 flex flex-col gap-8 overflow-x-visible pb-0 scrollbar-hide whitespace-nowrap">
               {CATEGORIES.map((cat) => (
                 <div
                   key={cat}
@@ -191,8 +244,8 @@ export default function Home() {
                     onClick={() => handleCategoryClick(cat)}
                     className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 ${
                       activeCategory === cat
-                        ? "text-[var(--color-brand-ink)] font-bold"
-                        : "text-gray-400 font-medium hover:text-gray-600"
+                        ? "text-black font-bold"
+                        : "text-gray-500 font-medium hover:text-black"
                     }`}
                   >
                     {cat === "Featured" ? (
@@ -222,48 +275,52 @@ export default function Home() {
             </div>
           </aside>
 
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-px bg-white">
-            {getMatchedProjects().map((project: any) => {
-              const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0"
+            >
+              {getMatchedProjects().map((project: any) => {
+                const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
 
-              return (
-                <ProjectCard 
-                  key={project.id} 
-                  project={project} 
-                  mode={mode} 
-                  onSelect={setSelectedProject}
-                  onUnlock={(unlockedProject) => {
-                    setUnlockedProjects(prev => {
-                      if (prev.find(p => p.id === unlockedProject.id)) return prev;
-                      return [...prev, unlockedProject];
-                    });
-                  }} 
-                />
-              );
-            })}
-            
+                return (
+                  <ProjectCard 
+                    key={project.id} 
+                    project={project} 
+                    mode={mode} 
+                    onSelect={setSelectedProject}
+                    onUnlock={(unlockedProject) => {
+                      setUnlockedProjects(prev => {
+                        if (prev.find(p => p.id === unlockedProject.id)) return prev;
+                        return [...prev, unlockedProject];
+                      });
+                    }} 
+                  />
+                );
+              })}
 
-            {getMatchedProjects().length === 0 && (
-              <div className="py-32 text-center italic font-display text-xl text-gray-400">
-                No projects loaded for {activeCategory} yet.
-              </div>
-            )}
-          </div>
+              {getMatchedProjects().length === 0 && (
+                <div className="py-32 text-center italic font-display text-xl text-gray-400">
+                  No projects loaded for {activeCategory} yet.
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
 
-      {/* Cinematic Footer Section */}
-      <footer className="py-8 px-6 md:px-12 lg:px-24 border-t border-black/5">
-        <div className="max-w-screen-2xl mx-auto flex flex-col items-center">
-
-          <div className="w-full flex flex-col md:flex-row justify-between items-center gap-8 mt-8 opacity-30 text-[9px] uppercase tracking-[0.5em] font-medium border-t border-black/5 pt-12">
-            <div className="flex gap-12">
-              <Link href="#" className="hover:opacity-100 transition-opacity">Instagram</Link>
-              <Link href="#" className="hover:opacity-100 transition-opacity">Vimeo</Link>
-              <Link href="#" className="hover:opacity-100 transition-opacity">IMDb</Link>
-            </div>
-            <span>© 2026 Liza Kalinina · All Rights Reserved</span>
-            <span className="hidden md:block">Based in Paris / Worldwide</span>
+      {/* Simple Footer */}
+      <footer className="py-6 px-6 md:px-12 border-t border-black/10">
+        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black/60 font-display">
+          <span>© 2026 Elizabeth Kalinina</span>
+          <div className="flex gap-8">
+            <Link href="#" className="hover:text-black/80 transition-colors">Instagram</Link>
+            <Link href="#" className="hover:text-black/80 transition-colors">Vimeo</Link>
+            <Link href="#" className="hover:text-black/80 transition-colors">IMDb</Link>
           </div>
         </div>
       </footer>
@@ -554,12 +611,20 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
               )}
             </div>
           )}
-          {!project.is_locked && (
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-500 flex items-end justify-start p-8 pb-10">
-              <h3 className="text-white text-[10px] md:text-xs font-medium opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-1 group-hover:translate-y-0 text-left tracking-[0.3em] uppercase leading-relaxed">
-                {project.title}
-              </h3>
-            </div>
+
+        </div>
+      )}
+
+      {/* Title and Client Below the Video */}
+      {!project.is_locked && (project.media_url || project.thumbnail_url) && (
+        <div className="w-full bg-transparent pt-2 pb-4 px-2 flex flex-col items-start gap-0.5 z-10 font-display">
+          <h3 className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-medium text-left">
+            {project.title}
+          </h3>
+          {project.client && (
+            <span className="text-black/70 text-[9px] md:text-[10px] tracking-[0.1em] uppercase font-normal text-left">
+              {project.client}
+            </span>
           )}
         </div>
       )}

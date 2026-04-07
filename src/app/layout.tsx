@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Liza Kalinina | Director of Photography",
+  title: "Elizabeth Kalinina | Director of Photography",
   description:
-    "Portfolio of Liza Kalinina, Director of Photography & Director based Worldwide.",
+    "Portfolio of Elizabeth Kalinina, Director of Photography & Director based Worldwide.",
 };
 
 export default function RootLayout({

@@ -30,7 +30,11 @@ export async function GET(request: Request) {
       return p;
     });
 
-    return NextResponse.json(sanitizedProjects);
+    return NextResponse.json(sanitizedProjects, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+      },
+    });
   } catch (error: any) {
     console.error("Fetch Projects Error:", error);
     return NextResponse.json({ error: 'Failed to fetch projects', details: error.message }, { status: 500 });
