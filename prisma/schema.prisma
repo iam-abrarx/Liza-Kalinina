@@ -12,13 +12,13 @@ model Project {
   title              String
   category           Category
   year               String
-  media_url          String
-  role               String
-  director           String
-  client             String
-  production_company String
+  media_url          String?
+  role               String?
+  director           String?
+  client             String?
+  production_company String?
   awards             String?
-  description        String
+  description        String?
   is_public          Boolean      @default(true)
   sort_order         Int          @default(0)
   createdAt          DateTime     @default(now())

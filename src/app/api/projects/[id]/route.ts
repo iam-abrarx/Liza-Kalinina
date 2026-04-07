@@ -50,6 +50,13 @@ export async function PATCH(
 
     const body = await request.json();
     
+    // Reject base64 data URLs for thumbnails (they bloat the database)
+    let thumbnailUrl = body.thumbnail_url;
+    if (thumbnailUrl && thumbnailUrl.startsWith('data:')) {
+      console.warn('Rejected base64 thumbnail — too large for database storage');
+      thumbnailUrl = null;
+    }
+
     const project = await prisma.project.update({
       where: { id },
       data: {
@@ -57,23 +64,23 @@ export async function PATCH(
         category: body.category as any,
         year: body.year,
         media_url: body.media_url,
-        thumbnail_url: body.thumbnail_url,
-        role: body.role,
-        director: body.director,
-        client: body.client,
-        production_company: body.production_company,
-        awards: body.awards,
-        description: body.description,
-        long_description: body.long_description,
-        gallery: body.gallery,
+        thumbnail_url: thumbnailUrl,
+        role: body.role ?? null,
+        director: body.director ?? null,
+        client: body.client ?? null,
+        production_company: body.production_company ?? null,
+        awards: body.awards ?? null,
+        description: body.description ?? null,
+        long_description: body.long_description ?? null,
+        gallery: body.gallery || [],
         is_public: body.category !== 'FEATURED',
-        sort_order: body.sort_order,
+        sort_order: body.sort_order ?? 0,
       }
     });
     
     return NextResponse.json(project);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Update Error:", error);
-    return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update project', details: error.message }, { status: 500 });
   }
 }

@@ -49,21 +49,39 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    
+
+    // Validate required fields
+    if (!body.title || !body.title.trim()) {
+      return NextResponse.json({ error: 'Project title is required' }, { status: 400 });
+    }
+    if (!body.year || !body.year.trim()) {
+      return NextResponse.json({ error: 'Release year is required' }, { status: 400 });
+    }
+    if (!body.media_url || !body.media_url.trim()) {
+      return NextResponse.json({ error: 'A video URL or uploaded video is required' }, { status: 400 });
+    }
+
+    // Reject base64 data URLs for thumbnails (they bloat the database)
+    let thumbnailUrl = body.thumbnail_url || null;
+    if (thumbnailUrl && thumbnailUrl.startsWith('data:')) {
+      console.warn('Rejected base64 thumbnail — too large for database storage');
+      thumbnailUrl = null;
+    }
+
     const project = await prisma.project.create({
       data: {
-        title: body.title,
+        title: body.title.trim(),
         category: body.category as any,
-        year: body.year,
-        media_url: body.media_url,
-        thumbnail_url: body.thumbnail_url,
-        role: body.role,
-        director: body.director,
-        client: body.client,
-        production_company: body.production_company,
-        awards: body.awards,
-        description: body.description,
-        long_description: body.long_description,
+        year: body.year.trim(),
+        media_url: body.media_url.trim(),
+        thumbnail_url: thumbnailUrl,
+        role: body.role || null,
+        director: body.director || null,
+        client: body.client || null,
+        production_company: body.production_company || null,
+        awards: body.awards || null,
+        description: body.description || null,
+        long_description: body.long_description || null,
         gallery: body.gallery || [],
         is_public: body.category !== 'FEATURED',
         sort_order: body.sort_order || 0,
@@ -72,7 +90,11 @@ export async function POST(request: Request) {
     
     return NextResponse.json(project, { status: 201 });
   } catch (error: any) {
-    console.error(error);
-    return NextResponse.json({ error: 'Failed to create project', details: error.message }, { status: 500 });
+    console.error('POST /api/projects error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to create project', 
+      details: error.message,
+      hint: 'Check that category matches one of: COMMERCIAL, MUSIC_VIDEO, NARRATIVE, FASHION, STILLS, FEATURED, DOCUMENTARY'
+    }, { status: 500 });
   }
 }

@@ -208,13 +208,17 @@ export default function AdminDashboard() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProject.media_url) {
-      showMessage("Please provide a video URL or upload a video file", "error");
-      setFormTab('media');
-      return;
-    }
+    
     setIsLoading(true);
     try {
+      // Check for base64 thumbnails which bloat the DB
+      if (newProject.thumbnail_url?.startsWith('data:')) {
+        if (!confirm("This project is using a temporary video frame as a cover. This can slow down the site. We recommend uploading a proper JPG cover later. Proceed anyway?")) {
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 
@@ -228,7 +232,8 @@ export default function AdminDashboard() {
         closeForm();
         fetchData();
       } else {
-        showMessage("Failed to create project", "error");
+        const err = await res.json();
+        showMessage(err.error || "Failed to create project", "error");
       }
     } catch (error) {
       showMessage("Error creating project", "error");
@@ -244,13 +249,17 @@ export default function AdminDashboard() {
   const handleUpdateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProjectId) return;
-    if (!newProject.media_url) {
-      showMessage("Please provide a video URL or upload a video file", "error");
-      setFormTab('media');
-      return;
-    }
+
     setIsLoading(true);
     try {
+      // Check for base64 thumbnails
+      if (newProject.thumbnail_url?.startsWith('data:')) {
+        if (!confirm("This project is using a temporary video frame as a cover. We recommend uploading a JPG for better performance. Update anyway?")) {
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const res = await fetch(`/api/projects/${editingProjectId}`, {
         method: 'PATCH',
         headers: { 
@@ -264,7 +273,8 @@ export default function AdminDashboard() {
         closeForm();
         fetchData();
       } else {
-        showMessage("Failed to update project", "error");
+        const err = await res.json();
+        showMessage(err.error || "Failed to update project", "error");
       }
     } catch (error) {
       showMessage("Error updating project", "error");
