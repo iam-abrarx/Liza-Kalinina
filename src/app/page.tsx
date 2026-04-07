@@ -52,20 +52,19 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
       exit={{ opacity: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }}
       className="fixed inset-0 z-[500] bg-[var(--color-brand-bg)] flex flex-col items-center justify-center pointer-events-none"
     >
-      <div className="flex flex-col items-center gap-12 w-full max-w-md px-6 md:px-12">
+      <div className="flex flex-col items-center gap-12 w-full max-w-4xl px-6 md:px-12">
         <div className="overflow-hidden">
           <motion.h1 
             initial={{ y: 60 }}
             animate={{ y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-xl md:text-4xl font-display italic tracking-[0.15em] md:tracking-[0.3em] uppercase text-center"
+            className="text-xl md:text-4xl font-display italic tracking-[0.15em] md:tracking-[0.3em] uppercase text-center whitespace-nowrap"
           >
             Elizabeth Kalinina
           </motion.h1>
         </div>
         
         <div className="w-full flex flex-col items-center gap-6">
-          {/* Minimalist Loading Bar */}
           <div className="w-full h-[1px] bg-black/5 relative overflow-hidden">
             <motion.div 
               initial={{ width: "0%" }}
@@ -79,7 +78,7 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
-            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-medium whitespace-nowrap"
+            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-black text-black whitespace-nowrap"
           >
             Director of Photography
           </motion.p>
@@ -318,8 +317,8 @@ export default function Home() {
         <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black font-display font-bold">
           <span>© 2025 Elizabeth Kalinina</span>
           <div className="flex gap-8">
-            <Link href="#" className="hover:text-black transition-colors font-bold">Instagram</Link>
-            <Link href="#" className="hover:text-black transition-colors font-bold">Vimeo</Link>
+            <a href="https://www.instagram.com/lizaleone_dp" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors font-bold">Instagram</a>
+            <a href="https://vimeo.com/elizabethkalininadop" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors font-bold">Vimeo</a>
           </div>
         </div>
       </footer>
