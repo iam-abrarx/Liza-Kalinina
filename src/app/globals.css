@@ -1,18 +1,11 @@
 @import "tailwindcss";
-@font-face {
-  font-family: "Julius Sans One";
-  src: url("/fonts/JuliusSansOne-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
 
 @theme {
   --color-brand-bg: #ffffff;
   --color-brand-ink: #111111;
 
-  --font-display: "Julius Sans One", sans-serif;
-  --font-body: "Julius Sans One", sans-serif;
+  --font-display: var(--font-julius);
+  --font-body: var(--font-julius);
 }
 
 @layer base {
