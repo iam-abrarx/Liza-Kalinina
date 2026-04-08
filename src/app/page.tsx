@@ -78,7 +78,7 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
-            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-black text-black/60 whitespace-nowrap"
+            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-black text-black whitespace-nowrap"
           >
             Director of Photography
           </motion.p>
@@ -110,10 +110,7 @@ export default function Home() {
     const dbCategory = CATEGORY_MAP[activeCategory];
     if (!dbCategory) return [];
     
-    const safeProjects = Array.isArray(projects) ? projects : [];
-    const safeUnlocked = Array.isArray(unlockedProjects) ? unlockedProjects : [];
-    
-    return [...safeProjects, ...safeUnlocked].filter((project: any) => {
+    return [...projects, ...unlockedProjects].filter((project: any) => {
       return (project.category || '').toUpperCase() === dbCategory.toUpperCase();
     });
   };
@@ -121,14 +118,9 @@ export default function Home() {
   const fetchProjects = async () => {
     try {
       const res = await fetch('/api/projects', { cache: 'no-store' });
+      if (!res.ok) throw new Error("API unavailable");
       const data = await res.json();
-      
-      if (Array.isArray(data)) {
-        setProjects(data);
-      } else {
-        console.warn("API did not return an array:", data);
-        setProjects([]);
-      }
+      setProjects(data);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
       setProjects([]);
@@ -182,9 +174,10 @@ export default function Home() {
         <Link href="/" className="flex items-center gap-4">
           <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold text-black/40">Director of Photography</span>
+          <span className="text-sm md:text-base tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-black text-black">Director of Photography</span>
         </Link>
         <div className="flex items-center gap-4">
+          {/* Contact removed from top as requested */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
             className="md:hidden p-1"
@@ -271,19 +264,23 @@ export default function Home() {
                         setUnlockedProjects([]);
                       }}
                       className="p-2 hover:bg-black/5 rounded-full transition-all text-black/40"
-                      title="End Featured Session"
+                      title="End Films Session"
                     >
                       <LogOut size={16} />
                     </button>
                   )}
                 </div>
               ))}
-              <Link 
-                href="/contact" 
-                className="text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 text-gray-500 font-medium hover:text-black md:mt-4 md:border-t md:border-current/10 md:pt-8"
-              >
-                Contact
-              </Link>
+              
+              {/* Desktop Contact Link in Sidebar */}
+              <div className="md:mt-4 md:border-t md:border-current/10 md:pt-8">
+                <Link 
+                  href="/contact"
+                  className="text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 text-gray-500 font-medium hover:text-black"
+                >
+                  Contact
+                </Link>
+              </div>
             </div>
           </aside>
 
@@ -373,7 +370,7 @@ export default function Home() {
                 {selectedProject.category === 'FEATURED' && (
                   <div className="absolute top-8 left-8 z-[210] flex items-center gap-3">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                    <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-white drop-shadow-md">Featured Now</span>
+                    <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-white drop-shadow-md">Films Now</span>
                   </div>
                 )}
 
@@ -437,7 +434,9 @@ export default function Home() {
               className="relative z-[205] w-full max-w-5xl mt-8 grid grid-cols-1 md:grid-cols-2 gap-12 pb-32"
             >
               <div className="flex flex-col gap-4">
-                <h3 className="text-xl md:text-2xl text-white font-display italic leading-tight">{selectedProject.title}</h3>
+                {selectedProject.title && selectedProject.title !== 'Untitled Still' && (
+                  <h3 className="text-xl md:text-2xl text-white font-display italic leading-tight">{selectedProject.title}</h3>
+                )}
                 <p className="text-[10px] text-white/30 font-display tracking-[0.4em] uppercase">{selectedProject.category} · {selectedProject.year}</p>
                 <div className="space-y-4 mt-6">
                   <p className="text-[11px] md:text-xs text-white/60 leading-relaxed max-w-lg font-light">
@@ -638,9 +637,11 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
       {/* Title and Client Below the Video */}
       {!project.is_locked && (project.media_url || project.thumbnail_url) && (
         <div className="w-full bg-transparent pt-2 pb-4 px-2 flex flex-col items-start gap-0.5 z-10 font-display">
-          <h3 className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-medium text-left">
-            {project.title}
-          </h3>
+          {project.title && project.title !== 'Untitled Still' && (
+            <h3 className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-medium text-left">
+              {project.title}
+            </h3>
+          )}
           {project.client && (
             <span className="text-black/70 text-[9px] md:text-[10px] tracking-[0.1em] uppercase font-normal text-left">
               {project.client}

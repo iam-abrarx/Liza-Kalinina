@@ -65,13 +65,15 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // Validate required fields
-    if (!body.title || !body.title.trim()) {
+    const isStills = body.category === 'STILLS';
+
+    if (!isStills && (!body.title || !body.title.trim())) {
       return NextResponse.json({ error: 'Project title is required' }, { status: 400 });
     }
     if (!body.year || !body.year.trim()) {
       return NextResponse.json({ error: 'Release year is required' }, { status: 400 });
     }
-    if (!body.media_url || !body.media_url.trim()) {
+    if (!isStills && (!body.media_url || !body.media_url.trim())) {
       return NextResponse.json({ error: 'A video URL or uploaded video is required' }, { status: 400 });
     }
 
@@ -84,10 +86,10 @@ export async function POST(request: Request) {
 
     const project = await prisma.project.create({
       data: {
-        title: body.title.trim(),
+        title: (body.title?.trim()) || (isStills ? "Untitled Still" : ""),
         category: body.category as any,
         year: body.year.trim(),
-        media_url: body.media_url.trim(),
+        media_url: (body.media_url?.trim()) || "",
         thumbnail_url: thumbnailUrl,
         role: body.role || null,
         director: body.director || null,

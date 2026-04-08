@@ -613,14 +613,14 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                     <div className="flex flex-col gap-2">
                       <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex items-center justify-between">
-                        Project Title <span className="text-red-500">*</span>
+                        Project Title {newProject.category !== 'STILLS' && <span className="text-red-500">*</span>}
                       </label>
                       <input 
-                        required
+                        required={newProject.category !== 'STILLS'}
                         value={newProject.title}
                         onChange={e => setNewProject(prev => ({...prev, title: e.target.value}))}
                         className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3 font-medium text-lg transition-colors"
-                        placeholder="Midnight Motion"
+                        placeholder={newProject.category === 'STILLS' ? "Untitled Still" : "Midnight Motion"}
                       />
                     </div>
                     <div className="flex flex-col gap-2">
@@ -636,8 +636,8 @@ export default function AdminDashboard() {
                           <option value="NARRATIVE">Narrative</option>
                           <option value="DOCUMENTARY">Documentaries</option>
                           <option value="FASHION">Fashion</option>
-                          <option value="STILLS">Stills</option>
-                          <option value="FEATURED">Featured (Admin Only)</option>
+                          <option value="STILLS">Stills/photography</option>
+                          <option value="FEATURED">Films (Privately Shared)</option>
                         </select>
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-20">
                            <Check size={14} />
@@ -739,7 +739,9 @@ export default function AdminDashboard() {
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white/20">
                           <ImageIcon size={48} strokeWidth={1} />
-                          <p className="text-[10px] uppercase tracking-[0.3em] font-bold">No Cover Assigned</p>
+                          <p className="text-[10px] uppercase tracking-[0.3em] font-bold">
+                            {newProject.category === 'STILLS' ? 'Add Primary Still' : 'No Cover Assigned'}
+                          </p>
                         </div>
                       )}
                       
@@ -764,7 +766,7 @@ export default function AdminDashboard() {
                           value={newProject.media_url}
                           onChange={e => setNewProject(prev => ({...prev, media_url: e.target.value}))}
                           className="w-full bg-white border-2 border-black/5 focus:border-black transition-all outline-none p-4 rounded-xl font-medium text-sm shadow-sm"
-                          placeholder="vimeo.com/123456789 (or upload a video →)"
+                          placeholder={newProject.category === 'STILLS' ? "Optional: Video resource link" : "vimeo.com/123456789 (or upload a video →)"}
                         />
                         {newProject.media_url && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -930,8 +932,12 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                   <div className="flex justify-between items-center p-8 bg-black text-white rounded-2xl shadow-xl">
                     <div>
-                      <h4 className="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2 font-black">Gallery Manager</h4>
-                      <p className="text-2xl italic font-display">{newProject.gallery.length} / 10 Images</p>
+                      <h4 className="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2 font-black">
+                        {newProject.category === 'STILLS' ? 'Photography Gallery' : 'Gallery Manager'}
+                      </h4>
+                      <p className="text-2xl italic font-display">
+                        {newProject.category === 'STILLS' ? 'Upload Stills Here' : `${newProject.gallery.length} / 10 Images`}
+                      </p>
                     </div>
                     <label className="cursor-pointer bg-white text-black px-8 py-3 rounded-full text-[10px] uppercase tracking-widest font-black hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-3">
                       <input 

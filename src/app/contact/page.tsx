@@ -9,9 +9,9 @@ export default function Contact() {
       {/* Navbar Minimal */}
       <nav className="w-full flex justify-between items-center text-[var(--color-brand-ink)]">
         <Link href="/" className="flex items-center gap-3 hover:opacity-70 transition-opacity">
-          <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
-          <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold text-black/40">Director of Photography</span>
+          <span className="text-sm tracking-widest uppercase font-medium">Elizabeth Kalinina</span>
+          <span className="hidden md:block w-px h-3 bg-black/10" />
+          <span className="text-sm tracking-[0.3em] uppercase opacity-40 font-medium">Director of Photography</span>
         </Link>
         <span className="text-sm border-b border-black/20 pb-1">Contact</span>
       </nav>
@@ -27,53 +27,56 @@ export default function Contact() {
           >
             Contact
           </motion.h1>
+          
+          {/* Location text removed as requested */}
         </div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
           className="flex flex-col items-center gap-12"
         >
-          {/* Email */}
           <div className="flex flex-col items-center gap-4">
             <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Email</span>
             <a 
               href="mailto:Elisabeth.kalinina@gmail.com" 
-              className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wider uppercase"
+              className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wider"
             >
               Elisabeth.kalinina@gmail.com
             </a>
           </div>
 
-          {/* Contact / WhatsApp */}
-          <div className="flex flex-col items-center gap-4">
-            <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Contact / WhatsApp</span>
-            <a 
-              href="https://wa.me/79161767043" 
-              className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wider"
-            >
-              +7 916 176-70-43
-            </a>
+          <div className="flex flex-col md:flex-row gap-12 md:gap-24">
+            <div className="flex flex-col items-center gap-4">
+              <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Phone / WhatsApp</span>
+              <a 
+                href="https://wa.me/79161767043" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-base md:text-xl font-light hover:opacity-50 transition-all duration-300 tracking-widest"
+              >
+                +7 916 176-70-43
+              </a>
+            </div>
           </div>
           
-          {/* Social */}
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-6">
             <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Social</span>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-wrap justify-center gap-8 md:gap-12">
               <a 
                 href="https://instagram.com/lizaleone_dp" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-sm md:text-lg tracking-[0.2em] font-medium hover:opacity-50 transition-colors uppercase"
+                className="text-[10px] md:text-xs tracking-[0.3em] uppercase font-bold hover:opacity-50 transition-colors"
               >
-                @lizaleone_dp
+                Instagram
               </a>
               <a 
                 href="https://vimeo.com/elizabethkalininadop" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-sm md:text-lg tracking-[0.2em] font-medium hover:opacity-50 transition-colors uppercase"
+                className="text-[10px] md:text-xs tracking-[0.3em] uppercase font-bold hover:opacity-50 transition-colors"
               >
                 Vimeo
               </a>
