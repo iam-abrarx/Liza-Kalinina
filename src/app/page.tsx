@@ -110,7 +110,10 @@ export default function Home() {
     const dbCategory = CATEGORY_MAP[activeCategory];
     if (!dbCategory) return [];
     
-    return [...projects, ...unlockedProjects].filter((project: any) => {
+    const safeProjects = Array.isArray(projects) ? projects : [];
+    const safeUnlocked = Array.isArray(unlockedProjects) ? unlockedProjects : [];
+    
+    return [...safeProjects, ...safeUnlocked].filter((project: any) => {
       return (project.category || '').toUpperCase() === dbCategory.toUpperCase();
     });
   };
@@ -118,9 +121,14 @@ export default function Home() {
   const fetchProjects = async () => {
     try {
       const res = await fetch('/api/projects', { cache: 'no-store' });
-      if (!res.ok) throw new Error("API unavailable");
       const data = await res.json();
-      setProjects(data);
+      
+      if (Array.isArray(data)) {
+        setProjects(data);
+      } else {
+        console.warn("API did not return an array:", data);
+        setProjects([]);
+      }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
       setProjects([]);
