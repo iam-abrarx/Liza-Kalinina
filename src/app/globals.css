@@ -28,6 +28,13 @@
     font-family: var(--font-display);
     font-weight: 400;
   }
+
+  .logo-name {
+    /* Subtle fake bold that keeps the edges clean */
+    text-shadow: 0.2px 0 0 currentColor, -0.2px 0 0 currentColor;
+    -webkit-font-smoothing: initial;
+    font-weight: 400;
+  }
 }
 
 @layer utilities {
