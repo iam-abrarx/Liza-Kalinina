@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
     const project = await prisma.project.create({
       data: {
-        title: (body.title?.trim()) || (isStills ? "Untitled Still" : ""),
+        title: (body.title?.trim()) || (isStills ? "" : ""),
         category: body.category as any,
         year: body.year.trim(),
         media_url: (body.media_url?.trim()) || "",

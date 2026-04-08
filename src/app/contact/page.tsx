@@ -8,10 +8,10 @@ export default function Contact() {
     <main className="min-h-screen bg-[var(--color-brand-bg)] flex flex-col justify-between p-6 md:p-12 lg:p-24 selection:bg-[#111] selection:text-[#F4F4F0]">
       {/* Navbar Minimal */}
       <nav className="w-full flex justify-between items-center text-[var(--color-brand-ink)]">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-70 transition-opacity">
-          <span className="text-sm tracking-widest uppercase font-medium">Elizabeth Kalinina</span>
-          <span className="hidden md:block w-px h-3 bg-black/10" />
-          <span className="text-sm tracking-[0.3em] uppercase opacity-40 font-medium">Director of Photography</span>
+        <Link href="/" className="flex items-center gap-4 hover:opacity-70 transition-opacity">
+          <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
+          <span className="hidden md:block w-px h-4 bg-black/10" />
+          <span className="text-sm md:text-base tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-black text-black">Director of Photography</span>
         </Link>
         <span className="text-sm border-b border-black/20 pb-1">Contact</span>
       </nav>
@@ -85,7 +85,6 @@ export default function Contact() {
         </motion.div>
       </section>
 
-      {/* Footer Minimal */}
       <footer className="w-full flex justify-center text-xs text-gray-400 tracking-widest uppercase mt-12">
         © {new Date().getFullYear()} Elizabeth Kalinina
       </footer>

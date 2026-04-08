@@ -103,8 +103,35 @@ export default function Home() {
   const [unlockedProjects, setUnlockedProjects] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState("Commercials");
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [hasPlayedTadam, setHasPlayedTadam] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Restore unlocked projects from local storage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const saved = localStorage.getItem('unlocked_tickets');
+    if (saved) {
+      try {
+        const tickets = JSON.parse(saved);
+        if (Array.isArray(tickets) && tickets.length > 0) {
+          fetch('/api/projects')
+            .then(res => res.json())
+            .then(data => {
+              if (Array.isArray(data)) {
+                const unlocked = data.filter((p: any) => tickets.includes(p.id));
+                setUnlockedProjects(unlocked);
+              }
+            })
+            .catch(err => console.error("Auto-unlock restore failed:", err));
+        }
+      } catch (e) {
+        console.error("Corrupt local storage for tickets:", e);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('unlocked_tickets');
+        }
+      }
+    }
+  }, []);
 
   const getMatchedProjects = () => {
     const dbCategory = CATEGORY_MAP[activeCategory];
@@ -260,7 +287,9 @@ export default function Home() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        localStorage.removeItem('unlocked_tickets');
+                        if (typeof window !== 'undefined') {
+                          localStorage.removeItem('unlocked_tickets');
+                        }
                         setUnlockedProjects([]);
                       }}
                       className="p-2 hover:bg-black/5 rounded-full transition-all text-black/40"
@@ -434,7 +463,7 @@ export default function Home() {
               className="relative z-[205] w-full max-w-5xl mt-8 grid grid-cols-1 md:grid-cols-2 gap-12 pb-32"
             >
               <div className="flex flex-col gap-4">
-                {selectedProject.title && selectedProject.title !== 'Untitled Still' && (
+                {selectedProject.title && (
                   <h3 className="text-xl md:text-2xl text-white font-display italic leading-tight">{selectedProject.title}</h3>
                 )}
                 <p className="text-[10px] text-white/30 font-display tracking-[0.4em] uppercase">{selectedProject.category} · {selectedProject.year}</p>
@@ -637,7 +666,7 @@ function ProjectCard({ project, mode, onSelect, onUnlock }: { project: any, mode
       {/* Title and Client Below the Video */}
       {!project.is_locked && (project.media_url || project.thumbnail_url) && (
         <div className="w-full bg-transparent pt-2 pb-4 px-2 flex flex-col items-start gap-0.5 z-10 font-display">
-          {project.title && project.title !== 'Untitled Still' && (
+          {project.title && (
             <h3 className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-medium text-left">
               {project.title}
             </h3>
