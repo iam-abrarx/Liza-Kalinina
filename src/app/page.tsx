@@ -10,8 +10,8 @@ const CATEGORIES = [
   "Music Videos",
   "Narrative",
   "Documentaries",
-  "Stills",
-  "Featured",
+  "Stills/photography",
+  "Films",
 ];
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -20,8 +20,8 @@ const CATEGORY_MAP: Record<string, string> = {
   "Narrative": "NARRATIVE",
   "Documentaries": "DOCUMENTARY",
   "Fashion": "FASHION",
-  "Stills": "STILLS",
-  "Featured": "FEATURED"
+  "Stills/photography": "STILLS",
+  "Films": "FEATURED"
 };
 
 const getVimeoId = (url: string) => {
@@ -78,7 +78,7 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
-            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-black text-black whitespace-nowrap"
+            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-black text-black/60 whitespace-nowrap"
           >
             Director of Photography
           </motion.p>
@@ -132,9 +132,9 @@ export default function Home() {
   }, []);
 
   const handleCategoryClick = (cat: string) => {
-    if (cat === "Featured") {
+    if (cat === "Films") {
       playTadam();
-      setActiveCategory("Featured");
+      setActiveCategory("Films");
     } else {
       setActiveCategory(cat);
     }
@@ -174,10 +174,9 @@ export default function Home() {
         <Link href="/" className="flex items-center gap-4">
           <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-black text-black">Director of Photography</span>
+          <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold text-black/40">Director of Photography</span>
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/contact" className="hidden md:block text-xs md:text-sm uppercase tracking-widest hover:opacity-50 transition-opacity">Contact</Link>
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
             className="md:hidden p-1"
@@ -208,7 +207,7 @@ export default function Home() {
                     : "text-gray-500 font-medium"
                 }`}
               >
-                {cat === "Featured" ? (
+                {cat === "Films" ? (
                   <span className="flex items-center gap-2">
                     {cat} <span className="inline-block w-2 h-2 rounded-full bg-black/20 animate-pulse" />
                   </span>
@@ -237,7 +236,7 @@ export default function Home() {
               {CATEGORIES.map((cat) => (
                 <div
                   key={cat}
-                  className={`flex items-center justify-start md:justify-between shrink-0 w-auto md:w-full group/prem ${cat === "Featured" ? "md:mt-4 md:border-t md:border-current/10 md:pt-8" : ""}`}
+                  className={`flex items-center justify-start md:justify-between shrink-0 w-auto md:w-full group/prem ${cat === "Films" ? "md:mt-4 md:border-t md:border-current/10 md:pt-8" : ""}`}
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
@@ -247,7 +246,7 @@ export default function Home() {
                         : "text-gray-500 font-medium hover:text-black"
                     }`}
                   >
-                    {cat === "Featured" ? (
+                    {cat === "Films" ? (
                       <span className="flex items-center gap-2">
                          {cat} <span className="inline-block w-2 h-2 rounded-full bg-black/20 transition-colors animate-pulse" />
                       </span>
@@ -256,7 +255,7 @@ export default function Home() {
                     )}
                   </button>
                   
-                  {cat === "Featured" && unlockedProjects.length > 0 && activeCategory === "Featured" && (
+                  {cat === "Films" && unlockedProjects.length > 0 && activeCategory === "Films" && (
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -271,6 +270,12 @@ export default function Home() {
                   )}
                 </div>
               ))}
+              <Link 
+                href="/contact" 
+                className="text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 text-gray-500 font-medium hover:text-black md:mt-4 md:border-t md:border-current/10 md:pt-8"
+              >
+                Contact
+              </Link>
             </div>
           </aside>
 
@@ -284,7 +289,7 @@ export default function Home() {
               className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0"
             >
               {getMatchedProjects().map((project: any) => {
-                const mode = activeCategory === "Featured" ? "theatrical" : "editorial";
+                const mode = activeCategory === "Films" ? "theatrical" : "editorial";
 
                 return (
                   <ProjectCard 
