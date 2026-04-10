@@ -30,8 +30,8 @@
   }
 
   .logo-name {
-    /* Subtle fake bold that keeps the edges clean */
-    text-shadow: 0.2px 0 0 currentColor, -0.2px 0 0 currentColor;
+    /* Stronger fake bold to overcome browser rendering differences */
+    text-shadow: 0.4px 0 0 currentColor, -0.4px 0 0 currentColor;
     -webkit-font-smoothing: initial;
     font-weight: 400;
   }
