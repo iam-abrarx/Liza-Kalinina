@@ -3,7 +3,7 @@ export const CATEGORIES = [
   "Music Videos",
   "Narrative",
   "Documentaries",
-  "Stills/photography",
+  "Photography",
   "Films",
 ];
 
@@ -13,7 +13,7 @@ export const CATEGORY_MAP: Record<string, string> = {
   "Narrative": "NARRATIVE",
   "Documentaries": "DOCUMENTARY",
   "Fashion": "FASHION",
-  "Stills/photography": "STILLS",
+  "Photography": "STILLS",
   "Films": "FEATURED"
 };
 

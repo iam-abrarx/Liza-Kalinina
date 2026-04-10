@@ -636,7 +636,7 @@ export default function AdminDashboard() {
                           <option value="NARRATIVE">Narrative</option>
                           <option value="DOCUMENTARY">Documentaries</option>
                           <option value="FASHION">Fashion</option>
-                          <option value="STILLS">Stills/photography</option>
+                          <option value="STILLS">Photography</option>
                           <option value="FEATURED">Films (Privately Shared)</option>
                         </select>
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-20">
