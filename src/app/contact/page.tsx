@@ -11,7 +11,7 @@ export default function Contact() {
         <Link href="/" className="flex items-center gap-4 hover:opacity-70 transition-opacity">
           <span className="text-sm md:text-base tracking-[0.3em] uppercase font-bold">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-sm md:text-base tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-black text-black">Director of Photography</span>
+          <span className="text-sm md:text-base tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 font-black text-[var(--color-brand-ink)]">Director of Photography</span>
         </Link>
         <span className="text-sm border-b border-black/20 pb-1">Contact</span>
       </nav>

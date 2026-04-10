@@ -44,7 +44,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
-            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-black text-black whitespace-nowrap"
+            className="text-[12px] md:text-sm uppercase tracking-[0.6em] font-black text-[var(--color-brand-ink)] whitespace-nowrap"
           >
             Director of Photography
           </motion.p>
