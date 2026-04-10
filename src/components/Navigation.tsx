@@ -18,7 +18,7 @@ export function Navigation({ mobileMenuOpen, setMobileMenuOpen, activeCategory, 
         <Link href="/" className="flex items-center gap-4">
           <span className="text-sm md:text-base tracking-[0.4em] uppercase logo-name">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-sm md:text-base tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-100 text-[var(--color-brand-ink)]">Director of Photography</span>
+          <span className="text-sm md:text-base tracking-[0.4em] uppercase text-[var(--color-brand-ink)] logo-name">Director of Photography</span>
         </Link>
         <div className="flex items-center gap-4">
           <button 
