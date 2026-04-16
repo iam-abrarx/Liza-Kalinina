@@ -47,7 +47,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                 {project.category === 'FEATURED' && (
                   <div className="absolute top-8 left-8 z-[210] flex items-center gap-3">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                    <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-white drop-shadow-md">Films Now</span>
+                    <span className="text-[10px] uppercase tracking-[0.4em] font-normal text-white drop-shadow-md">Films Now</span>
                   </div>
                 )}
 
@@ -86,7 +86,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                 className="w-full max-w-5xl flex flex-col gap-8 mt-12"
               >
                 <div className="flex justify-between items-baseline">
-                  <h4 className="text-white/40 text-[10px] uppercase tracking-[0.5em] font-bold">Behind the Frames</h4>
+                  <h4 className="text-white/40 text-[10px] uppercase tracking-[0.5em] font-normal">Behind the Frames</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {project.gallery.map((img: string, i: number) => (
@@ -128,9 +128,9 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
               </div>
 
               <div className="flex flex-col justify-end items-end gap-1 text-[9px] text-white/20">
-                <p className="uppercase tracking-[0.4em] font-medium">Director: {project.director}</p>
-                <p className="uppercase tracking-[0.4em] font-medium">DP: {project.role}</p>
-                <p className="uppercase tracking-[0.4em] font-medium opacity-50 mt-1">Production: {project.production_company}</p>
+                <p className="uppercase tracking-[0.4em] font-normal">Director: {project.director}</p>
+                <p className="uppercase tracking-[0.4em] font-normal">DP: {project.role}</p>
+                <p className="uppercase tracking-[0.4em] font-normal opacity-50 mt-1">Production: {project.production_company}</p>
                 {project.awards && (
                   <p className="text-white/20 italic font-display mt-4 text-right max-w-xs text-[10px]">{project.awards}</p>
                 )}

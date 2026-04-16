@@ -103,7 +103,7 @@ export function ProjectCard({ project, mode, onSelect, onUnlock }: ProjectCardPr
                       className="w-full bg-white/5 border border-white/20 focus:border-white focus:bg-white/10 rounded-full py-4 text-center text-lg tracking-[0.2em] font-mono outline-none transition-all uppercase placeholder:text-white/30 text-white"
                     />
                     {unlockError && (
-                      <p className="absolute -bottom-6 inset-x-0 text-red-300 text-[10px] text-center uppercase tracking-widest font-bold">
+                      <p className="absolute -bottom-6 inset-x-0 text-red-300 text-[10px] text-center uppercase tracking-widest font-normal">
                         {unlockError}
                       </p>
                     )}
@@ -155,12 +155,12 @@ export function ProjectCard({ project, mode, onSelect, onUnlock }: ProjectCardPr
       {!project.is_locked && (project.media_url || project.thumbnail_url) && (
         <div className="w-full bg-transparent pt-2 pb-4 px-2 flex flex-col items-start gap-0.5 z-10 font-display">
           {project.title && (
-            <h3 className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-medium text-left">
+            <h3 className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-normal text-left">
               {project.title}
             </h3>
           )}
           {project.client && (
-            <span className="text-black/70 text-[9px] md:text-[10px] tracking-[0.1em] uppercase font-normal text-left">
+            <span className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-normal text-left">
               {project.client}
             </span>
           )}

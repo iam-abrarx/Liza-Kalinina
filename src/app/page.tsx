@@ -142,8 +142,8 @@ export default function Home() {
                           onClick={() => handleCategoryClick(cat)}
                           className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 ${
                             activeCategory === cat
-                              ? "text-black font-bold"
-                              : "text-gray-500 font-medium hover:text-black"
+                              ? "text-black font-normal"
+                              : "text-gray-500 font-normal hover:text-black"
                           }`}
                         >
                           {cat === "Films" ? (
@@ -168,7 +168,7 @@ export default function Home() {
                     <div className="md:mt-4 md:border-t md:border-current/10 md:pt-8">
                       <motion.a 
                         href="/contact"
-                        className="text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 text-gray-500 font-medium hover:text-black"
+                        className="text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 text-gray-500 font-normal hover:text-black"
                       >
                         Contact
                       </motion.a>
@@ -207,7 +207,7 @@ export default function Home() {
             </section>
 
             <footer className="py-6 px-6 md:px-12 border-t border-black/10">
-              <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black font-display font-bold">
+              <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.3em] text-black font-display font-normal">
                 <span>© 2025 Elizabeth Kalinina</span>
                 <div className="flex gap-8">
                   <a href="https://www.instagram.com/lizaleone_dp" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors">Instagram</a>

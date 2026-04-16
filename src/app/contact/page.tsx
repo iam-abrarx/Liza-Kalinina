@@ -9,9 +9,9 @@ export default function Contact() {
       {/* Navbar Minimal */}
       <nav className="w-full flex justify-between items-center text-[var(--color-brand-ink)]">
         <Link href="/" className="flex items-center gap-4 hover:opacity-70 transition-opacity">
-          <span className="text-sm md:text-base tracking-[0.4em] uppercase logo-name">Elizabeth Kalinina</span>
-          <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-sm md:text-base tracking-[0.4em] uppercase logo-name">Director of Photography</span>
+          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Elizabeth Kalinina</span>
+          <span className="hidden md:block w-px h-8 bg-black/10" />
+          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Director of Photography</span>
         </Link>
         <span className="text-sm border-b border-black/20 pb-1">Contact</span>
       </nav>
@@ -23,7 +23,7 @@ export default function Contact() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[10px] md:text-xs uppercase tracking-[0.6em] font-bold text-black/40"
+            className="text-[10px] md:text-xs uppercase tracking-[0.6em] font-normal text-black/40"
           >
             Contact
           </motion.h1>
@@ -38,7 +38,7 @@ export default function Contact() {
           className="flex flex-col items-center gap-12"
         >
           <div className="flex flex-col items-center gap-4">
-            <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Email</span>
+            <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Email</span>
             <a 
               href="mailto:Elisabeth.kalinina@gmail.com" 
               className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wider"
@@ -49,7 +49,7 @@ export default function Contact() {
 
           <div className="flex flex-col md:flex-row gap-12 md:gap-24">
             <div className="flex flex-col items-center gap-4">
-              <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Phone / WhatsApp</span>
+              <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Phone / WhatsApp</span>
               <a 
                 href="https://wa.me/79161767043" 
                 target="_blank"
@@ -62,13 +62,13 @@ export default function Contact() {
           </div>
           
           <div className="flex flex-col items-center gap-6">
-            <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-bold">Social</span>
+            <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Social</span>
             <div className="flex flex-wrap justify-center gap-8 md:gap-12">
               <a 
                 href="https://instagram.com/lizaleone_dp" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-[10px] md:text-xs tracking-[0.3em] uppercase font-bold hover:opacity-50 transition-colors"
+                className="text-[10px] md:text-xs tracking-[0.3em] uppercase font-normal hover:opacity-50 transition-colors"
               >
                 Instagram
               </a>
@@ -76,7 +76,7 @@ export default function Contact() {
                 href="https://vimeo.com/elizabethkalininadop" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-[10px] md:text-xs tracking-[0.3em] uppercase font-bold hover:opacity-50 transition-colors"
+                className="text-[10px] md:text-xs tracking-[0.3em] uppercase font-normal hover:opacity-50 transition-colors"
               >
                 Vimeo
               </a>

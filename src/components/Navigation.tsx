@@ -16,9 +16,9 @@ export function Navigation({ mobileMenuOpen, setMobileMenuOpen, activeCategory, 
     <>
       <nav className="fixed top-0 w-full p-4 md:px-12 md:py-6 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-white border-b border-black/5">
         <Link href="/" className="flex items-center gap-4">
-          <span className="text-sm md:text-base tracking-[0.4em] uppercase logo-name">Elizabeth Kalinina</span>
-          <span className="hidden md:block w-px h-4 bg-black/10" />
-          <span className="text-sm md:text-base tracking-[0.4em] uppercase logo-name">Director of Photography</span>
+          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Elizabeth Kalinina</span>
+          <span className="hidden md:block w-px h-8 bg-black/10" />
+          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Director of Photography</span>
         </Link>
         <div className="flex items-center gap-4">
           <button 
@@ -47,8 +47,8 @@ export function Navigation({ mobileMenuOpen, setMobileMenuOpen, activeCategory, 
                 onClick={() => handleCategoryClick(cat)}
                 className={`text-left text-base uppercase tracking-[0.2em] transition-all duration-300 py-2 border-b border-black/5 ${
                   activeCategory === cat
-                    ? "text-black font-bold"
-                    : "text-gray-500 font-medium"
+                    ? "text-black font-normal"
+                    : "text-gray-500 font-normal"
                 }`}
               >
                 {cat === "Films" ? (
@@ -61,7 +61,7 @@ export function Navigation({ mobileMenuOpen, setMobileMenuOpen, activeCategory, 
             <Link 
               href="/contact" 
               onClick={() => setMobileMenuOpen(false)}
-              className="text-left text-base uppercase tracking-[0.2em] transition-all duration-300 py-2 border-b border-black/5 text-gray-500 font-medium"
+              className="text-left text-base uppercase tracking-[0.2em] transition-all duration-300 py-2 border-b border-black/5 text-gray-500 font-normal"
             >
               Contact
             </Link>
