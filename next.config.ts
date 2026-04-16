@@ -1,5 +1,4 @@
 const nextConfig: any = {
-  output: 'standalone',
   images: {
     unoptimized: true,
   },
