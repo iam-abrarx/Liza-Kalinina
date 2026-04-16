@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
-import { LogOut } from "lucide-react";
 
 // Components
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -13,7 +12,7 @@ import { TheaterMode } from "@/components/TheaterMode";
 
 // Hooks & Utils
 import { useHydrated } from "@/hooks/useHydrated";
-import { CATEGORIES, CATEGORY_MAP } from "@/lib/utils";
+import { CATEGORY_MAP } from "@/lib/utils";
 import { Project } from "@/types";
 
 export default function Home() {

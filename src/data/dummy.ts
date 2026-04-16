@@ -1,4 +1,5 @@
+import { Project } from "@/types";
 
-export const DUMMY_PROJECTS: any[] = [];
+export const DUMMY_PROJECTS: Project[] = [];
 
-export const DUMMY_PASSES: any[] = [];
+export const DUMMY_PASSES: unknown[] = [];

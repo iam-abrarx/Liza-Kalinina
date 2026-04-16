@@ -22,13 +22,12 @@ export async function GET() {
       latency_ms: duration,
       node_version: process.version,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({
       status: 'error',
       message: 'Database connection failed',
-      error: error.message,
-      code: error.code,
-      meta: error.meta,
+      error: errorMessage,
       env_present: !!process.env.DATABASE_URL,
     }, { status: 500 });
   }

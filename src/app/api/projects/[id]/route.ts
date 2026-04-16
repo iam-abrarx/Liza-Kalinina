@@ -25,15 +25,15 @@ export async function DELETE(
     });
     console.log(`[API] Successfully deleted project: ${id}`);
     return NextResponse.json({ message: 'Project deleted', id: deleted.id });
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[API] Delete Error for project ${id}:`, error);
     
     // Check for specific Prisma errors (e.g., P2025: Record not found)
-    if (error.code === 'P2025') {
-       return NextResponse.json({ error: 'Project not found in database. It might be local dummy data.' }, { status: 404 });
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
-    
-    return NextResponse.json({ error: `Failed to delete project: ${error.message}` }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to delete project', details: errorMessage }, { status: 500 });
   }
 }
 
@@ -63,7 +63,7 @@ export async function PATCH(
       where: { id },
       data: {
         title: body.title,
-        category: body.category as any,
+        category: body.category,
         year: body.year,
         media_url: body.media_url,
         thumbnail_url: thumbnailUrl,
@@ -81,8 +81,8 @@ export async function PATCH(
     });
     
     return NextResponse.json(project);
-  } catch (error: any) {
-    console.error("Update Error:", error);
-    return NextResponse.json({ error: 'Failed to update project', details: error.message }, { status: 500 });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to update project', details: errorMessage }, { status: 500 });
   }
 }

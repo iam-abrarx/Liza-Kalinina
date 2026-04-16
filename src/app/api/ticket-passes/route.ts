@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       include: { project: true }
     });
     return NextResponse.json(passes);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch passes' }, { status: 500 });
   }
 }

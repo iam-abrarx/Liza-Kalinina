@@ -18,13 +18,14 @@ export async function DELETE(
     });
     console.log(`[API] Successfully deleted ticket pass: ${id}`);
     return NextResponse.json({ message: 'Pass deleted', id: deleted.id });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[API] Delete Pass Error for ${id}:`, error);
 
-    if (error.code === 'P2025') {
+    if ((error as any)?.code === 'P2025') {
         return NextResponse.json({ error: 'Ticket pass not found in database.' }, { status: 404 });
     }
 
-    return NextResponse.json({ error: `Failed to delete pass: ${error.message}` }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to delete pass', details: errorMessage }, { status: 500 });
   }
 }

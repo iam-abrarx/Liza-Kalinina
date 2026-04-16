@@ -17,7 +17,7 @@ export function useThumbnailGenerator() {
       }
 
       const uniqueUrls = [...new Set(urlsToTry)];
-      let data: any = null;
+      let data: Record<string, unknown> | null = null;
 
       for (const tryUrl of uniqueUrls) {
         try {

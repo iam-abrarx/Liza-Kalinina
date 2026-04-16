@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
 import { CATEGORIES } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";

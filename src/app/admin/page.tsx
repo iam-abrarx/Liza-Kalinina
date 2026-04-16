@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil, ChevronLeft, ChevronRight, Image as ImageIcon, Video as VideoIcon } from "lucide-react";
+import { Plus, Link as LinkIcon, Lock, Trash2, X, Check, Upload as UploadIcon, Pencil, Image as ImageIcon, Video as VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
 import { useThumbnailGenerator } from "@/hooks/useThumbnailGenerator";
 import { useProjectForm } from "@/hooks/useProjectForm";
+import { Project } from "@/types";
 
 export default function AdminDashboard() {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [passes, setPasses] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -22,21 +23,12 @@ export default function AdminDashboard() {
   const { isUploading, uploadProgress, uploadFiles, uploadThumbnail } = useMediaUpload(password);
   
   const { 
-    isFetchingMeta, isGeneratingThumbs, thumbnailProgress, thumbnailSuggestions, 
+    isFetchingMeta, isGeneratingThumbs, thumbnailSuggestions, 
     fetchVimeoMeta, generateThumbnails, removeThumbnailCandidate, addThumbnailCandidate, setThumbnailSuggestions
   } = useThumbnailGenerator();
 
   const thumbnailScrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollThumbnails = (direction: 'left' | 'right') => {
-    if (thumbnailScrollRef.current) {
-      const scrollAmount = 300;
-      thumbnailScrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -90,12 +82,13 @@ export default function AdminDashboard() {
         // Cloud upload returned empty but local URL is already set — keep it
         showMessage("Video selected locally. Cloud upload pending.", "success");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Error uploading file";
       if (!isGallery && localUrl) {
         // Keep the local URL even if cloud upload fails
         showMessage("Video loaded locally. Cloud upload failed — you can still save.", "error");
       } else {
-        showMessage(error.message || "Error uploading file", "error");
+        showMessage(errorMessage, "error");
       }
     }
   };
@@ -106,21 +99,22 @@ export default function AdminDashboard() {
       return;
     }
     try {
-        const data = await fetchVimeoMeta(newProject.media_url);
+        const data = await fetchVimeoMeta(newProject.media_url) as any;
         let year = newProject.year;
-        if (data.upload_date) {
+        if (data && data.upload_date) {
           year = data.upload_date.split('-')[0];
         }
         setNewProject(prev => ({
           ...prev,
-          title: data.title || prev.title,
+          title: data?.title || prev.title,
           year: year,
-          thumbnail_url: data.thumbnail_url || prev.thumbnail_url,
-          director: data.author_name || prev.director
+          thumbnail_url: data?.thumbnail_url || prev.thumbnail_url,
+          director: data?.author_name || prev.director
         }));
-        showMessage(`Fetched: "${data.title}" (${year})`);
-    } catch (error: any) {
-        showMessage(error.message || "Error fetching Vimeo details", "error");
+        showMessage(`Fetched: "${data?.title || 'Unknown'}" (${year})`);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Error fetching Vimeo details";
+        showMessage(errorMessage, "error");
     }
   };
 
@@ -135,8 +129,9 @@ export default function AdminDashboard() {
         addThumbnailCandidate(url);
         showMessage("Custom thumbnail uploaded");
       }
-    } catch (error: any) {
-      showMessage(error.message || "Upload failed", "error");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      showMessage(errorMessage, "error");
     }
   };
 
@@ -150,8 +145,9 @@ export default function AdminDashboard() {
           if (res) {
             showMessage(`${res.unique ? res.unique.length : 0} thumbnails generated`);
           }
-      } catch (error: any) {
-          showMessage(error.message || "Error generating thumbnails", "error");
+      } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : "Error generating thumbnails";
+          showMessage(errorMessage, "error");
       }
   };
 
@@ -268,7 +264,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleEditProject = (project: any) => {
+  const handleEditProject = (project: Project) => {
     openEditProjectForm(project);
   };
 
@@ -593,7 +589,7 @@ export default function AdminDashboard() {
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setFormTab(tab.id as any)}
+                  onClick={() => setFormTab(tab.id as 'basic' | 'media' | 'narrative' | 'gallery')}
                   className={`py-4 px-6 text-[10px] uppercase tracking-widest font-bold transition-all border-b-2 whitespace-nowrap ${
                     formTab === tab.id 
                       ? 'border-black text-black' 
@@ -839,7 +835,7 @@ export default function AdminDashboard() {
                       <div className="py-20 flex flex-col items-center justify-center text-gray-300 border-2 border-dashed border-black/5 rounded-2xl bg-black/[0.01]">
                         <ImageIcon size={32} strokeWidth={1} className="mb-4 opacity-40 text-black" />
                         <p className="text-[10px] uppercase tracking-widest font-medium max-w-[200px] text-center leading-relaxed">
-                          Enter a Video URL then click "Scan Video" or upload a custom image to see options here.
+                          Enter a Video URL then click &quot;Scan Video&quot; or upload a custom image to see options here.
                         </p>
                       </div>
                     ) : (

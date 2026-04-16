@@ -3,8 +3,6 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-
-
 export async function GET(request: Request) {
   try {
     const adminPassword = request.headers.get('x-admin-password');
@@ -39,7 +37,7 @@ export async function GET(request: Request) {
           ...p,
           media_url: '',
           long_description: '',
-          is_locked: true,
+          is_locked: true
         };
       }
       return p;
@@ -50,9 +48,9 @@ export async function GET(request: Request) {
         'Cache-Control': 'no-store, max-age=0, must-revalidate',
       },
     });
-  } catch (error: any) {
-    console.error("Fetch Projects Error:", error);
-    return NextResponse.json({ error: 'Failed to fetch projects', details: error.message }, { status: 500 });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to fetch projects', details: errorMessage }, { status: 500 });
   }
 }
 
@@ -89,7 +87,7 @@ export async function POST(request: Request) {
     const project = await prisma.project.create({
       data: {
         title: (body.title?.trim()) || (isStills ? "" : ""),
-        category: body.category as any,
+        category: body.category,
         year: body.year.trim(),
         media_url: (body.media_url?.trim()) || "",
         thumbnail_url: thumbnailUrl,
@@ -107,12 +105,11 @@ export async function POST(request: Request) {
     });
     
     return NextResponse.json(project, { status: 201 });
-  } catch (error: any) {
-    console.error('POST /api/projects error:', error);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ 
       error: 'Failed to create project', 
-      details: error.message,
-      hint: 'Check that category matches one of: COMMERCIAL, MUSIC_VIDEO, NARRATIVE, FASHION, STILLS, FEATURED, DOCUMENTARY'
+      details: errorMessage 
     }, { status: 500 });
   }
 }

@@ -41,10 +41,10 @@ export async function POST(request: Request) {
       url: `/uploads/${filename}`,
       message: 'File uploaded successfully to local storage' 
     });
-  } catch (error: any) {
-    console.error('[UPLOAD ERROR]', error);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Server error during upload: ' + error.message },
+      { error: 'Server error during upload: ' + errorMessage },
       { status: 500 }
     );
   }

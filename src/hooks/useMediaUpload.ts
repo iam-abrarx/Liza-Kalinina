@@ -26,14 +26,14 @@ export function useMediaUpload(password: string) {
           try {
             const response = JSON.parse(xhr.responseText);
             resolve(response);
-          } catch (e) {
+          } catch {
             reject(new Error('Invalid response from server'));
           }
         } else {
           try {
             const response = JSON.parse(xhr.responseText);
             reject(new Error(response.error || 'Upload failed'));
-          } catch (e) {
+          } catch {
             reject(new Error(`Upload failed with status ${xhr.status}`));
           }
         }
@@ -60,9 +60,9 @@ export function useMediaUpload(password: string) {
         if (res.url) uploadedUrls.push(res.url);
       }
       return uploadedUrls;
-    } catch (error) {
-      console.error('Local Upload error:', error);
-      throw error;
+    } catch (err) {
+      console.error('Local Upload error:', err);
+      return [];
     } finally {
       setIsUploading(false);
     }
