@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const adminPassword = request.headers.get('x-admin-password');
-    const correctPassword = process.env.ADMIN_PASSWORD || 'admin';
+    const correctPassword = process.env.ADMIN_PASSWORD || 'adminpass123321';
 
     if (adminPassword === correctPassword) {
       return NextResponse.json({ authenticated: true });
