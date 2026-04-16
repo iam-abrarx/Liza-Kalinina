@@ -7,6 +7,7 @@ import { LogOut } from "lucide-react";
 // Components
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Navigation } from "@/components/Navigation";
+import { Sidebar } from "@/components/Sidebar";
 import { ProjectCard } from "@/components/ProjectCard";
 import { TheaterMode } from "@/components/TheaterMode";
 
@@ -127,54 +128,15 @@ export default function Home() {
               handleCategoryClick={handleCategoryClick}
             />
 
-            <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-24 md:pt-44 pb-12 px-0 md:px-0">
+            <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-32 md:pt-44 pb-12 px-0 md:px-0">
               <div className="max-w-full mx-auto flex flex-col md:flex-row">
                 
-                {/* Desktop Sidebar */}
-                <aside className="hidden md:block md:w-64 shrink-0 md:relative z-30 bg-[var(--color-brand-bg)] px-6">
-                  <div className="md:sticky md:top-32 flex flex-col gap-8 overflow-x-visible pb-0 scrollbar-hide whitespace-nowrap">
-                    {CATEGORIES.map((cat) => (
-                      <div
-                        key={cat}
-                        className={`flex items-center justify-start md:justify-between shrink-0 w-auto md:w-full group/prem ${cat === "Films" ? "md:mt-4 md:border-t md:border-current/10 md:pt-8" : ""}`}
-                      >
-                        <button
-                          onClick={() => handleCategoryClick(cat)}
-                          className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 ${
-                            activeCategory === cat
-                              ? "text-black font-normal"
-                              : "text-gray-500 font-normal hover:text-black"
-                          }`}
-                        >
-                          {cat === "Films" ? (
-                            <span className="flex items-center gap-2">
-                               {cat} <span className="inline-block w-2 h-2 rounded-full bg-black/20 transition-colors animate-pulse" />
-                            </span>
-                          ) : cat}
-                        </button>
-                        
-                        {cat === "Films" && unlockedProjects.length > 0 && activeCategory === "Films" && (
-                          <button 
-                            onClick={handleEndFilmsSession}
-                            className="p-2 hover:bg-black/5 rounded-full transition-all text-black/40"
-                            title="End Films Session"
-                          >
-                            <LogOut size={16} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    
-                    <div className="md:mt-4 md:border-t md:border-current/10 md:pt-8">
-                      <motion.a 
-                        href="/contact"
-                        className="text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 text-gray-500 font-normal hover:text-black"
-                      >
-                        Contact
-                      </motion.a>
-                    </div>
-                  </div>
-                </aside>
+                <Sidebar 
+                  activeCategory={activeCategory}
+                  handleCategoryClick={handleCategoryClick}
+                  unlockedProjectsCount={unlockedProjects.length}
+                  handleEndFilmsSession={handleEndFilmsSession}
+                />
 
                 {/* Projects Grid */}
                 <AnimatePresence mode="wait">
