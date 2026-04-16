@@ -9,9 +9,9 @@ export default function Contact() {
       {/* Navbar Minimal */}
       <nav className="w-full flex justify-between items-center text-[var(--color-brand-ink)]">
         <Link href="/" className="flex items-center gap-4 hover:opacity-70 transition-opacity">
-          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Elizabeth Kalinina</span>
+          <span className="text-xl md:text-lg font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-8 bg-black/10" />
-          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Director of Photography</span>
+          <span className="text-xl md:text-lg font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Director of Photography</span>
         </Link>
         <span className="text-sm border-b border-black/20 pb-1">Contact</span>
       </nav>

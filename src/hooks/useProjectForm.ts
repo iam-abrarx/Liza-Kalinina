@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Project } from '@/types';
 
 const emptyProject = {
   title: "",
@@ -34,7 +35,7 @@ export function useProjectForm() {
     setIsProjectFormOpen(true);
   };
 
-  const openEditProjectForm = (project: any) => {
+  const openEditProjectForm = (project: Project) => {
     setEditingProjectId(project.id);
     setNewProject({
       title: project.title || "",

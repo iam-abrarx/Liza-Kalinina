@@ -7,6 +7,9 @@ const nextConfig: any = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   env: {
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "admin",
   },

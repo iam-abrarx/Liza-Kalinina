@@ -16,9 +16,9 @@ export function Navigation({ mobileMenuOpen, setMobileMenuOpen, activeCategory, 
     <>
       <nav className="fixed top-0 w-full p-4 md:px-12 md:py-6 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-white border-b border-black/5">
         <Link href="/" className="flex items-center gap-4">
-          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Elizabeth Kalinina</span>
+          <span className="text-xl md:text-lg font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Elizabeth Kalinina</span>
           <span className="hidden md:block w-px h-8 bg-black/10" />
-          <span className="text-xl md:text-l font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Director of Photography</span>
+          <span className="text-xl md:text-lg font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Director of Photography</span>
         </Link>
         <div className="flex items-center gap-4">
           <button 
