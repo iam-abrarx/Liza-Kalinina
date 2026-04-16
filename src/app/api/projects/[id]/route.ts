@@ -12,7 +12,8 @@ export async function DELETE(
   const { id } = await params;
   const adminPassword = request.headers.get('x-admin-password');
   
-  if (adminPassword !== (process.env.ADMIN_PASSWORD || 'adminpass123321')) {
+  const correctPassword = process.env.ADMIN_PASSWORD;
+  if (!correctPassword || adminPassword !== correctPassword) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -44,7 +45,8 @@ export async function PATCH(
     const { id } = await params;
     const adminPassword = request.headers.get('x-admin-password');
 
-    if (adminPassword !== (process.env.ADMIN_PASSWORD || 'adminpass123321')) {
+    const correctPassword = process.env.ADMIN_PASSWORD;
+    if (!correctPassword || adminPassword !== correctPassword) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

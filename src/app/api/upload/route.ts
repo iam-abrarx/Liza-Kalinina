@@ -7,7 +7,8 @@ export async function POST(request: Request) {
   try {
     // Security check via header (consistent with all other APIs)
     const adminPassword = request.headers.get('x-admin-password');
-    if (adminPassword !== (process.env.ADMIN_PASSWORD || 'adminpass123321')) {
+    const correctPassword = process.env.ADMIN_PASSWORD;
+    if (!correctPassword || adminPassword !== correctPassword) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
