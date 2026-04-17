@@ -3,9 +3,14 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminPassword = request.headers.get('x-admin-password');
+  const correctPassword = process.env.ADMIN_PASSWORD;
+  if (!correctPassword || adminPassword !== correctPassword) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    // 1. Check if env is present
     const envPresent = !!process.env.DATABASE_URL;
     const dbUrlStart = process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 20) + '...' : 'MISSING';
 

@@ -50,7 +50,8 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: 'Failed to fetch projects', details: errorMessage }, { status: 500 });
+    console.error('Failed to fetch projects:', errorMessage);
+    return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
 

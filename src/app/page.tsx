@@ -19,7 +19,8 @@ export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const hydrated = useHydrated();
   
-  const [isLoading, setIsLoading] = useState(true);
+  const hasVisited = typeof window !== "undefined" && !!localStorage.getItem("ek_visited");
+  const [isLoading, setIsLoading] = useState(!hasVisited);
   const [projects, setProjects] = useState<Project[]>([]);
   const [unlockedProjects, setUnlockedProjects] = useState<Project[]>([]);
   const [activeCategory, setActiveCategory] = useState("Commercials");
@@ -109,16 +110,17 @@ export default function Home() {
   if (!hydrated) return null; // Avoid hydration mismatch on initial render
 
   return (
-    <main className="min-h-screen bg-[var(--color-brand-bg)]" ref={containerRef}>
+    <main className="min-h-screen bg-[var(--color-brand-bg)] flex flex-col" ref={containerRef}>
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <LoadingScreen key="loader" onComplete={() => setIsLoading(false)} />
+          <LoadingScreen key="loader" onComplete={() => { localStorage.setItem("ek_visited", "1"); setIsLoading(false); }} />
         ) : (
-          <motion.div 
+          <motion.div
             key="main-content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
+            className="flex flex-col min-h-screen"
           >
             <Navigation 
               mobileMenuOpen={mobileMenuOpen}
@@ -127,7 +129,7 @@ export default function Home() {
               handleCategoryClick={handleCategoryClick}
             />
 
-            <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-32 md:pt-44 pb-12 px-0 md:px-0">
+            <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-32 md:pt-44 pb-12 px-0 md:px-0 flex-1">
               <div className="max-w-full mx-auto flex flex-col md:flex-row">
                 
                 <Sidebar 
@@ -145,7 +147,7 @@ export default function Home() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.6, ease: "easeInOut" }}
-                    className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0"
+                    className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-y-10"
                   >
                     {getMatchedProjects().map((project) => (
                       <ProjectCard 

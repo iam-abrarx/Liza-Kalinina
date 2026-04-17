@@ -9,6 +9,12 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminPassword = request.headers.get('x-admin-password');
+  const correctPassword = process.env.ADMIN_PASSWORD;
+  if (!correctPassword || adminPassword !== correctPassword) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await params;
   console.log(`[API] Attempting to delete ticket pass: ${id}`);
 

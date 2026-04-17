@@ -116,7 +116,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                 )}
                 <p className="text-[10px] text-white/30 font-display tracking-[0.4em] uppercase">{project.category} · {project.year}</p>
                 <div className="space-y-4 mt-6">
-                  <p className="text-[11px] md:text-xs text-white/60 leading-relaxed max-w-lg font-light">
+                  <p className="text-xs md:text-sm text-white/60 leading-relaxed max-w-lg font-normal">
                     {project.description}
                   </p>
                   {project.long_description && (
@@ -127,12 +127,12 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                 </div>
               </div>
 
-              <div className="flex flex-col justify-end items-end gap-1 text-[9px] text-white/20">
+              <div className="flex flex-col justify-end items-end gap-2 text-[10px] text-white/50">
                 <p className="uppercase tracking-[0.4em] font-normal">Director: {project.director}</p>
                 <p className="uppercase tracking-[0.4em] font-normal">DP: {project.role}</p>
-                <p className="uppercase tracking-[0.4em] font-normal opacity-50 mt-1">Production: {project.production_company}</p>
+                <p className="uppercase tracking-[0.4em] font-normal text-white/30 mt-1">Production: {project.production_company}</p>
                 {project.awards && (
-                  <p className="text-white/20 italic font-display mt-4 text-right max-w-xs text-[10px]">{project.awards}</p>
+                  <p className="text-white/40 italic font-display mt-4 text-right max-w-xs text-[11px]">{project.awards}</p>
                 )}
               </div>
             </motion.div>

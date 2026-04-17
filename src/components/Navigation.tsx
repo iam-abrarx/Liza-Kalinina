@@ -3,6 +3,7 @@ import Link from "next/link";
 import { X, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { CATEGORIES } from "@/lib/utils";
 
 interface NavigationProps {
@@ -12,15 +13,22 @@ interface NavigationProps {
   handleCategoryClick?: (cat: string) => void;
 }
 
-export function Navigation({ 
-  mobileMenuOpen, 
-  setMobileMenuOpen, 
-  activeCategory, 
-  handleCategoryClick 
+export function Navigation({
+  mobileMenuOpen,
+  setMobileMenuOpen,
+  activeCategory,
+  handleCategoryClick
 }: NavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isContactPage = pathname === "/contact";
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const onCategoryClick = (cat: string) => {
     if (handleCategoryClick) {
@@ -34,10 +42,17 @@ export function Navigation({
   return (
     <>
       <nav className="fixed top-0 w-full p-4 md:px-12 md:py-6 flex justify-between items-center z-50 text-[var(--color-brand-ink)] bg-white border-b border-black/5">
-        <Link href="/" className="flex items-center gap-4 hover:opacity-70 transition-opacity">
-          <span className="text-sm md:text-sm font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Elizabeth Kalinina</span>
+        <Link href="/" className="flex items-center gap-3 md:gap-4 hover:opacity-70 transition-opacity">
+          <span className={`font-display font-normal uppercase leading-tight transition-all duration-300 md:text-sm md:tracking-[0.2em] ${scrolled ? "text-[10px] tracking-[0.08em]" : "text-xs tracking-[0.12em]"}`}>
+            <span className="md:hidden">Elizabeth<br />Kalinina</span>
+            <span className="hidden md:inline">Elizabeth Kalinina</span>
+          </span>
+          <span className={`w-px bg-black/10 md:hidden transition-all duration-300 ${scrolled ? "h-5" : "h-6"}`} />
           <span className="hidden md:block w-px h-8 bg-black/10" />
-          <span className="text-sm md:text-sm font-display tracking-[0.15em] md:tracking-[0.2em] uppercase">Director of Photography</span>
+          <span className={`font-display font-normal uppercase leading-tight transition-all duration-300 md:text-sm md:tracking-[0.2em] ${scrolled ? "text-[10px] tracking-[0.08em]" : "text-xs tracking-[0.12em]"}`}>
+            <span className="md:hidden">Director of<br />Photography</span>
+            <span className="hidden md:inline">Director of Photography</span>
+          </span>
         </Link>
         <div className="flex items-center gap-4">
           <button 

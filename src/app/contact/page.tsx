@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
-import { Sidebar } from "@/components/Sidebar";
 
 export default function Contact() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -16,10 +15,7 @@ export default function Contact() {
       />
 
       <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-32 md:pt-44 pb-12 px-0">
-        <div className="max-w-full mx-auto flex flex-col md:flex-row min-h-[60vh]">
-          <Sidebar />
-
-          {/* Content Area */}
+        <div className="max-w-full mx-auto flex flex-col min-h-[60vh]">
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6 md:px-12 gap-16">
             <div className="flex flex-col items-center gap-8">
               <motion.h1 
@@ -40,9 +36,10 @@ export default function Contact() {
             >
               <div className="flex flex-col items-center gap-4">
                 <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Email</span>
-                <a 
-                  href="mailto:Elisabeth.kalinina@gmail.com" 
-                  className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wider"
+                <a
+                  href="mailto:Elisabeth.kalinina@gmail.com"
+                  className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wide normal-case"
+                  style={{ textTransform: "none", fontVariant: "normal" }}
                 >
                   Elisabeth.kalinina@gmail.com
                 </a>
@@ -88,7 +85,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <footer className="w-full flex justify-center text-xs text-gray-400 tracking-widest uppercase py-12">
+      <footer className="w-full flex justify-center text-[10px] md:text-xs font-display font-normal text-gray-400 tracking-[0.3em] uppercase py-12">
         © {new Date().getFullYear()} Elizabeth Kalinina
       </footer>
     </main>

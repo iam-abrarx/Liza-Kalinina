@@ -155,12 +155,12 @@ export function ProjectCard({ project, mode, onSelect, onUnlock }: ProjectCardPr
       {!project.is_locked && (project.media_url || project.thumbnail_url) && (
         <div className="w-full bg-transparent pt-2 pb-4 px-2 flex flex-col items-start gap-0.5 z-10 font-display">
           {project.title && (
-            <h3 className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-normal text-left">
+            <h3 className="text-black text-xs md:text-xs tracking-[0.15em] uppercase font-normal text-left">
               {project.title}
             </h3>
           )}
           {project.client && (
-            <span className="text-black text-[11px] md:text-xs tracking-[0.15em] uppercase font-normal text-left">
+            <span className="text-black/50 text-[11px] md:text-xs tracking-[0.15em] uppercase font-normal text-left">
               {project.client}
             </span>
           )}

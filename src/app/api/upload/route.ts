@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { join, extname } from 'path';
 import { existsSync } from 'fs';
+
+const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4', '.webm', '.mov']);
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 
 export async function POST(request: Request) {
   try {
@@ -19,12 +22,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File too large (max 500MB)' }, { status: 400 });
+    }
+
+    const ext = extname(file.name).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+      return NextResponse.json({ error: 'File type not allowed' }, { status: 400 });
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create unique filename
+    // Create unique filename — strip original name to avoid path traversal
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const filename = `${uniqueSuffix}-${file.name.replace(/ /g, '_')}`;
+    const filename = `${uniqueSuffix}${ext}`;
     
     // Ensure uploads directory exists
     const uploadsDir = join(process.cwd(), 'public', 'uploads');
