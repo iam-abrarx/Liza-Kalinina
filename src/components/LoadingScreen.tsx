@@ -24,7 +24,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             initial={{ y: 60 }}
             animate={{ y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-xl md:text-4xl font-display italic tracking-[0.15em] md:tracking-[0.3em] uppercase text-center whitespace-nowrap"
+            className="text-xl md:text-4xl font-display font-normal tracking-[0.15em] md:tracking-[0.3em] uppercase text-center whitespace-nowrap"
           >
             Elizabeth Kalinina
           </motion.h1>
@@ -44,7 +44,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
-            className="text-[12px] md:text-sm font-display italic uppercase tracking-[0.3em] text-[var(--color-brand-ink)] logo-name whitespace-nowrap"
+            className="text-[12px] md:text-sm font-display font-normal uppercase tracking-[0.3em] text-[var(--color-brand-ink)] logo-name whitespace-nowrap"
           >
             Director of Photography
           </motion.p>

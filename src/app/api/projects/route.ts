@@ -36,8 +36,7 @@ export async function GET(request: Request) {
         return {
           ...p,
           media_url: '',
-          long_description: '',
-          is_locked: true
+          long_description: ''
         };
       }
       return p;
@@ -100,8 +99,10 @@ export async function POST(request: Request) {
         description: body.description || null,
         long_description: body.long_description || null,
         gallery: body.gallery || [],
-        is_public: body.category !== 'FEATURED',
+        is_public: body.is_public ?? true,
+        is_featured: body.is_featured ?? false,
         sort_order: body.sort_order || 0,
+        featured_order: body.featured_order || 0,
       }
     });
     

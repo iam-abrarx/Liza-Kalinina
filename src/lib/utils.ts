@@ -1,4 +1,5 @@
 export const CATEGORIES = [
+  "Featured Work",
   "Commercials",
   "Music Videos",
   "Narrative",

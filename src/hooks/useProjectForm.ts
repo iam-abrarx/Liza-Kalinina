@@ -15,7 +15,9 @@ const emptyProject = {
   description: "",
   long_description: "",
   gallery: [] as string[],
-  sort_order: 0
+  sort_order: 0,
+  is_featured: false,
+  featured_order: 0
 };
 
 export function useProjectForm() {
@@ -51,7 +53,9 @@ export function useProjectForm() {
       description: project.description || "",
       long_description: project.long_description || "",
       gallery: project.gallery || [],
-      sort_order: project.sort_order || 0
+      sort_order: project.sort_order || 0,
+      is_featured: project.is_featured || false,
+      featured_order: project.featured_order || 0
     });
     setFormTab('basic');
     setIsProjectFormOpen(true);

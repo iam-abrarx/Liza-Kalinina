@@ -23,8 +23,9 @@ export interface Project {
   long_description: string | null;
   gallery: string[];
   is_public: boolean;
-  is_locked?: boolean;
+  is_featured: boolean;
   sort_order?: number;
+  featured_order?: number;
   createdAt: Date;
 }
 

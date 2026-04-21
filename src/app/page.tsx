@@ -22,36 +22,9 @@ export default function Home() {
   const hasVisited = typeof window !== "undefined" && !!localStorage.getItem("ek_visited");
   const [isLoading, setIsLoading] = useState(!hasVisited);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [unlockedProjects, setUnlockedProjects] = useState<Project[]>([]);
-  const [activeCategory, setActiveCategory] = useState("Commercials");
+  const [activeCategory, setActiveCategory] = useState("Featured Work");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Restore unlocked projects from local storage safely
-  useEffect(() => {
-    if (!hydrated) return;
-    
-    const saved = localStorage.getItem('unlocked_tickets');
-    if (saved) {
-      try {
-        const tickets = JSON.parse(saved);
-        if (Array.isArray(tickets) && tickets.length > 0) {
-          fetch('/api/projects')
-            .then(res => res.json())
-            .then(data => {
-              if (Array.isArray(data)) {
-                const unlocked = data.filter((p: Project) => tickets.includes(p.id));
-                setUnlockedProjects(unlocked);
-              }
-            })
-            .catch(err => console.error("Auto-unlock restore failed:", err));
-        }
-      } catch (e) {
-        console.error("Corrupt local storage for tickets:", e);
-        localStorage.removeItem('unlocked_tickets');
-      }
-    }
-  }, [hydrated]);
 
   const fetchProjects = async () => {
     try {
@@ -70,16 +43,16 @@ export default function Home() {
   }, []);
 
   const getMatchedProjects = () => {
+    if (activeCategory === "Featured Work") {
+      return projects
+        .filter(p => p.is_featured)
+        .sort((a, b) => (a.featured_order || 0) - (b.featured_order || 0));
+    }
+
     const dbCategory = CATEGORY_MAP[activeCategory];
     if (!dbCategory) return [];
     
-    // Combine public projects and unlocked featured projects
-    const allAvailable = [...projects, ...unlockedProjects];
-    
-    // Deduplicate by ID
-    const uniqueProjects = Array.from(new Map(allAvailable.map(p => [p.id, p])).values());
-
-    return uniqueProjects.filter((project: Project) => {
+    return projects.filter((project: Project) => {
       return (project.category || '').toUpperCase() === dbCategory.toUpperCase();
     });
   };
@@ -88,15 +61,6 @@ export default function Home() {
     setActiveCategory(cat);
     setMobileMenuOpen(false);
   };
-
-  const handleEndFilmsSession = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('unlocked_tickets');
-    }
-    setUnlockedProjects([]);
-  };
-
   // Prevent background scroll when modal is open
   useEffect(() => {
     if (selectedProject) {
@@ -128,15 +92,12 @@ export default function Home() {
               activeCategory={activeCategory}
               handleCategoryClick={handleCategoryClick}
             />
-
             <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-32 md:pt-44 pb-12 px-0 md:px-0 flex-1">
               <div className="max-w-full mx-auto flex flex-col md:flex-row">
                 
                 <Sidebar 
                   activeCategory={activeCategory}
                   handleCategoryClick={handleCategoryClick}
-                  unlockedProjectsCount={unlockedProjects.length}
-                  handleEndFilmsSession={handleEndFilmsSession}
                 />
 
                 {/* Projects Grid */}
@@ -153,9 +114,8 @@ export default function Home() {
                       <ProjectCard 
                         key={project.id} 
                         project={project} 
-                        mode={activeCategory === "Films" ? "theatrical" : "editorial"}
+                        mode={activeCategory === "Featured Work" || activeCategory === "Films" ? "theatrical" : "editorial"}
                         onSelect={setSelectedProject}
-                        onUnlock={(unlocked) => setUnlockedProjects(prev => [...prev, unlocked])} 
                       />
                     ))}
 

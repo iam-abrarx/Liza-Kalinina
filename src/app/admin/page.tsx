@@ -10,7 +10,6 @@ import { Project } from "@/types";
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [passes, setPasses] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
 
@@ -32,7 +31,6 @@ export default function AdminDashboard() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
-  const [isPassFormOpen, setIsPassFormOpen] = useState(false);
 
   const showMessage = (text: string, type: string = "success") => {
     setMessage({ text, type });
@@ -164,14 +162,6 @@ export default function AdminDashboard() {
       setNewProject(prev => ({ ...prev, thumbnail_url: "" }));
     }
   };
-  const [newPass, setNewPass] = useState({
-    pass_code: "",
-    linked_project_id: "",
-    expires_at: ""
-  });
-
-
-
   useEffect(() => {
     // Only auto-fetch if we already have a password in memory (e.g. from local storage or previous session)
     if (isAuthenticated) {
@@ -207,23 +197,16 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const [projectsRes, passesRes] = await Promise.all([
-        fetch('/api/projects', {
+      const res = await fetch('/api/projects', {
           headers: { 'x-admin-password': password }
-        }),
-        fetch('/api/ticket-passes', {
-          headers: { 'x-admin-password': password }
-        })
-    ]);
+      });
       
-      if (!projectsRes.ok || !passesRes.ok) throw new Error("API unavailable");
+      if (!res.ok) throw new Error("API unavailable");
       
-      setProjects(await projectsRes.json());
-      setPasses(await passesRes.json());
+      setProjects(await res.json());
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error("Failed to fetch projects:", error);
       setProjects([]);
-      setPasses([]);
     }
   };
 
@@ -305,34 +288,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreatePass = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/ticket-passes', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-admin-password': password 
-        },
-        body: JSON.stringify(newPass)
-      });
-      if (res.ok) {
-        showMessage("Ticket Pass generated");
-        setIsPassFormOpen(false);
-        setNewPass({ pass_code: "", linked_project_id: "", expires_at: "" });
-        fetchData();
-      } else {
-        const err = await res.json();
-        showMessage(err.error || "Failed to create pass", "error");
-      }
-    } catch (error) {
-      showMessage("Error creating pass", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleDeleteProject = async (id: string) => {
     if (!confirm("Are you sure you want to delete this project?")) return;
     try {
@@ -346,25 +301,6 @@ export default function AdminDashboard() {
         fetchData();
       } else {
         showMessage(data.error || "Failed to delete project", "error");
-      }
-    } catch (error) {
-      showMessage("Error connecting to server", "error");
-    }
-  };
-
-  const handleDeletePass = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this ticket pass?")) return;
-    try {
-      const res = await fetch(`/api/ticket-passes/${id}`, { 
-        method: 'DELETE',
-        headers: { 'x-admin-password': password }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        showMessage("Pass deleted");
-        fetchData();
-      } else {
-        showMessage(data.error || "Failed to delete pass", "error");
       }
     } catch (error) {
       showMessage("Error connecting to server", "error");
@@ -439,104 +375,69 @@ export default function AdminDashboard() {
         </Link>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32">
-        {/* Projects Column */}
-        <section>
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-display">Manage Projects</h2>
-              <button 
-                onClick={openNewProjectForm}
-                className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-4 py-2 rounded-sm hover:-translate-y-1 transition-transform"
-              >
-                <Plus size={16} /> New Project
-              </button>
-          </div>
-          
-          <div className="flex flex-col gap-4">
-            {projects.length === 0 ? (
-              <p className="text-gray-500 italic">No projects added yet.</p>
-            ) : (
-              projects.map(p => (
-                <div key={p.id} className="p-4 border border-black/10 bg-white flex justify-between items-center group hover:border-black/30 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 aspect-video bg-zinc-900 overflow-hidden border border-black/5 flex items-center justify-center">
-                      {p.thumbnail_url ? (
-                        <img src={getMediaUrl(p.thumbnail_url)} alt="" className="w-full h-full object-cover" />
-                      ) : getVimeoId(p.media_url) ? (
-                        <div className="flex flex-col items-center">
-                          <span className="text-[8px] font-bold text-white/40">VIMEO</span>
-                        </div>
-                      ) : getMediaUrl(p.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
-                        <video src={getMediaUrl(p.media_url)} muted className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={getMediaUrl(p.media_url)} alt="" className="w-full h-full object-cover" />
-                      )}
+      <section className="mb-16">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-display">Manage Projects</h2>
+          <button 
+            onClick={openNewProjectForm}
+            className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-4 py-2 rounded-sm hover:-translate-y-1 transition-transform"
+          >
+            <Plus size={16} /> New Project
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {projects.length === 0 ? (
+            <p className="text-gray-500 italic">No projects added yet.</p>
+          ) : (
+            projects.map(p => (
+              <div key={p.id} className="p-4 border border-black/10 bg-white flex flex-col gap-4 group hover:border-black/30 transition-colors">
+                <div className="aspect-video bg-zinc-900 overflow-hidden border border-black/5 flex items-center justify-center relative">
+                  {p.thumbnail_url ? (
+                    <img src={getMediaUrl(p.thumbnail_url)} alt="" className="w-full h-full object-cover" />
+                  ) : getVimeoId(p.media_url) ? (
+                    <div className="flex flex-col items-center">
+                       <span className="text-[8px] font-bold text-white/40">VIMEO</span>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{p.title}</h3>
-                      <p className="text-xs text-gray-500 uppercase tracking-widest">{p.category} · {p.year}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`text-[10px] px-2 py-1 rounded-full uppercase tracking-wider ${p.category === 'FEATURED' ? 'bg-black text-white' : 'bg-green-100 text-green-700'}`}>
-                      {p.category === 'FEATURED' ? 'Private' : 'Public'}
-                    </span>
+                  ) : getMediaUrl(p.media_url).match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) ? (
+                    <video src={getMediaUrl(p.media_url)} muted className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={getMediaUrl(p.media_url)} alt="" className="w-full h-full object-cover" />
+                  )}
+                  
+                  <div className="absolute top-2 right-2 flex gap-2">
                     <button 
                       onClick={() => handleEditProject(p)}
-                      className="text-gray-400 hover:text-blue-600 transition-colors"
+                      className="p-2 bg-white/90 hover:bg-white text-blue-600 rounded-full shadow-sm transition-all"
                       title="Edit Project"
                     >
-                      <Pencil size={16} />
+                      <Pencil size={14} />
                     </button>
                     <button 
                       onClick={() => handleDeleteProject(p.id)}
-                      className="text-gray-400 hover:text-black transition-colors"
+                      className="p-2 bg-white/90 hover:bg-white text-red-600 rounded-full shadow-sm transition-all"
+                      title="Delete Project"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </section>
-
-        {/* Ticket Passes Column */}
-        <section>
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-display">Featured Access Passes</h2>
-            <button 
-              onClick={() => setIsPassFormOpen(true)}
-              className="flex items-center gap-2 text-sm uppercase tracking-wider border border-black px-4 py-2 hover:bg-black/5 transition-colors"
-            >
-              <LinkIcon size={16} /> Generate Pass
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            {passes.length === 0 ? (
-              <p className="text-gray-500 italic">No active ticket passes.</p>
-            ) : (
-              passes.map(tp => (
-                <div key={tp.id} className="p-4 border border-black/10 bg-white relative overflow-hidden flex justify-between items-center">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-black/80" />
-                  <div className="pl-4">
-                    <h3 className="font-mono text-xl tracking-widest text-[#111]">{tp.pass_code}</h3>
-                    <p className="text-sm text-gray-600 mt-2">Unlocks: <span className="font-medium">{tp.project?.title || 'Unknown Project'}</span></p>
-                    <p className="text-xs text-gray-400 mt-1">Expires: {tp.expires_at ? new Date(tp.expires_at).toLocaleDateString() : 'Never'}</p>
-                  </div>
-                  <button 
-                    onClick={() => handleDeletePass(tp.id)}
-                    className="text-gray-400 hover:text-black transition-colors pr-2"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                <div>
+                  <h3 className="font-semibold text-lg flex items-center justify-between">
+                    {p.title}
+                    {p.is_featured && (
+                      <span className="text-[8px] bg-black text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                        Featured #{p.featured_order}
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest">{p.category} · {p.year}</p>
                 </div>
-              ))
-            )}
-          </div>
-        </section>
-      </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
 
       {/* Project Creation Overlay */}
       {isProjectFormOpen && (
@@ -633,7 +534,7 @@ export default function AdminDashboard() {
                           <option value="DOCUMENTARY">Documentaries</option>
                           <option value="FASHION">Fashion</option>
                           <option value="STILLS">Photography</option>
-                          <option value="FEATURED">Films (Privately Shared)</option>
+                          <option value="FEATURED">Films</option>
                         </select>
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-20">
                            <Check size={14} />
@@ -659,6 +560,28 @@ export default function AdminDashboard() {
                         onChange={e => setNewProject(prev => ({...prev, sort_order: parseInt(e.target.value) || 0}))}
                         className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3 font-medium transition-colors"
                       />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex items-center gap-2">
+                        <input 
+                          type="checkbox"
+                          checked={newProject.is_featured}
+                          onChange={e => setNewProject(prev => ({...prev, is_featured: e.target.checked}))}
+                          className="w-4 h-4 rounded border-black/10 text-black focus:ring-black cursor-pointer"
+                        />
+                        Mark as Featured
+                      </label>
+                      <div className="mt-1">
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-2">Featured Display Order</p>
+                        <input 
+                          type="number"
+                          disabled={!newProject.is_featured}
+                          value={newProject.featured_order}
+                          onChange={e => setNewProject(prev => ({...prev, featured_order: parseInt(e.target.value) || 0}))}
+                          className={`w-full bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-2 font-medium transition-colors ${!newProject.is_featured ? 'opacity-30' : ''}`}
+                          placeholder="0"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1018,65 +941,6 @@ export default function AdminDashboard() {
                   {isLoading ? "SYNCING..." : (editingProjectId ? "UPDATE ARCHIVE" : "PUBLISH PROJECT")}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Ticket Pass Generation Overlay */}
-      {isPassFormOpen && (
-        <div className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[var(--color-brand-bg)] p-8 shadow-2xl relative">
-            <button onClick={() => setIsPassFormOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black transition-colors">
-              <X size={24} strokeWidth={1} />
-            </button>
-            
-            <h2 className="text-2xl font-display italic mb-8">Generate Access Pass</h2>
-
-            <form onSubmit={handleCreatePass} className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400">Secret Code</label>
-                <input 
-                  required
-                  value={newPass.pass_code}
-                  onChange={e => setNewPass({...newPass, pass_code: e.target.value})}
-                  className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-mono text-xl tracking-widest"
-                  placeholder="LIZA-SECRET-01"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400">Link to Private Project</label>
-                <select 
-                  required
-                  value={newPass.linked_project_id}
-                  onChange={e => setNewPass({...newPass, linked_project_id: e.target.value})}
-                  className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium appearance-none"
-                >
-                  <option value="">Select a Featured project...</option>
-                  {projects.filter(p => p.category === 'FEATURED').map(p => (
-                    <option key={p.id} value={p.id}>{p.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400">Expiration Date (Optional)</label>
-                <input 
-                  type="date"
-                  value={newPass.expires_at}
-                  onChange={e => setNewPass({...newPass, expires_at: e.target.value})}
-                  className="bg-transparent border-b border-black/10 focus:border-black outline-none py-2 font-medium"
-                />
-              </div>
-
-              <button 
-                type="submit"
-                disabled={isLoading}
-                className="bg-black text-white py-4 uppercase tracking-[0.2em] text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-50 mt-4"
-              >
-                {isLoading ? "Generating..." : "Generate & Save"}
-              </button>
             </form>
           </div>
         </div>
