@@ -9,6 +9,7 @@ import { Navigation } from "@/components/Navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { ProjectCard } from "@/components/ProjectCard";
 import { TheaterMode } from "@/components/TheaterMode";
+import { PhotographyMasonry } from "@/components/PhotographyMasonry";
 
 // Hooks & Utils
 import { useHydrated } from "@/hooks/useHydrated";
@@ -102,29 +103,38 @@ export default function Home() {
 
                 {/* Projects Grid */}
                 <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeCategory}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                    className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-y-10"
-                  >
-                    {getMatchedProjects().map((project) => (
-                      <ProjectCard 
-                        key={project.id} 
-                        project={project} 
-                        mode={activeCategory === "Featured Work" || activeCategory === "Films" ? "theatrical" : "editorial"}
-                        onSelect={setSelectedProject}
-                      />
-                    ))}
+                    <motion.div
+                      key={activeCategory}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                      className="flex-1"
+                    >
+                      {activeCategory === "Photography" ? (
+                        <PhotographyMasonry 
+                          projects={getMatchedProjects()} 
+                          onSelect={setSelectedProject} 
+                        />
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-8 md:gap-y-10">
+                          {getMatchedProjects().map((project) => (
+                            <ProjectCard 
+                              key={project.id} 
+                              project={project} 
+                              mode={activeCategory === "Featured Work" || activeCategory === "Films" ? "theatrical" : "editorial"}
+                              onSelect={setSelectedProject}
+                            />
+                          ))}
+                        </div>
+                      )}
 
-                    {getMatchedProjects().length === 0 && (
-                      <div className="py-32 text-center italic font-display text-xl text-gray-400">
-                        No projects loaded for {activeCategory} yet.
-                      </div>
-                    )}
-                  </motion.div>
+                      {getMatchedProjects().length === 0 && (
+                        <div className="py-32 text-center italic font-display text-xl text-gray-400">
+                          No projects loaded for {activeCategory} yet.
+                        </div>
+                      )}
+                    </motion.div>
                 </AnimatePresence>
               </div>
             </section>

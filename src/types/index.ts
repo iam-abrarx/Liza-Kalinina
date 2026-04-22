@@ -24,6 +24,8 @@ export interface Project {
   gallery: string[];
   is_public: boolean;
   is_featured: boolean;
+  is_album: boolean;
+  orientation: 'portrait' | 'landscape';
   sort_order?: number;
   featured_order?: number;
   createdAt: Date;

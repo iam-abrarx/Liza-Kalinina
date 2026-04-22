@@ -101,6 +101,8 @@ export async function POST(request: Request) {
         gallery: body.gallery || [],
         is_public: body.is_public ?? true,
         is_featured: body.is_featured ?? false,
+        is_album: body.is_album ?? false,
+        orientation: body.orientation || "landscape",
         sort_order: body.sort_order || 0,
         featured_order: body.featured_order || 0,
       }

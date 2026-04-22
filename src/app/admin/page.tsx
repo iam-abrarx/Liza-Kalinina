@@ -30,7 +30,8 @@ export default function AdminDashboard() {
 
 
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState({ text: "", type: "" });
+  const [message, setMessage] = useState({ text: "", type: "success" });
+  const [filterCategory, setFilterCategory] = useState<string>("ALL");
 
   const showMessage = (text: string, type: string = "success") => {
     setMessage({ text, type });
@@ -46,27 +47,48 @@ export default function AdminDashboard() {
       if (!isGallery) {
         const file = files[0];
         localUrl = URL.createObjectURL(file);
-        // Set media_url immediately so the form can submit even if cloud upload is slow/fails
+        // Set media_url immediately
         setNewProject(prev => ({ ...prev, media_url: localUrl }));
-        await generateThumbnails(localUrl, (url) => {
-            if (!newProject.thumbnail_url) {
-                setNewProject(prev => ({ ...prev, thumbnail_url: url }));
-            }
-        });
+        
+        // Detect orientation if it's an image
+        if (file.type.startsWith('image/')) {
+          const img = new Image();
+          img.onload = () => {
+            const orient = img.width > img.height ? 'landscape' : 'portrait';
+            setNewProject(prev => ({ ...prev, orientation: orient }));
+          };
+          img.src = localUrl;
+        }
+
+        // Only generate thumbnails for video files
+        if (file.type.startsWith('video/')) {
+          await generateThumbnails(localUrl, (url) => {
+              if (!newProject.thumbnail_url) {
+                  setNewProject(prev => ({ ...prev, thumbnail_url: url }));
+              }
+          });
+        }
       }
 
       const uploadedUrls = await uploadFiles(files);
       
       if (uploadedUrls.length > 0) {
         if (isGallery) {
-          setNewProject(prev => ({ 
-            ...prev, 
-            gallery: [...prev.gallery, ...uploadedUrls].slice(0, 10) 
-          }));
+          setNewProject(prev => {
+            const nextGallery = [...prev.gallery, ...uploadedUrls];
+            return { 
+              ...prev, 
+              gallery: nextGallery.slice(0, 50), // Increase gallery limit for albums
+              is_album: nextGallery.length > 1
+            };
+          });
         } else {
           const url = uploadedUrls[0];
-          // Upgrade from local blob URL to the permanent cloud URL
-          setNewProject(prev => ({ ...prev, media_url: url }));
+          setNewProject(prev => ({ 
+            ...prev, 
+            media_url: url,
+            thumbnail_url: prev.category === 'STILLS' ? url : prev.thumbnail_url
+          }));
           
           if (url.match(/\.(mp4|webm|ogg|mov)/i) && thumbnailSuggestions.length === 0) {
               const res = await generateThumbnails(url);
@@ -77,14 +99,12 @@ export default function AdminDashboard() {
         }
         showMessage(`${uploadedUrls.length} file(s) uploaded successfully`);
       } else if (!isGallery) {
-        // Cloud upload returned empty but local URL is already set — keep it
-        showMessage("Video selected locally. Cloud upload pending.", "success");
+        showMessage(`${newProject.category === 'STILLS' ? 'Image' : 'Video'} selected locally. Cloud upload pending.`, "success");
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Error uploading file";
       if (!isGallery && localUrl) {
-        // Keep the local URL even if cloud upload fails
-        showMessage("Video loaded locally. Cloud upload failed — you can still save.", "error");
+        showMessage(`${newProject.category === 'STILLS' ? 'Image' : 'Video'} loaded locally. Cloud upload failed — you can still save.`, "error");
       } else {
         showMessage(errorMessage, "error");
       }
@@ -316,8 +336,10 @@ export default function AdminDashboard() {
   const getMediaUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-    // Ensure local paths start with /
-    return url.startsWith('/') ? url : `/${url}`;
+    
+    // Consistency check: Ensure local paths start with /
+    const cleanUrl = url.replace(/^\/Elizabeth-Kalinina/, '');
+    return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
   };
 
   if (!isAuthenticated) {
@@ -376,21 +398,44 @@ export default function AdminDashboard() {
       </header>
 
       <section className="mb-16">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-display">Manage Projects</h2>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-6">
+            <h2 className="text-2xl font-display">Manage Projects</h2>
+            <div className="flex items-center gap-2 bg-black/5 rounded-full px-4 py-1.5 border border-black/5">
+              <span className="text-[9px] uppercase tracking-widest font-black text-gray-400">Filter:</span>
+              <select 
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="bg-transparent text-[10px] uppercase tracking-widest font-bold outline-none cursor-pointer hover:text-black transition-colors"
+              >
+                <option value="ALL">All Categories</option>
+                <option value="COMMERCIAL">Commercials</option>
+                <option value="MUSIC_VIDEO">Music Videos</option>
+                <option value="NARRATIVE">Narrative</option>
+                <option value="DOCUMENTARY">Documentaries</option>
+                <option value="FASHION">Fashion</option>
+                <option value="STILLS">Photography</option>
+                <option value="FEATURED">Films</option>
+              </select>
+            </div>
+          </div>
           <button 
             onClick={openNewProjectForm}
-            className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-4 py-2 rounded-sm hover:-translate-y-1 transition-transform"
+            className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-6 py-2.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg shadow-black/10"
           >
             <Plus size={16} /> New Project
           </button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {projects.length === 0 ? (
-            <p className="text-gray-500 italic">No projects added yet.</p>
+          {projects.filter(p => filterCategory === "ALL" || p.category === filterCategory).length === 0 ? (
+            <div className="col-span-full py-20 text-center border-2 border-dashed border-black/5 rounded-2xl bg-black/[0.01]">
+              <p className="text-gray-400 italic uppercase tracking-widest text-[10px]">No projects found in this category.</p>
+            </div>
           ) : (
-            projects.map(p => (
+            projects
+              .filter(p => filterCategory === "ALL" || p.category === filterCategory)
+              .map(p => (
               <div key={p.id} className="p-4 border border-black/10 bg-white flex flex-col gap-4 group hover:border-black/30 transition-colors">
                 <div className="aspect-video bg-zinc-900 overflow-hidden border border-black/5 flex items-center justify-center relative">
                   {p.thumbnail_url ? (
@@ -463,9 +508,9 @@ export default function AdminDashboard() {
                   </div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">
                     {formTab === 'basic' ? 'Step 01 / Details' : 
-                     formTab === 'media' ? 'Step 02 / Media' : 
+                     formTab === 'media' ? (newProject.category === 'STILLS' ? 'Step 02 / Main Image' : 'Step 02 / Media') : 
                      formTab === 'narrative' ? 'Step 03 / Narrative' : 
-                     'Step 04 / Gallery'}
+                     (newProject.category === 'STILLS' ? 'Step 04 / Album' : 'Step 04 / Gallery')}
                   </p>
                 </div>
               </div>
@@ -483,9 +528,9 @@ export default function AdminDashboard() {
             <div className="flex border-b border-black/5 px-8 md:px-12 bg-white/30 overflow-x-auto no-scrollbar">
               {[
                 { id: 'basic', label: 'Details' },
-                { id: 'media', label: 'Video & Cover' },
+                { id: 'media', label: newProject.category === 'STILLS' ? 'Main Image' : 'Video & Cover' },
                 { id: 'narrative', label: 'Story & Awards' },
-                { id: 'gallery', label: 'Behind Scenes' }
+                { id: 'gallery', label: newProject.category === 'STILLS' ? 'Album' : 'Behind Scenes' }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -583,6 +628,39 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
+
+                    {/* New Fields: Album and Orientation */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex items-center gap-2">
+                        <input 
+                          type="checkbox"
+                          checked={newProject.is_album}
+                          onChange={e => setNewProject(prev => ({...prev, is_album: e.target.checked}))}
+                          className="w-4 h-4 rounded border-black/10 text-black focus:ring-black cursor-pointer"
+                        />
+                        Mark as Album
+                      </label>
+                      <p className="text-[9px] text-gray-400 uppercase tracking-wider mt-1">
+                        (Auto-enabled if gallery &gt; 1)
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                        Masonry Grid Holder Orientation
+                      </label>
+                      <select 
+                        value={newProject.orientation}
+                        onChange={e => setNewProject(prev => ({...prev, orientation: e.target.value as 'portrait' | 'landscape'}))}
+                        className="bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3 font-medium transition-colors cursor-pointer"
+                      >
+                        <option value="landscape">Landscape (Square/Wide Grid)</option>
+                        <option value="portrait">Portrait (Tall Grid)</option>
+                      </select>
+                      <p className="text-[8px] text-gray-400 uppercase tracking-wider italic">
+                        * Controls how this project sits in the masonry layout.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="pt-12 border-t border-black/5">
@@ -631,25 +709,34 @@ export default function AdminDashboard() {
                   
                   {/* 1. Primary Cover Preview Area */}
                   <div className="flex flex-col gap-4">
-                    <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Active Project Cover</label>
+                    <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">
+                      {newProject.category === 'STILLS' ? 'Photography Preview' : 'Active Project Cover'}
+                    </label>
                     <div className="relative group/cover aspect-2-1 w-full bg-zinc-900 rounded-2xl overflow-hidden border border-black/5 shadow-2xl transition-all hover:shadow-black/20">
-                      {newProject.thumbnail_url ? (
+                      {(newProject.thumbnail_url || (newProject.category === 'STILLS' && newProject.media_url)) ? (
                         <>
                           <img 
-                            src={getMediaUrl(newProject.thumbnail_url)} 
+                            src={getMediaUrl(newProject.thumbnail_url || (newProject.category === 'STILLS' ? newProject.media_url : ''))} 
                             alt="Selected Cover" 
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-8 flex justify-between items-end">
                             <div>
-                              <p className="text-[8px] uppercase tracking-widest text-white/60 mb-1">Source URL</p>
-                              <p className="text-[10px] text-white font-mono opacity-80 max-w-md truncate">{newProject.thumbnail_url}</p>
+                              <p className="text-[8px] uppercase tracking-widest text-white/60 mb-1">
+                                {newProject.thumbnail_url ? 'Thumbnail Source' : 'High-Res Source'}
+                              </p>
+                              <p className="text-[10px] text-white font-mono opacity-80 max-w-md truncate">
+                                {newProject.thumbnail_url || newProject.media_url}
+                              </p>
                             </div>
                             <button 
                               type="button"
-                              onClick={() => setNewProject(p => ({ ...p, thumbnail_url: "" }))}
+                              onClick={() => {
+                                if (newProject.thumbnail_url) setNewProject(p => ({ ...p, thumbnail_url: "" }));
+                                else setNewProject(p => ({ ...p, media_url: "" }));
+                              }}
                               className="bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white p-3 rounded-full transition-all backdrop-blur-md"
-                              title="Clear Cover Image"
+                              title="Clear Image"
                             >
                               <X size={16} />
                             </button>
@@ -679,13 +766,15 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Video URL Input */}
                     <div className="md:col-span-2 flex flex-col gap-4">
-                      <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Video Resource (Vimeo or MP4)</label>
+                      <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">
+                        {newProject.category === 'STILLS' ? 'Primary Image Resource' : 'Video Resource (Vimeo or MP4)'}
+                      </label>
                       <div className="relative group">
                         <input 
                           value={newProject.media_url}
                           onChange={e => setNewProject(prev => ({...prev, media_url: e.target.value}))}
                           className="w-full bg-white border-2 border-black/5 focus:border-black transition-all outline-none p-4 rounded-xl font-medium text-sm shadow-sm"
-                          placeholder={newProject.category === 'STILLS' ? "Optional: Video resource link" : "vimeo.com/123456789 (or upload a video →)"}
+                          placeholder={newProject.category === 'STILLS' ? "Main Image / Full-Res URL (optional)" : "vimeo.com/123456789 (or upload a video →)"}
                         />
                         {newProject.media_url && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -716,25 +805,49 @@ export default function AdminDashboard() {
                     <div className="flex flex-col gap-4 h-full">
                       <label className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-black">Library Actions</label>
                       <div className="grid grid-cols-2 gap-2 flex-1">
-                        <label className="flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group aspect-square lg:aspect-auto">
-                           <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailUpload} disabled={isUploading} />
-                           <UploadIcon size={20} className="mb-1 group-hover:-translate-y-0.5 transition-transform" />
-                           <span className="text-[9px] uppercase font-black tracking-widest">Cover</span>
-                        </label>
-                        <label className="flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group aspect-square lg:aspect-auto">
-                           <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, false)} disabled={isUploading} />
-                           <VideoIcon size={20} className="mb-1 group-hover:-translate-y-1 transition-transform" />
-                           <span className="text-[9px] uppercase font-black tracking-widest">Video</span>
-                        </label>
-                        <button 
-                          type="button"
-                          onClick={() => executeGenerateThumbnails(newProject.media_url)}
-                          disabled={isGeneratingThumbs || !newProject.media_url}
-                          className="col-span-2 flex flex-col items-center justify-center bg-white border-2 border-black/5 rounded-xl hover:border-black transition-all active:scale-95 group disabled:opacity-30 disabled:grayscale py-4"
-                        >
-                          <VideoIcon size={18} className="mb-1 group-hover:scale-110 transition-transform text-gray-400 group-hover:text-black" />
-                          <span className="text-[8px] uppercase font-black tracking-widest text-gray-400 group-hover:text-black">Scan Current Media</span>
-                        </button>
+                        {newProject.category === 'STILLS' ? (
+                          /* Photography: Unified Upload */
+                          <label className="col-span-2 flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group py-6">
+                             <input 
+                               type="file" 
+                               accept="image/*" 
+                               className="hidden" 
+                               onChange={(e) => handleFileUpload(e, false)} 
+                               disabled={isUploading} 
+                             />
+                             <UploadIcon size={24} className="mb-2 group-hover:-translate-y-1 transition-transform" />
+                             <span className="text-[10px] uppercase font-black tracking-widest">Upload Project Photo</span>
+                          </label>
+                        ) : (
+                          /* Video Categories: Split Uploads */
+                          <>
+                            <label className="flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group aspect-square lg:aspect-auto">
+                               <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailUpload} disabled={isUploading} />
+                               <UploadIcon size={20} className="mb-1 group-hover:-translate-y-0.5 transition-transform" />
+                               <span className="text-[9px] uppercase font-black tracking-widest">Cover</span>
+                            </label>
+                            <label className="flex flex-col items-center justify-center bg-black text-white rounded-xl cursor-pointer hover:bg-gray-800 transition-all active:scale-95 border border-black shadow-lg shadow-black/10 group aspect-square lg:aspect-auto">
+                               <input 
+                                 type="file" 
+                                 accept="video/*" 
+                                 className="hidden" 
+                                 onChange={(e) => handleFileUpload(e, false)} 
+                                 disabled={isUploading} 
+                               />
+                               <VideoIcon size={20} className="mb-1 group-hover:-translate-y-1 transition-transform" />
+                               <span className="text-[9px] uppercase font-black tracking-widest">Video</span>
+                            </label>
+                            <button 
+                              type="button"
+                              onClick={() => executeGenerateThumbnails(newProject.media_url)}
+                              disabled={isGeneratingThumbs || !newProject.media_url}
+                              className="col-span-2 flex flex-col items-center justify-center bg-white border-2 border-black/5 rounded-xl hover:border-black transition-all active:scale-95 group disabled:opacity-30 disabled:grayscale py-4"
+                            >
+                              <VideoIcon size={18} className="mb-1 group-hover:scale-110 transition-transform text-gray-400 group-hover:text-black" />
+                              <span className="text-[8px] uppercase font-black tracking-widest text-gray-400 group-hover:text-black">Scan Current Media</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -876,14 +989,28 @@ export default function AdminDashboard() {
                       <div key={idx} className="aspect-square bg-white p-2 relative group rounded-2xl border border-black/5 shadow-sm hover:shadow-xl transition-all">
                         <div className="w-full h-full rounded-xl overflow-hidden relative">
                           <img src={url} alt="" className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                setNewProject(prev => ({ ...prev, thumbnail_url: url }));
+                                showMessage("Set as primary thumbnail");
+                              }}
+                              className={`px-3 py-1.5 rounded-full text-[9px] uppercase font-black transition-all ${
+                                newProject.thumbnail_url === url 
+                                  ? 'bg-green-500 text-white' 
+                                  : 'bg-white text-black hover:bg-gray-100'
+                              }`}
+                            >
+                              {newProject.thumbnail_url === url ? 'Primary Cover' : 'Set as Cover'}
+                            </button>
                             <button 
                               type="button"
                               onClick={() => removeGalleryImage(idx)}
-                              className="bg-white text-black p-3 rounded-full hover:bg-red-500 hover:text-white transition-all scale-75 group-hover:scale-100"
+                              className="bg-white/20 text-white p-2 rounded-full hover:bg-red-500 hover:text-white transition-all scale-75 group-hover:scale-100"
                               title="Remove Image"
                             >
-                              <X size={20} />
+                              <X size={16} />
                             </button>
                           </div>
                         </div>

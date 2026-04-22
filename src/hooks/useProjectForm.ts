@@ -17,7 +17,9 @@ const emptyProject = {
   gallery: [] as string[],
   sort_order: 0,
   is_featured: false,
-  featured_order: 0
+  featured_order: 0,
+  is_album: false,
+  orientation: "landscape" as 'portrait' | 'landscape'
 };
 
 export function useProjectForm() {
@@ -55,7 +57,9 @@ export function useProjectForm() {
       gallery: project.gallery || [],
       sort_order: project.sort_order || 0,
       is_featured: project.is_featured || false,
-      featured_order: project.featured_order || 0
+      featured_order: project.featured_order || 0,
+      is_album: project.is_album || false,
+      orientation: project.orientation || "landscape"
     });
     setFormTab('basic');
     setIsProjectFormOpen(true);

@@ -22,6 +22,8 @@ model Project {
   description        String?
   is_public          Boolean      @default(true)
   is_featured        Boolean      @default(false)
+  is_album           Boolean      @default(false)
+  orientation        String?      @default("landscape") // landscape, portrait
   sort_order         Int          @default(0)
   featured_order     Int          @default(0)
   createdAt          DateTime     @default(now())
