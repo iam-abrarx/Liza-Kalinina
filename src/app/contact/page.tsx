@@ -7,28 +7,30 @@ export default function Contact() {
   return (
     <main className="min-h-screen bg-[var(--color-brand-bg)] flex flex-col selection:bg-[#111] selection:text-[#F4F4F0]">
 
-      <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-20 md:pt-28 pb-24 px-6 md:px-12 lg:px-24 flex-grow">
-        <div className="max-w-6xl mx-auto">
-          {/* Back Button */}
-          <div className="mb-8">
-            <Link 
-              href="/"
-              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-zinc-500 hover:text-black transition-colors"
-            >
-              ← Home
-            </Link>
-          </div>
+      <section className="relative z-20 bg-[var(--color-brand-bg)] text-[var(--color-brand-ink)] pt-12 md:pt-16 pb-24 px-6 md:px-12 lg:px-24 flex-grow">
+        <div className="max-w-6xl mx-auto relative">
+          <div className="sticky top-0 z-40 bg-[var(--color-brand-bg)] pt-6 md:pt-8 pb-2 mb-8 md:mb-12">
+            {/* Back Button */}
+            <div className="mb-4">
+              <Link 
+                href="/"
+                className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-zinc-500 hover:text-black transition-colors"
+              >
+                ← Home
+              </Link>
+            </div>
 
-          {/* Title Header */}
-          <div className="mb-12 border-b border-black/10 pb-6">
-            <motion.h1 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="text-base md:text-lg font-display font-light uppercase tracking-[0.2em] text-zinc-950"
-            >
-              Elizabeth Kalinina – Contact
-            </motion.h1>
+            {/* Title Header */}
+            <div className="border-b border-black/10 pb-4">
+              <motion.h1 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="text-base md:text-lg font-display font-light uppercase tracking-[0.2em] text-zinc-950"
+              >
+                Elizabeth Kalinina – Contact
+              </motion.h1>
+            </div>
           </div>
 
           {/* Content */}

@@ -35,7 +35,6 @@ model Project {
 
 enum Category {
   COMMERCIAL
-  MUSIC_VIDEO
   NARRATIVE
   FASHION
   STILLS

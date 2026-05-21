@@ -480,7 +480,6 @@ export default function AdminDashboard() {
               >
                 <option value="ALL">All Categories</option>
                 <option value="COMMERCIAL">Commercials</option>
-                <option value="MUSIC_VIDEO">Music Videos</option>
                 <option value="NARRATIVE">Narrative</option>
                 <option value="DOCUMENTARY">Documentaries</option>
                 <option value="FASHION">Fashion</option>
@@ -654,7 +653,6 @@ export default function AdminDashboard() {
                           className="w-full bg-transparent border-b-2 border-black/5 focus:border-black outline-none py-3.5 font-medium appearance-none transition-colors cursor-pointer"
                         >
                           <option value="COMMERCIAL">Commercials</option>
-                          <option value="MUSIC_VIDEO">Music Videos</option>
                           <option value="NARRATIVE">Narrative</option>
                           <option value="DOCUMENTARY">Documentaries</option>
                           <option value="FASHION">Fashion</option>

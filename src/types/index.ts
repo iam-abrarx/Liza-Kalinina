@@ -1,6 +1,5 @@
 export type Category = 
   | "COMMERCIAL" 
-  | "MUSIC_VIDEO" 
   | "NARRATIVE" 
   | "DOCUMENTARY" 
   | "FASHION" 

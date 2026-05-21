@@ -66,7 +66,7 @@ export default function Home() {
     if (activeCategory === "Commercials") {
       return projects.filter((project: Project) => {
         const cat = (project.category || '').toUpperCase();
-        return cat === "COMMERCIAL" || cat === "MUSIC_VIDEO";
+        return cat === "COMMERCIAL";
       });
     }
 
