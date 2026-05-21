@@ -1,7 +1,6 @@
 export const CATEGORIES = [
   "Featured Work",
   "Commercials",
-  "Music Videos",
   "Narrative",
   "Documentaries",
   "Photography",
@@ -10,7 +9,6 @@ export const CATEGORIES = [
 
 export const CATEGORY_MAP: Record<string, string> = {
   "Commercials": "COMMERCIAL",
-  "Music Videos": "MUSIC_VIDEO",
   "Narrative": "NARRATIVE",
   "Documentaries": "DOCUMENTARY",
   "Fashion": "FASHION",

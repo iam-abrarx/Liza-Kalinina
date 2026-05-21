@@ -37,11 +37,11 @@ export default function Contact() {
               <div className="flex flex-col items-center gap-4">
                 <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Email</span>
                 <a
-                  href="mailto:Elisabeth.kalinina@gmail.com"
-                  className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wide normal-case"
-                  style={{ textTransform: "none", fontVariant: "normal" }}
+                  href="mailto:elisabeth.kalinina@gmail.com"
+                  className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wide"
+                  style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
                 >
-                  Elisabeth.kalinina@gmail.com
+                  elisabeth.kalinina@gmail.com
                 </a>
               </div>
 
@@ -49,12 +49,13 @@ export default function Contact() {
                 <div className="flex flex-col items-center gap-4">
                   <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Phone / WhatsApp</span>
                   <a 
-                    href="https://wa.me/79161767043" 
+                    href="https://wa.me/33766878452" 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-base md:text-xl font-light hover:opacity-50 transition-all duration-300 tracking-widest"
+                    style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
                   >
-                    +7 916 176-70-43
+                    +33 7 66 87 84 52
                   </a>
                 </div>
               </div>

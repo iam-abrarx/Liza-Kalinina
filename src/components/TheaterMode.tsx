@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { getMediaUrl, getVimeoId, isVideo } from "@/lib/utils";
 import { Project } from "@/types";
 
@@ -12,29 +12,65 @@ interface TheaterModeProps {
 
 export function TheaterMode({ project, onClose }: TheaterModeProps) {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  useEffect(() => {
+    if (project) {
+      // Calculate scrollbar width to prevent jump
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+    }
+  }, [project]);
+
+  const handleExitComplete = () => {
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+  };
+
+  const handleCopyLink = () => {
+    if (!project) return;
+    const url = `${window.location.origin}/?project=${project.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  };
 
   const isPhotography = project?.category === 'STILLS';
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" onExitComplete={handleExitComplete}>
       {project && (
         <motion.div 
+          key="theater-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-start overflow-y-auto bg-black/95 py-12 px-4 md:px-12 lg:px-24 scrollbar-hide"
+          transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }}
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-start overflow-y-auto bg-white/98 py-12 px-4 md:px-12 lg:px-24 scrollbar-hide"
         >
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-[80px] -z-10"
+            className="fixed inset-0 bg-white/10 -z-10"
             onClick={onClose}
           />
 
+          {/* Back to Homepage Button */}
           <button 
             onClick={onClose}
-            className="fixed top-8 right-8 md:top-12 md:right-12 text-white/50 hover:text-white transition-colors z-[210] bg-black/20 p-2 rounded-full backdrop-blur-md"
+            className="fixed top-8 left-8 md:top-12 md:left-12 text-zinc-800 hover:text-black transition-colors z-[210] bg-black/5 p-2 rounded-full backdrop-blur-md border border-black/5"
           >
-            <X size={32} strokeWidth={1} />
+            <ArrowLeft size={32} strokeWidth={1.5} />
+          </button>
+
+          <button 
+            onClick={onClose}
+            className="fixed top-8 right-8 md:top-12 md:right-12 text-zinc-800 hover:text-black transition-colors z-[210] bg-black/5 p-2 rounded-full backdrop-blur-md border border-black/5"
+          >
+            <X size={32} strokeWidth={1.5} />
           </button>
 
           {/* Fullscreen Image Overlay */}
@@ -44,7 +80,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[250] bg-black flex items-center justify-center p-4 cursor-zoom-out"
+                className="fixed inset-0 z-[250] bg-white flex items-center justify-center p-4 cursor-zoom-out"
                 onClick={() => setFullscreenImage(null)}
               >
                 <img 
@@ -54,7 +90,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                 />
                 <button 
                   onClick={() => setFullscreenImage(null)}
-                  className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
+                  className="absolute top-8 right-8 text-black/50 hover:text-black transition-colors"
                 >
                   <X size={32} strokeWidth={1} />
                 </button>
@@ -68,13 +104,13 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
               <motion.div 
                 initial={{ scale: 0.9, y: 20, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
-                exit={{ scale: 0.9, y: 20, opacity: 0 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ scale: 0.98, y: 15, opacity: 0 }}
+                transition={{ duration: 0.55, ease: [0.25, 1, 0.5, 1] }}
                 className={`relative w-full shadow-2xl z-[205] group ${isPhotography && project.orientation === 'portrait' ? 'max-w-2xl aspect-[3/4]' : 'aspect-video'}`}
               >
-                <div className="absolute inset-0 -z-10 translate-y-4 scale-110 blur-[100px] bg-white/5 opacity-50 transition-opacity duration-1000" />
+                <div className="absolute inset-0 -z-10 translate-y-4 scale-110 blur-[100px] bg-black/5 opacity-30 transition-opacity duration-1000" />
                 
-                <div className="relative w-full h-full bg-black overflow-hidden rounded-sm">
+                <div className={`relative w-full h-full ${isPhotography ? 'bg-zinc-50' : 'bg-black'} overflow-hidden rounded-sm`}>
                   {project.category === 'FEATURED' && (
                     <div className="absolute top-8 left-8 z-[210] flex items-center gap-3">
                       <span className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
@@ -118,7 +154,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="relative aspect-video md:aspect-square bg-zinc-900 overflow-hidden rounded-sm cursor-zoom-in group"
+                        className="relative aspect-video md:aspect-square bg-zinc-100 overflow-hidden rounded-sm cursor-zoom-in group"
                         onClick={() => setFullscreenImage(img!)}
                       >
                         <img src={getMediaUrl(img!)} alt="" className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
@@ -134,11 +170,12 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
               <motion.div 
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.55, ease: [0.25, 1, 0.5, 1] }}
                 className="w-full max-w-5xl flex flex-col gap-8 mt-12"
               >
                 <div className="flex justify-between items-baseline">
-                  <h4 className="text-white/40 text-[10px] uppercase tracking-[0.5em] font-normal">Behind the Frames</h4>
+                  <h4 className="text-zinc-800 text-[10px] uppercase tracking-[0.5em] font-medium">Behind the Frames</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {project.gallery.map((img: string, i: number) => (
@@ -147,7 +184,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                       initial={{ opacity: 0, scale: 0.95 }}
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
-                      className="aspect-video bg-zinc-900 overflow-hidden cursor-zoom-in group"
+                      className="aspect-video bg-zinc-100 overflow-hidden cursor-zoom-in group"
                       onClick={() => setFullscreenImage(img)}
                     >
                       <img src={getMediaUrl(img)} alt="" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 group-hover:scale-105" />
@@ -160,32 +197,46 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
+              exit={{ y: 15, opacity: 0 }}
+              transition={{ duration: 0.55, ease: [0.25, 1, 0.5, 1] }}
               className="relative z-[205] w-full max-w-5xl mt-8 grid grid-cols-1 md:grid-cols-2 gap-12 pb-32"
             >
               <div className="flex flex-col gap-4">
                 {project.title && (
-                  <h3 className="text-xl md:text-2xl text-white font-display italic leading-tight">{project.title}</h3>
+                  <h3 className="text-xl md:text-2xl text-zinc-900 font-display italic leading-tight font-medium">{project.title}</h3>
                 )}
-                <p className="text-[10px] text-white/30 font-display tracking-[0.4em] uppercase">{project.category} · {project.year}</p>
+                <p className="text-[10px] text-zinc-800 font-display tracking-[0.4em] uppercase font-semibold">{project.category} · {project.year}</p>
+
+                {/* Copy Link to Share */}
+                <button
+                  onClick={handleCopyLink}
+                  className="mt-3 inline-flex items-center gap-2 text-[9px] uppercase tracking-[0.3em] text-zinc-400 hover:text-zinc-800 transition-colors font-medium group"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:scale-110"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  {linkCopied ? (
+                    <span className="text-zinc-800 font-semibold">Link copied</span>
+                  ) : (
+                    <span>Share</span>
+                  )}
+                </button>
                 <div className="space-y-4 mt-6">
-                  <p className="text-xs md:text-sm text-white/60 leading-relaxed max-w-lg font-normal">
+                  <p className="text-xs md:text-sm text-zinc-950 leading-relaxed max-w-lg font-normal">
                     {project.description}
                   </p>
                   {project.long_description && (
-                    <p className="text-[10px] text-white/30 leading-relaxed max-w-lg font-light italic">
+                    <p className="text-[10px] text-zinc-800 leading-relaxed max-w-lg font-normal italic">
                       {project.long_description}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col justify-end items-end gap-2 text-[10px] text-white/50">
-                {project.director && <p className="uppercase tracking-[0.4em] font-normal text-right">Director: {project.director}</p>}
-                {project.role && <p className="uppercase tracking-[0.4em] font-normal text-right">DP: {project.role}</p>}
-                {project.production_company && <p className="uppercase tracking-[0.4em] font-normal text-white/30 mt-1 text-right">Production: {project.production_company}</p>}
+              <div className="flex flex-col justify-end items-end gap-2 text-[10px] text-zinc-800 font-medium">
+                {project.director && <p className="uppercase tracking-[0.4em] text-right">Director: <span className="text-zinc-950 font-semibold">{project.director}</span></p>}
+                {project.role && <p className="uppercase tracking-[0.4em] text-right">DP: <span className="text-zinc-950 font-semibold">{project.role}</span></p>}
+                {project.production_company && <p className="uppercase tracking-[0.4em] text-zinc-600 mt-1 text-right">Production: <span className="text-zinc-900">{project.production_company}</span></p>}
                 {project.awards && (
-                  <p className="text-white/40 italic font-display mt-4 text-right max-w-xs text-[11px]">{project.awards}</p>
+                  <p className="text-zinc-900 italic font-display mt-4 text-right max-w-xs text-[11.5px] leading-relaxed">{project.awards}</p>
                 )}
               </div>
             </motion.div>

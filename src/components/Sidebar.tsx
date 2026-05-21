@@ -27,14 +27,12 @@ export function Sidebar({
   };
 
   return (
-    <aside className="hidden md:block md:w-64 shrink-0 md:relative z-30 bg-[var(--color-brand-bg)] px-6">
+    <aside className="hidden md:block md:w-64 shrink-0 md:relative z-30 bg-[var(--color-brand-bg)] pl-6 md:pl-12 pr-6">
       <div className="md:sticky md:top-32 flex flex-col gap-8 overflow-x-visible pb-0 scrollbar-hide whitespace-nowrap">
         {CATEGORIES.map((cat, idx) => (
           <div
             key={cat}
             className={`flex items-center justify-start md:justify-between shrink-0 w-auto md:w-full group/prem ${
-                cat === "Films" ? "md:mt-4 md:border-t md:border-current/10 md:pt-8" : ""
-            } ${
                 cat === "Featured Work" ? "md:mb-4 md:border-b md:border-current/10 md:pb-8" : ""
             }`}
           >
@@ -51,7 +49,15 @@ export function Sidebar({
           </div>
         ))}
         
-        <div className="md:mt-4 md:border-t md:border-current/10 md:pt-8">
+        <div className="md:mt-4 md:border-t md:border-current/10 md:pt-8 flex flex-col gap-4">
+          <Link 
+            href="/about"
+            className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 font-normal hover:text-black ${
+                pathname === "/about" ? "text-black" : "text-gray-500"
+            }`}
+          >
+            About
+          </Link>
           <Link 
             href="/contact"
             className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 font-normal hover:text-black ${

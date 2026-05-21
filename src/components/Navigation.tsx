@@ -93,6 +93,15 @@ export function Navigation({
               </button>
             ))}
             <Link 
+              href="/about" 
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-left text-base uppercase tracking-[0.2em] transition-all duration-300 py-2 border-b border-black/5 ${
+                pathname === "/about" ? "text-black font-normal" : "text-gray-500 font-normal"
+              }`}
+            >
+              About
+            </Link>
+            <Link 
               href="/contact" 
               onClick={() => setMobileMenuOpen(false)}
               className={`text-left text-base uppercase tracking-[0.2em] transition-all duration-300 py-2 border-b border-black/5 ${

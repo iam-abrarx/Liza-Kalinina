@@ -43,11 +43,31 @@ export default function Home() {
     fetchProjects();
   }, []);
 
+  // Auto-open project from shared link (?project=<id>)
+  useEffect(() => {
+    if (projects.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const projectId = params.get('project');
+    if (projectId) {
+      const match = projects.find(p => p.id === projectId);
+      if (match) setSelectedProject(match);
+      // Clean URL without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [projects]);
+
   const getMatchedProjects = () => {
     if (activeCategory === "Featured Work") {
       return projects
         .filter(p => p.is_featured)
         .sort((a, b) => (a.featured_order || 0) - (b.featured_order || 0));
+    }
+
+    if (activeCategory === "Commercials") {
+      return projects.filter((project: Project) => {
+        const cat = (project.category || '').toUpperCase();
+        return cat === "COMMERCIAL" || cat === "MUSIC_VIDEO";
+      });
     }
 
     const dbCategory = CATEGORY_MAP[activeCategory];
@@ -62,15 +82,7 @@ export default function Home() {
     setActiveCategory(cat);
     setMobileMenuOpen(false);
   };
-  // Prevent background scroll when modal is open
-  useEffect(() => {
-    if (selectedProject) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [selectedProject]);
+
 
   if (!hydrated) return null; // Avoid hydration mismatch on initial render
 

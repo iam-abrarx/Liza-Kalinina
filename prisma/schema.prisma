@@ -42,3 +42,11 @@ enum Category {
   FEATURED
   DOCUMENTARY
 }
+
+model Bio {
+  id        String   @id @default("singleton")
+  text      String   @db.Text
+  images    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

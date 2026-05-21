@@ -33,6 +33,12 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState({ text: "", type: "success" });
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
 
+  // Bio state
+  const [isBioFormOpen, setIsBioFormOpen] = useState(false);
+  const [bioText, setBioText] = useState("");
+  const [bioImages, setBioImages] = useState<string[]>([]);
+  const [isSavingBio, setIsSavingBio] = useState(false);
+
   const showMessage = (text: string, type: string = "success") => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: "", type: "" }), 3000);
@@ -182,10 +188,74 @@ export default function AdminDashboard() {
       setNewProject(prev => ({ ...prev, thumbnail_url: "" }));
     }
   };
+
+  const fetchBio = async () => {
+    try {
+      const res = await fetch('/api/bio');
+      if (res.ok) {
+        const data = await res.json();
+        setBioText(data.text || "");
+        setBioImages(data.images || []);
+      }
+    } catch (error) {
+      console.error("Error fetching bio:", error);
+    }
+  };
+
+  const handleBioImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    try {
+      const uploadedUrls = await uploadFiles(files);
+      if (uploadedUrls.length > 0) {
+        setBioImages(prev => [...prev, ...uploadedUrls]);
+        showMessage(`${uploadedUrls.length} file(s) uploaded for bio`);
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Error uploading file";
+      showMessage(errorMessage, "error");
+    }
+  };
+
+  const removeBioImage = (index: number) => {
+    setBioImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveBio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingBio(true);
+    try {
+      const res = await fetch('/api/bio', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': password 
+        },
+        body: JSON.stringify({
+          text: bioText,
+          images: bioImages
+        })
+      });
+      if (res.ok) {
+        showMessage("Bio updated successfully");
+        setIsBioFormOpen(false);
+      } else {
+        const err = await res.json();
+        showMessage(err.error || "Failed to update bio", "error");
+      }
+    } catch (error) {
+      showMessage("Error saving bio info", "error");
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
   useEffect(() => {
     // Only auto-fetch if we already have a password in memory (e.g. from local storage or previous session)
     if (isAuthenticated) {
       fetchData();
+      fetchBio();
     }
   }, [isAuthenticated]);
 
@@ -419,12 +489,22 @@ export default function AdminDashboard() {
               </select>
             </div>
           </div>
-          <button 
-            onClick={openNewProjectForm}
-            className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-6 py-2.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg shadow-black/10"
-          >
-            <Plus size={16} /> New Project
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              type="button"
+              onClick={() => { fetchBio(); setIsBioFormOpen(true); }}
+              className="flex items-center gap-2 text-sm uppercase tracking-wider border border-black/20 text-black px-6 py-2.5 rounded-full hover:border-black hover:bg-black/5 transition-all"
+            >
+              Edit About
+            </button>
+            <button 
+              type="button"
+              onClick={openNewProjectForm}
+              className="flex items-center gap-2 text-sm uppercase tracking-wider bg-black text-white px-6 py-2.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg shadow-black/10"
+            >
+              <Plus size={16} /> New Project
+            </button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -1066,6 +1146,229 @@ export default function AdminDashboard() {
                   }`}
                 >
                   {isLoading ? "SYNCING..." : (editingProjectId ? "UPDATE ARCHIVE" : "PUBLISH PROJECT")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bio Editing Overlay */}
+      {isBioFormOpen && (
+        <div className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-sm flex items-center justify-end">
+          <div className="w-full max-w-3xl h-full bg-[var(--color-brand-bg)] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-8 md:px-12 md:py-8 border-b border-black/5 bg-white/50 backdrop-blur-md sticky top-0 z-10">
+              <div>
+                <h2 className="text-3xl font-display italic text-black">Edit About Info</h2>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold mt-1">Configure About text & set photography</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsBioFormOpen(false)} 
+                className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-black hover:bg-black/5 rounded-full transition-all"
+                title="Close Form"
+              >
+                <X size={32} strokeWidth={1} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBio} className="flex-1 overflow-y-auto p-8 md:p-12 flex flex-col gap-12 bg-gray-50/30">
+              
+              {/* Bio Paragraphs Editor */}
+              <div className="flex flex-col gap-3">
+                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-black">About Paragraphs (Use double line breaks to separate paragraphs)</label>
+                <textarea 
+                  rows={12}
+                  required
+                  value={bioText}
+                  onChange={e => setBioText(e.target.value)}
+                  className="bg-white border-2 border-transparent focus:border-black text-black outline-none p-6 rounded-xl font-light text-sm shadow-sm leading-relaxed transition-all resize-none"
+                  placeholder="Born in the United States...&#10;&#10;I trained under Roman Vasyanov..."
+                />
+              </div>
+
+              {/* Bio Images Section */}
+              <div className="flex flex-col gap-8">
+                
+                {/* 1. Focus Image (Left of Bio) */}
+                <div className="flex flex-col gap-4 border border-black/5 bg-black/[0.01] p-6 rounded-2xl">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-widest text-zinc-400 font-black mb-1">Focus Image</h4>
+                      <p className="text-xs text-zinc-500">This image appears on the left side of your biography.</p>
+                    </div>
+                    <label className="cursor-pointer bg-black text-white px-5 py-2.5 rounded-full text-[9px] uppercase tracking-widest font-black hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-md flex items-center gap-2">
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        onChange={async (e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length === 0) return;
+                          try {
+                            const urls = await uploadFiles(files);
+                            if (urls.length > 0) {
+                              setBioImages(prev => {
+                                const list = [...prev];
+                                if (list.length > 0) {
+                                  list[0] = urls[0];
+                                } else {
+                                  list.push(urls[0]);
+                                }
+                                return list;
+                              });
+                              showMessage("Focus image updated successfully");
+                            }
+                          } catch (err: any) {
+                            showMessage(err.message || "Upload failed", "error");
+                          }
+                        }}
+                        disabled={isUploading}
+                      />
+                      Change Focus Image
+                    </label>
+                  </div>
+
+                  {bioImages.length > 0 ? (
+                    <div className="w-48 aspect-[3/4] bg-white p-2 relative group rounded-2xl border border-black/5 shadow-sm overflow-hidden">
+                      <img 
+                        src={getMediaUrl(bioImages[0])} 
+                        alt="Bio Focus Image" 
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          type="button"
+                          onClick={() => removeBioImage(0)}
+                          className="bg-red-500 text-white p-3 rounded-full hover:bg-red-600 transition-all shadow-md"
+                          title="Remove Image"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-8 border-2 border-dashed border-black/10 rounded-2xl flex flex-col items-center justify-center text-zinc-400">
+                      <ImageIcon size={28} className="mb-1 text-zinc-300" />
+                      <p className="text-[9px] uppercase tracking-widest font-bold">No focus image selected</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Other Gallery Images (Arranged Below) */}
+                <div className="flex flex-col gap-6">
+                  <div className="flex justify-between items-center p-6 bg-zinc-900 text-white rounded-2xl shadow-lg">
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-1 font-black">Other Gallery Images</h4>
+                      <p className="text-lg italic font-display">{Math.max(0, bioImages.length - 1)} Image(s) below bio</p>
+                    </div>
+                    <label className="cursor-pointer bg-white text-black px-6 py-2.5 rounded-full text-[9px] uppercase tracking-widest font-black hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all shadow-md flex items-center gap-2">
+                      <input 
+                        type="file" 
+                        multiple
+                        className="hidden" 
+                        onChange={handleBioImageUpload}
+                        disabled={isUploading}
+                      />
+                      {isUploading ? `UPLOADING ${uploadProgress}%` : "ADD IMAGES"}
+                      {!isUploading && <Plus size={12} />}
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    {bioImages.slice(1).map((url, sliceIdx) => {
+                      const actualIdx = sliceIdx + 1;
+                      return (
+                        <div key={`bio-img-${actualIdx}`} className="aspect-square bg-white p-2 relative group rounded-2xl border border-black/5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
+                          <div className="w-full h-full rounded-xl overflow-hidden relative">
+                            <img src={getMediaUrl(url)} alt="" className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 p-4 text-center">
+                              
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setBioImages(prev => {
+                                    const list = [...prev];
+                                    const target = list.splice(actualIdx, 1)[0];
+                                    return [target, ...list];
+                                  });
+                                  showMessage("Promoted to Focus Image");
+                                }}
+                                className="px-3 py-1.5 bg-white text-black text-[8px] uppercase tracking-widest font-black rounded-full hover:bg-zinc-100 hover:scale-105 transition-all"
+                              >
+                                Set as Focus
+                              </button>
+
+                              <div className="flex gap-2">
+                                {actualIdx > 1 && (
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      setBioImages(prev => {
+                                        const list = [...prev];
+                                        const temp = list[actualIdx];
+                                        list[actualIdx] = list[actualIdx - 1];
+                                        list[actualIdx - 1] = temp;
+                                        return list;
+                                      });
+                                      showMessage("Moved image left");
+                                    }}
+                                    className="px-2 py-1 bg-white/20 text-white text-[8px] font-black rounded hover:bg-white hover:text-black transition-colors"
+                                    title="Move Left"
+                                  >
+                                    ← Left
+                                  </button>
+                                )}
+                                
+                                {actualIdx < bioImages.length - 1 && (
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      setBioImages(prev => {
+                                        const list = [...prev];
+                                        const temp = list[actualIdx];
+                                        list[actualIdx] = list[actualIdx + 1];
+                                        list[actualIdx + 1] = temp;
+                                        return list;
+                                      });
+                                      showMessage("Moved image right");
+                                    }}
+                                    className="px-2 py-1 bg-white/20 text-white text-[8px] font-black rounded hover:bg-white hover:text-black transition-colors"
+                                    title="Move Right"
+                                  >
+                                    Right →
+                                  </button>
+                                )}
+                              </div>
+
+                              <button 
+                                type="button"
+                                onClick={() => removeBioImage(actualIdx)}
+                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-sm"
+                                title="Remove Image"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Sticky Footer in Form */}
+              <div className="mt-auto pt-10 flex items-center justify-end sticky bottom-0 bg-transparent py-4">
+                <button 
+                  type="submit"
+                  disabled={isSavingBio || isUploading}
+                  className={`px-12 py-3.5 rounded-full uppercase tracking-[0.3em] text-[10px] font-black transition-all shadow-xl hover:-translate-y-1 active:scale-95 ${
+                    isSavingBio || isUploading ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {isSavingBio ? "SAVING..." : "SAVE ABOUT INFO"}
                 </button>
               </div>
             </form>
