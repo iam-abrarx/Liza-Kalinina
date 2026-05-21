@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowLeft } from "lucide-react";
-import { getMediaUrl, getVimeoId, isVideo } from "@/lib/utils";
+import { getMediaUrl, getVimeoId, isVideo, slugify } from "@/lib/utils";
 import { Project } from "@/types";
 
 interface TheaterModeProps {
@@ -32,7 +32,7 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
 
   const handleCopyLink = () => {
     if (!project) return;
-    const url = `${window.location.origin}/?project=${project.id}`;
+    const url = `${window.location.origin}/?project=${slugify(project.title || '') || project.id}`;
     navigator.clipboard.writeText(url).then(() => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);

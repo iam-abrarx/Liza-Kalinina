@@ -38,7 +38,7 @@ export function Sidebar({
           >
             <button
               onClick={() => onCategoryClick(cat)}
-              className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 ${
+              className={`text-left text-xs md:text-sm uppercase tracking-[0.2em] transition-all duration-500 cursor-pointer ${
                 activeCategory === cat
                   ? "text-black font-normal"
                   : "text-gray-500 font-normal hover:text-black"

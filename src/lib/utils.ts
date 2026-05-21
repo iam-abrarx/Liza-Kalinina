@@ -35,3 +35,8 @@ export const isVideo = (url: string | null) => {
   if (!url) return false;
   return url.match(/\.(mp4|webm|ogg|mov)$|^blob:|^data:video/i) !== null;
 };
+
+export const slugify = (str: string) => {
+  if (!str) return '';
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+};

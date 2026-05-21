@@ -13,7 +13,7 @@ import { PhotographyMasonry } from "@/components/PhotographyMasonry";
 
 // Hooks & Utils
 import { useHydrated } from "@/hooks/useHydrated";
-import { CATEGORY_MAP } from "@/lib/utils";
+import { CATEGORY_MAP, slugify } from "@/lib/utils";
 import { Project } from "@/types";
 
 export default function Home() {
@@ -49,7 +49,7 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     const projectId = params.get('project');
     if (projectId) {
-      const match = projects.find(p => p.id === projectId);
+      const match = projects.find(p => p.id === projectId || slugify(p.title) === projectId);
       if (match) setSelectedProject(match);
       // Clean URL without reload
       window.history.replaceState({}, '', window.location.pathname);
