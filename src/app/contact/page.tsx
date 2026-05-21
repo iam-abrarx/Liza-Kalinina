@@ -42,7 +42,7 @@ export default function Contact() {
               className="flex flex-col items-center gap-12"
             >
               <div className="flex flex-col items-center gap-4">
-                <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Email</span>
+                <span className="text-[9px] uppercase tracking-[0.4em] text-black/60 font-bold">Email</span>
                 <a
                   href="mailto:elisabeth.kalinina@gmail.com"
                   className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wide"
@@ -54,7 +54,7 @@ export default function Contact() {
 
               <div className="flex flex-col md:flex-row gap-12 md:gap-24">
                 <div className="flex flex-col items-center gap-4">
-                  <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Phone / WhatsApp</span>
+                  <span className="text-[9px] uppercase tracking-[0.4em] text-black/60 font-bold">Phone / WhatsApp</span>
                   <a 
                     href="https://wa.me/33766878452" 
                     target="_blank"
@@ -68,7 +68,7 @@ export default function Contact() {
               </div>
               
               <div className="flex flex-col items-center gap-6">
-                <span className="text-[9px] uppercase tracking-[0.4em] text-black/30 font-normal">Social</span>
+                <span className="text-[9px] uppercase tracking-[0.4em] text-black/60 font-bold">Social</span>
                 <div className="flex flex-wrap justify-center gap-8 md:gap-12">
                   <a 
                     href="https://instagram.com/lizaleone_dp" 
