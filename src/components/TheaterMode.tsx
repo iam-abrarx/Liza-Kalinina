@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft, Send } from "lucide-react";
 import { getMediaUrl, getVimeoId, isVideo, slugify } from "@/lib/utils";
 import { Project } from "@/types";
 
@@ -210,14 +210,40 @@ export function TheaterMode({ project, onClose }: TheaterModeProps) {
                 {/* Copy Link to Share */}
                 <button
                   onClick={handleCopyLink}
-                  className="mt-3 inline-flex items-center gap-2 text-[9px] uppercase tracking-[0.3em] text-zinc-400 hover:text-zinc-800 transition-colors font-medium group"
+                  className="mt-3 inline-flex items-center gap-2.5 text-sm uppercase tracking-[0.3em] text-zinc-500 hover:text-zinc-900 transition-all duration-300 font-bold group"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:scale-110"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  {linkCopied ? (
-                    <span className="text-zinc-800 font-semibold">Link copied</span>
-                  ) : (
-                    <span>Share</span>
-                  )}
+                  <Send 
+                    size={20} 
+                    strokeWidth={1.5} 
+                    className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-[2px] group-hover:translate-x-[2px]" 
+                  />
+                  <div className="relative overflow-hidden h-6 flex items-center">
+                    <AnimatePresence mode="wait">
+                      {linkCopied ? (
+                        <motion.span 
+                          key="copied"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="block whitespace-nowrap"
+                        >
+                          Link copied
+                        </motion.span>
+                      ) : (
+                        <motion.span 
+                          key="share"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="block whitespace-nowrap"
+                        >
+                          Share
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </button>
                 <div className="space-y-4 mt-6">
                   <p className="text-xs md:text-sm text-zinc-950 leading-relaxed max-w-lg font-normal">

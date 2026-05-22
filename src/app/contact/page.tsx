@@ -45,8 +45,7 @@ export default function Contact() {
                 <span className="text-[9px] uppercase tracking-[0.4em] text-black/60 font-bold">Email</span>
                 <a
                   href="mailto:elisabeth.kalinina@gmail.com"
-                  className="text-lg md:text-2xl font-light hover:opacity-50 transition-all duration-300 tracking-wide"
-                  style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+                  className="text-xl md:text-3xl font-display uppercase hover:opacity-50 transition-all duration-300 tracking-[0.15em]"
                 >
                   elisabeth.kalinina@gmail.com
                 </a>
@@ -59,8 +58,7 @@ export default function Contact() {
                     href="https://wa.me/33766878452" 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-base md:text-xl font-light hover:opacity-50 transition-all duration-300 tracking-widest"
-                    style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+                    className="text-lg md:text-2xl font-display uppercase hover:opacity-50 transition-all duration-300 tracking-[0.15em]"
                   >
                     +33 7 66 87 84 52
                   </a>
